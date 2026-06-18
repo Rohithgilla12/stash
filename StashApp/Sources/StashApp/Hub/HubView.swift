@@ -10,11 +10,11 @@ struct HubView<Content: View>: View {
             searchField
             tabBar
             ScrollView { content() }
-                .frame(maxHeight: Tokens.contentMaxHeight)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             footer
         }
         .padding(12)
-        .frame(width: Tokens.panelWidth)
+        .frame(width: Tokens.panelWidth, height: Tokens.panelHeight)
         .background(Tokens.panelFill)
     }
 
