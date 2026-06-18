@@ -48,7 +48,9 @@ final class SnippetsViewModel {
     }
 
     func onDemoChange() {
-        guard let result = ExpansionEngine.expanded(buffer: demoText, snippets: snippets, now: Date()) else { return }
+        let current = demoText
+        guard let result = ExpansionEngine.expanded(buffer: current, snippets: snippets, now: Date()),
+              result.text != current else { return }
         demoText = result.text
         lastExpanded = result.expandedTrigger
     }
