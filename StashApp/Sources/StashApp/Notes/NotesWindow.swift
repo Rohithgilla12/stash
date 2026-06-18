@@ -28,6 +28,11 @@ private struct NotesSidebar: View {
                         SidebarRow(note: note, isSelected: model.selectedId == note.id) {
                             model.selectedId = note.id
                         }
+                        .contextMenu {
+                            Button("Delete", role: .destructive) {
+                                Task { await model.delete(note) }
+                            }
+                        }
                     }
                 }
                 .padding(8)
@@ -103,7 +108,6 @@ private struct SidebarRow: View {
 
 private struct NotesEditor: View {
     @Bindable var model: NotesViewModel
-    @State private var draft: Note?
 
     var body: some View {
         Group {
@@ -216,7 +220,7 @@ private struct EditorPane: View {
         TextField("Title", text: Binding(
             get: { draft.title },
             set: { draft.title = $0 }
-        ), onCommit: { onUpdate(draft) })
+        ))
         .textFieldStyle(.plain)
         .font(.system(.title2, design: .rounded).weight(.semibold))
         .foregroundStyle(Tokens.textPrimary)
