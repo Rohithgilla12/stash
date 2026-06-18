@@ -38,7 +38,13 @@ final class SnippetsViewModel {
 
     func seed() async {
         let now = Int64(Date().timeIntervalSince1970 * 1000)
-        try? await store.seedDefaultsIfEmpty(now: now)
+        do {
+            try await store.seedDefaultsIfEmpty(now: now)
+        } catch {
+            #if DEBUG
+            print("SnippetsViewModel seed error:", error)
+            #endif
+        }
     }
 
     func onDemoChange() {

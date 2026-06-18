@@ -28,7 +28,7 @@ actor SnippetsStore {
         let defaults: [Snippet] = [
             Snippet(trigger: ":sig",   label: "Signature",  expand: "— Rohith",              dynamic: nil,     createdAt: now),
             Snippet(trigger: ":addr",  label: "Address",    expand: "123 Main St, City, ST",  dynamic: nil,     createdAt: now),
-            Snippet(trigger: ":ty",    label: "Thank you",  expand: "Thank you!",              dynamic: nil,     createdAt: now),
+            Snippet(trigger: ":ty",    label: "Thank you!", expand: "Thank you!",              dynamic: nil,     createdAt: now),
             Snippet(trigger: ":cal",   label: "Calendar",   expand: "Let's find a time: ",     dynamic: nil,     createdAt: now),
             Snippet(trigger: ":date",  label: "Date",       expand: nil,                       dynamic: "date",  createdAt: now),
             Snippet(trigger: ":shrug", label: "Shrug",      expand: nil,                       dynamic: "shrug", createdAt: now),

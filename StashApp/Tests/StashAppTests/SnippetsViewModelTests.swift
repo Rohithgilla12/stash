@@ -2,13 +2,13 @@ import Testing
 import GRDB
 @testable import StashApp
 
-@Test func testVMLiveObservation() async throws {
+@Test @MainActor func testVMLiveObservation() async throws {
     let db = try StashDatabase(path: ":memory:")
     let store = SnippetsStore(pool: db.pool)
-    let vm = await SnippetsViewModel(db: db.pool, store: store)
-    await vm.startObserving()
+    let vm = SnippetsViewModel(db: db.pool, store: store)
+    vm.startObserving()
     var iterations = 0
-    while await vm.snippets.isEmpty == false && iterations < 20 {
+    while vm.snippets.isEmpty && iterations < 20 {
         try await Task.sleep(nanoseconds: 50_000_000)
         iterations += 1
     }
@@ -16,7 +16,7 @@ import GRDB
     var found = false
     for _ in 0..<20 {
         try await Task.sleep(nanoseconds: 50_000_000)
-        if await vm.snippets.contains(where: { $0.trigger == ":obs" }) {
+        if vm.snippets.contains(where: { $0.trigger == ":obs" }) {
             found = true
             break
         }
