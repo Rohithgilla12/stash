@@ -16,6 +16,11 @@ struct StashApp: App {
                 .frame(minWidth: 560, idealWidth: 560, minHeight: 520, idealHeight: 520)
         }
         .windowResizability(.contentSize)
+
+        Window("Tasks", id: "tasks") {
+            TasksWindow(model: env.tasksViewModel)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
@@ -36,6 +41,7 @@ private struct ContentView: View {
             switch selection {
             case .clipboard: ClipboardTab(model: env.viewModel)
             case .notes: NotesTab(model: env.notesViewModel)
+            case .todos: TodosTab(model: env.tasksViewModel)
             default: ComingSoonView(tab: selection)
             }
         }

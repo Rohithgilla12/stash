@@ -5,6 +5,7 @@ import SwiftUI
 final class AppEnvironment {
     let viewModel: ClipboardViewModel
     let notesViewModel: NotesViewModel
+    let tasksViewModel: TasksViewModel
     private let monitor: ClipboardMonitor
 
     init() {
@@ -21,6 +22,8 @@ final class AppEnvironment {
         self.viewModel = ClipboardViewModel(db: db, store: store, monitor: monitor)
         let notesStore = NotesStore(pool: db.pool)
         self.notesViewModel = NotesViewModel(db: db, store: notesStore)
+        let tasksStore = TasksStore(pool: db.pool)
+        self.tasksViewModel = TasksViewModel(db: db.pool, store: tasksStore)
         // MenuBarExtra content is lazy, so start capture eagerly here; start() is idempotent.
         start()
     }
@@ -28,6 +31,7 @@ final class AppEnvironment {
     func start() {
         viewModel.startObserving()
         notesViewModel.startObserving()
+        tasksViewModel.startObserving()
         Task { await monitor.start() }
     }
 }
