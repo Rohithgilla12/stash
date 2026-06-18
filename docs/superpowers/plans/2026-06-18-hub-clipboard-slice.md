@@ -198,7 +198,7 @@ import SwiftUI
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/TokensTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — `Color(hex:)` / `Tokens` not found.
 
 - [ ] **Step 3: Implement `Tokens.swift`**
@@ -299,7 +299,7 @@ import Foundation
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/DatabaseTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — `StashDatabase` / `ClipItem` not found.
 
 - [ ] **Step 3: Implement `ClipKind.swift`**
@@ -513,7 +513,7 @@ private final class FakePB: PasteboardReading, @unchecked Sendable {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/ClipClassifierTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — types not found.
 
 - [ ] **Step 3: Implement `PasteboardReading.swift` and `ClipClassifier.swift`**
@@ -633,7 +633,7 @@ import Foundation
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/ThumbnailCacheTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — `ThumbnailCache` not found.
 
 - [ ] **Step 3: Implement `ThumbnailCache.swift`**
@@ -779,7 +779,7 @@ private func mk(_ id: String, _ text: String, pinned: Bool = false, at: Int64) -
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/ClipboardStoreTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — `ClipboardStore` not found. (Note: `DatabasePool(path: ":memory:")` is supported by GRDB.)
 
 - [ ] **Step 3: Implement `ClipboardStore.swift`**
@@ -928,7 +928,7 @@ private final class MutPB: PasteboardReading, @unchecked Sendable {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/ClipboardMonitorTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — `ClipboardMonitor` / `SystemPasteboard` not found.
 
 - [ ] **Step 3: Implement `SystemPasteboard.swift`**
@@ -1073,7 +1073,7 @@ import Testing
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/ClipboardViewModelTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — `ClipboardViewModel` not found.
 
 - [ ] **Step 3: Implement `ClipboardViewModel.swift`**
@@ -1186,7 +1186,7 @@ import Testing
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO -only-testing:StashAppTests/HubTabTests`
+Run: `cd StashApp && xcodebuild test -scheme StashApp -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO`
 Expected: FAIL — `HubTab` not found.
 
 - [ ] **Step 3: Implement `HubTab.swift`**

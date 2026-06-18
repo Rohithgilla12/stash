@@ -4,4 +4,5 @@ mcp-server/dist/
 *.xcodeproj
 StashApp/.build/
 StashApp/DerivedData/
+StashApp/Sources/StashApp/Info.plist
 DerivedData/
