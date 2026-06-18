@@ -33,7 +33,12 @@ CREATE TABLE IF NOT EXISTS notes (
   title      TEXT NOT NULL,
   body       TEXT NOT NULL DEFAULT '',
   color      TEXT,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  kind       TEXT NOT NULL DEFAULT 'text',   -- 'text' | 'todo'
+  items      TEXT NOT NULL DEFAULT '[]',     -- JSON [{t,done}] for todo notes
+  accent     TEXT,
+  on_desktop INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS clipboard (
   id           TEXT PRIMARY KEY,
