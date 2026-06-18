@@ -26,6 +26,8 @@ targets:
         LSUIElement: true
         CFBundleDisplayName: Stash
         NSHumanReadableCopyright: ""
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
     settings:
       base:
         ENABLE_APP_SANDBOX: NO
