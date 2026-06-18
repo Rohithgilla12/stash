@@ -36,12 +36,14 @@ CREATE TABLE IF NOT EXISTS notes (
   updated_at INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS clipboard (
-  id         TEXT PRIMARY KEY,
-  kind       TEXT NOT NULL,              -- 'text' | 'link' | 'image' | 'code' | ...
-  text       TEXT,
-  app        TEXT,
-  pinned     INTEGER NOT NULL DEFAULT 0,
-  created_at INTEGER NOT NULL
+  id           TEXT PRIMARY KEY,
+  kind         TEXT NOT NULL,              -- 'text' | 'link' | 'image' | ...
+  text         TEXT,
+  app          TEXT,
+  pinned       INTEGER NOT NULL DEFAULT 0,
+  created_at   INTEGER NOT NULL,
+  title        TEXT,                       -- display label (link title / filename / first line)
+  preview_path TEXT                        -- sidecar file for image/GIF thumbnails
 );
 `);
 
