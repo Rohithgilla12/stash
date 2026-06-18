@@ -12,6 +12,8 @@ final class AppEnvironment {
     private let stickyManager: StickyNotesManager
     private let db: StashDatabase
     private var stickyObservationTask: Task<Void, Never>?
+    private let snapper = WindowSnapper()
+    private var snapHotKeys: [GlobalHotKey] = []
 
     init() {
         let database = (try? StashDatabase(path: AppPaths.dbURL().path))
@@ -51,6 +53,27 @@ final class AppEnvironment {
         Task { await snippetsViewModel.seed() }
         startStickyObservation()
         stickyManager.registerHotKey()
+        registerSnapHotKeys()
+        snapper.ensureTrusted()
+    }
+
+    private func registerSnapHotKeys() {
+        var registered: [GlobalHotKey] = []
+        for hk in SnapHotKey.all {
+            if let key = GlobalHotKey(keyCode: hk.keyCode, modifiers: hk.modifiers, handler: { [weak self] in
+                self?.snapper.snap(hk.target)
+            }) {
+                registered.append(key)
+            } else {
+                #if DEBUG
+                print("[Stash] Could not register snap hotkey for \(hk.target) (combo already claimed?)")
+                #endif
+            }
+        }
+        snapHotKeys = registered
+        #if DEBUG
+        print("[Stash] Snap hotkeys registered: \(registered.count)/\(SnapHotKey.all.count)")
+        #endif
     }
 
     private func startStickyObservation() {
