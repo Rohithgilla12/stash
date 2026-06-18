@@ -21,6 +21,7 @@ enum Tokens {
     static let panelRadius: CGFloat = 16
     static let rowRadius: CGFloat = 9
     static let panelWidth: CGFloat = 456
+    static let panelHeight: CGFloat = 560
     static let contentMaxHeight: CGFloat = 600
     static let thumbSize = CGSize(width: 58, height: 38)
 }
