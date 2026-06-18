@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#e7e5df}
+  input,textarea{font-family:inherit}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(63,164,91,.5)}70%{box-shadow:0 0 0 5px rgba(63,164,91,0)}}
+  @keyframes taskin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</helmet>
+
+<div style="width:max-content;min-width:100%;min-height:100vh;box-sizing:border-box;padding:48px;background:#e7e5df;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif;color:#2c2925;display:flex;flex-direction:column;align-items:flex-start">
+
+  <div style="width:1440px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:7px">
+      <div style="width:32px;height:32px;border-radius:9px;background:#c8642f;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(160,70,20,.3)">
+        <div style="width:13px;height:15px;background:#fff;border-radius:2px;position:relative"><div style="position:absolute;top:-3px;left:3px;width:7px;height:4px;background:#fff;border-radius:2px;border:1px solid #c8642f"></div></div>
+      </div>
+      <h1 style="font-family:ui-rounded,'SF Pro Rounded',-apple-system,sans-serif;font-size:27px;font-weight:700;letter-spacing:-.4px">Stash</h1>
+      <span style="font-size:14px;color:#8a8378;font-weight:500">interactive prototype</span>
+    </div>
+    <p style="font-size:13.5px;line-height:1.5;color:#6b655c;max-width:820px">A full task app with tags, priorities &amp; due dates — and an <strong>MCP server</strong> so Claude &amp; Claude Code can plan your day. Try “Generate my day” in the AI tab, the natural-language quick-add (<code style="font-family:ui-monospace,monospace">#eng !high today</code>), snippet expansion, and ⌥Space stickies.</p>
+  </div>
+
+  <!-- ===== DESKTOP ===== -->
+  <div data-screen-label="Stash desktop" style="width:1440px;background:#fff;border-radius:3px;box-shadow:0 6px 24px rgba(0,0,0,.12);overflow:hidden">
+    <div style="position:relative;width:1440px;height:900px;background:linear-gradient(165deg,#f1dac0 0%,#e6c5a5 48%,#d6aa84 100%);overflow:hidden">
+      <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 16% 6%,rgba(255,250,242,.6),transparent 52%)"></div>
+
+      <div style="{{ demoStyle }}">
+        <div style="height:40px;display:flex;align-items:center;gap:8px;padding:0 14px;border-bottom:1px solid rgba(0,0,0,.05)"><div style="width:11px;height:11px;border-radius:50%;background:#ff5f57"></div><div style="width:11px;height:11px;border-radius:50%;background:#febc2e"></div><div style="width:11px;height:11px;border-radius:50%;background:#28c840"></div><span style="font-size:12.5px;color:#8a8378;margin-left:8px">Safari — {{ demoLabel }}</span></div>
+      </div>
+
+      <!-- sticky notes layer -->
+      <div style="position:absolute;inset:30px 0 0 0;opacity:{{ stickyOpacity }};transform:{{ stickyTransform }};pointer-events:{{ stickyPe }};transition:opacity .3s ease,transform .3s ease;transform-origin:30% 30%;z-index:10">
+        <sc-for list="{{ desktopNotes }}" as="st" hint-placeholder-count="3">
+          <div onClick="{{ st.onOpen }}" style="position:absolute;left:{{ st.left }}px;top:{{ st.top }}px;width:228px;background:{{ st.color }};border-radius:5px;padding:18px 20px 20px;box-shadow:0 16px 34px rgba(70,48,20,.22);transform:rotate({{ st.rot }}deg);cursor:pointer">
+            <div style="position:absolute;top:-7px;left:50%;transform:translateX(-50%);width:15px;height:15px;border-radius:50%;background:{{ st.accent }};box-shadow:0 2px 4px rgba(0,0,0,.25)"></div>
+            <div style="font-family:ui-rounded,'SF Pro Rounded',sans-serif;font-weight:700;font-size:16px;margin-bottom:11px;color:#4a3f24">{{ st.title }}</div>
+            <sc-if value="{{ st.isTodo }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ st.items }}" as="ti" hint-placeholder-count="3">
+                  <div onClick="{{ ti.onToggle }}" style="display:flex;gap:9px;align-items:flex-start;cursor:pointer;font-size:13.5px;color:#4a3f24">
+                    <sc-if value="{{ ti.done }}" hint-placeholder-val="{{ false }}"><div style="width:15px;height:15px;border-radius:4px;background:#caa83a;flex:none;margin-top:1px;position:relative"><div style="position:absolute;left:4.5px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(40deg)"></div></div></sc-if>
+                    <sc-if value="{{ ti.notDone }}" hint-placeholder-val="{{ true }}"><div style="width:15px;height:15px;border-radius:4px;border:2px solid #c2a64a;flex:none;margin-top:1px"></div></sc-if>
+                    <span style="{{ ti.textStyle }}">{{ ti.t }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ st.isText }}" hint-placeholder-val="{{ false }}">
+              <p style="font-size:13.5px;line-height:1.55;color:#4a3f24;white-space:pre-wrap">{{ st.body }}</p>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- ===== Notes window ===== -->
+      <sc-if value="{{ notesOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:250px;top:140px;width:520px;height:520px;background:rgba(252,250,246,.94);backdrop-filter:blur(34px) saturate(1.4);border:1px solid rgba(0,0,0,.08);border-radius:14px;box-shadow:0 34px 80px rgba(40,28,14,.38);overflow:hidden;display:flex;flex-direction:column;z-index:34">
+          <div style="height:44px;display:flex;align-items:center;gap:9px;padding:0 16px;border-bottom:1px solid rgba(0,0,0,.06)">
+            <div style="display:flex;gap:8px"><div onClick="{{ closeNotes }}" style="width:12px;height:12px;border-radius:50%;background:#ff5f57;cursor:pointer"></div><div style="width:12px;height:12px;border-radius:50%;background:#febc2e"></div><div style="width:12px;height:12px;border-radius:50%;background:#28c840"></div></div>
+            <span style="font-family:ui-rounded,'SF Pro Rounded',sans-serif;font-weight:700;font-size:14px;margin-left:8px">Notes</span>
+            <span style="margin-left:auto;font-size:11.5px;color:#5e8a52;display:flex;align-items:center;gap:5px"><div style="width:7px;height:7px;border-radius:50%;background:#5e8a52"></div>Saved</span>
+          </div>
+          <div style="flex:1;display:flex;min-height:0">
+            <div style="width:178px;border-right:1px solid rgba(0,0,0,.06);padding:10px 8px;display:flex;flex-direction:column;gap:2px;background:rgba(0,0,0,.015);overflow:auto">
+              <sc-for list="{{ notesList }}" as="n" hint-placeholder-count="4">
+                <div onClick="{{ n.onOpen }}" style="{{ n.sideStyle }}">
+                  <div style="width:10px;height:10px;border-radius:3px;flex:none;background:{{ n.color }};border:1px solid rgba(0,0,0,.12)"></div>
+                  <span style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.title }}</span>
+                </div>
+              </sc-for>
+              <div onClick="{{ newNote }}" style="margin-top:auto;display:flex;align-items:center;gap:7px;padding:8px 10px;color:#c8642f;font-size:13px;font-weight:600;cursor:pointer">+ New note</div>
+            </div>
+            <div style="flex:1;padding:20px 22px;display:flex;flex-direction:column;min-width:0">
+              <input value="{{ activeNote.title }}" onChange="{{ activeNote.onTitle }}" style="font-family:ui-rounded,'SF Pro Rounded',sans-serif;font-weight:700;font-size:20px;color:#3a352e;border:none;outline:none;background:transparent;margin-bottom:3px;width:100%" />
+              <div style="font-size:11.5px;color:#a39a8c;margin-bottom:17px">Edited just now · synced</div>
+              <sc-if value="{{ activeNote.isTodo }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <sc-for list="{{ activeNote.items }}" as="ai" hint-placeholder-count="4">
+                    <div style="display:flex;gap:11px;align-items:center">
+                      <div onClick="{{ ai.onToggle }}" style="cursor:pointer;flex:none">
+                        <sc-if value="{{ ai.done }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:6px;background:#c8642f;position:relative"><div style="position:absolute;left:6px;top:3px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(40deg)"></div></div></sc-if>
+                        <sc-if value="{{ ai.notDone }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:6px;border:2px solid #c9bfae"></div></sc-if>
+                      </div>
+                      <input value="{{ ai.t }}" onChange="{{ ai.onText }}" style="flex:1;border:none;outline:none;background:transparent;font-size:14.5px;color:#3a352e;{{ ai.textStyle }}" />
+                    </div>
+                  </sc-for>
+                  <div onClick="{{ activeNote.onAddTask }}" style="display:flex;align-items:center;gap:9px;color:#c8642f;font-weight:600;font-size:13.5px;cursor:pointer;margin-top:2px">+ Add task</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ activeNote.isText }}" hint-placeholder-val="{{ false }}">
+                <textarea value="{{ activeNote.body }}" onChange="{{ activeNote.onBody }}" style="flex:1;min-height:150px;resize:none;border:none;outline:none;background:transparent;font-size:14.5px;line-height:1.65;color:#3a352e;width:100%"></textarea>
+              </sc-if>
+              <div style="margin-top:auto;display:flex;gap:8px;padding-top:16px;border-top:1px solid rgba(0,0,0,.06)">
+                <div onClick="{{ activeNote.onPinDesktop }}" style="{{ pinDesktopStyle }}">{{ pinDesktopLabel }}</div>
+                <div style="font-size:12.5px;color:#8a8378;background:rgba(0,0,0,.05);padding:6px 12px;border-radius:8px;cursor:pointer">Share</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== Tasks window (full to-do app) ===== -->
+      <sc-if value="{{ tasksOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:250px;top:120px;width:560px;height:580px;background:rgba(252,250,246,.95);backdrop-filter:blur(34px) saturate(1.4);border:1px solid rgba(0,0,0,.08);border-radius:14px;box-shadow:0 34px 80px rgba(40,28,14,.4);overflow:hidden;display:flex;flex-direction:column;z-index:36">
+          <div style="height:44px;display:flex;align-items:center;gap:9px;padding:0 16px;border-bottom:1px solid rgba(0,0,0,.06)">
+            <div style="display:flex;gap:8px"><div onClick="{{ closeTasks }}" style="width:12px;height:12px;border-radius:50%;background:#ff5f57;cursor:pointer"></div><div style="width:12px;height:12px;border-radius:50%;background:#febc2e"></div><div style="width:12px;height:12px;border-radius:50%;background:#28c840"></div></div>
+            <span style="font-family:ui-rounded,'SF Pro Rounded',sans-serif;font-weight:700;font-size:14px;margin-left:8px">Tasks</span>
+            <span style="margin-left:auto;font-size:11px;color:#5e8a52;display:flex;align-items:center;gap:6px"><div style="width:7px;height:7px;border-radius:50%;background:#5e8a52;animation:pulse 1.8s infinite"></div>MCP connected</span>
+          </div>
+          <div style="flex:1;display:flex;min-height:0">
+            <!-- sidebar -->
+            <div style="width:180px;border-right:1px solid rgba(0,0,0,.06);padding:11px 9px;display:flex;flex-direction:column;gap:2px;background:rgba(0,0,0,.015);overflow:auto">
+              <sc-for list="{{ smartLists }}" as="sl" hint-placeholder-count="4">
+                <div onClick="{{ sl.onClick }}" style="{{ sl.style }}"><span style="font-size:13px">{{ sl.label }}</span><span style="font-size:11.5px;color:#a39a8c;font-variant-numeric:tabular-nums">{{ sl.count }}</span></div>
+              </sc-for>
+              <div style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#b3a99b;margin:11px 8px 5px">PROJECTS</div>
+              <sc-for list="{{ projectList }}" as="pr" hint-placeholder-count="3">
+                <div onClick="{{ pr.onClick }}" style="{{ pr.style }}"><span style="font-size:13px">{{ pr.label }}</span><span style="font-size:11.5px;color:#a39a8c">{{ pr.count }}</span></div>
+              </sc-for>
+              <div style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#b3a99b;margin:11px 8px 6px">TAGS</div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;padding:0 6px">
+                <sc-for list="{{ tagList }}" as="tg" hint-placeholder-count="4">
+                  <div onClick="{{ tg.onClick }}" style="{{ tg.style }}">{{ tg.label }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <!-- main -->
+            <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+              <div style="padding:16px 20px 10px">
+                <div style="display:flex;align-items:baseline;justify-content:space-between">
+                  <div style="font-family:ui-rounded,'SF Pro Rounded',sans-serif;font-weight:700;font-size:19px">{{ filterTitle }}</div>
+                  <span style="font-size:12px;color:#9a948a">{{ filterCount }} open</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px;background:rgba(0,0,0,.05);border-radius:10px;padding:9px 12px;margin-top:11px">
+                  <span style="color:#a39a8c;font-size:16px">+</span>
+                  <input value="{{ taskDraft }}" onChange="{{ onTaskDraft }}" onKeyDown="{{ onTaskKey }}" placeholder="Add task — ‘Fix login #eng !high today’" style="flex:1;border:none;outline:none;background:transparent;font-size:13.5px;color:#2c2925" />
+                </div>
+              </div>
+              <div style="flex:1;overflow:auto;padding:0 12px 14px">
+                <sc-for list="{{ filteredTasks }}" as="t" hint-placeholder-count="5">
+                  <div style="border-radius:9px">
+                    <div style="{{ t.rowStyle }}" style-hover="background:rgba(200,100,47,0.08)">
+                      <div style="{{ t.prioStyle }}"></div>
+                      <div onClick="{{ t.onToggle }}" style="cursor:pointer;flex:none">
+                        <sc-if value="{{ t.done }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:6px;background:#c8642f;position:relative"><div style="position:absolute;left:6px;top:3px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(40deg)"></div></div></sc-if>
+                        <sc-if value="{{ t.notDone }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:6px;border:2px solid #c9bfae"></div></sc-if>
+                      </div>
+                      <div style="flex:1;min-width:0">
+                        <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;{{ t.titleStyle }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span><sc-if value="{{ t.isClaude }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;color:#c8642f;background:#f6ddcf;padding:1px 6px;border-radius:5px;flex:none">✶ Claude</span></sc-if></div>
+                        <div style="display:flex;align-items:center;gap:5px;margin-top:4px">
+                          <sc-for list="{{ t.chips }}" as="c" hint-placeholder-count="1"><span style="{{ c.style }}">{{ c.label }}</span></sc-for>
+                          <span style="font-size:10.5px;color:#b3a99b">{{ t.project }}</span>
+                        </div>
+                      </div>
+                      <sc-if value="{{ t.hasSubs }}" hint-placeholder-val="{{ false }}"><span onClick="{{ t.onToggleExpand }}" style="font-size:10.5px;font-weight:600;color:#7a746a;background:rgba(0,0,0,.05);padding:2px 8px;border-radius:6px;cursor:pointer;flex:none">☑ {{ t.subProgress }}</span></sc-if>
+                      <sc-if value="{{ t.hasDue }}" hint-placeholder-val="{{ false }}"><span style="{{ t.dueStyle }}">{{ t.due }}</span></sc-if>
+                    </div>
+                    <sc-if value="{{ t.expanded }}" hint-placeholder-val="{{ false }}">
+                      <div style="margin:2px 0 10px 36px;display:flex;flex-direction:column;gap:9px">
+                        <sc-for list="{{ t.subs }}" as="su" hint-placeholder-count="2">
+                          <div onClick="{{ su.onToggle }}" style="display:flex;align-items:center;gap:9px;cursor:pointer">
+                            <sc-if value="{{ su.done }}" hint-placeholder-val="{{ false }}"><div style="width:15px;height:15px;border-radius:5px;background:#c8642f;flex:none;position:relative"><div style="position:absolute;left:4.5px;top:2px;width:4px;height:7px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(40deg)"></div></div></sc-if>
+                            <sc-if value="{{ su.notDone }}" hint-placeholder-val="{{ true }}"><div style="width:15px;height:15px;border-radius:5px;border:2px solid #c9bfae;flex:none"></div></sc-if>
+                            <span style="font-size:13px;{{ su.textStyle }}">{{ su.t }}</span>
+                          </div>
+                        </sc-for>
+                        <div onClick="{{ t.onAddSub }}" style="font-size:12px;color:#c8642f;font-weight:600;cursor:pointer">+ Add subtask</div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ filterEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:34px;text-align:center;color:#a39a8c;font-size:13.5px">Nothing here yet.</div></sc-if>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-top:1px solid rgba(0,0,0,.06)">
+                <span style="font-size:11.5px;color:#9a948a">Synced with Claude via MCP</span>
+                <div onClick="{{ generateDay }}" style="{{ genMiniStyle }}">✶ {{ genLabel }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- menu bar -->
+      <div style="position:absolute;top:0;left:0;right:0;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(250,247,242,.72);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.05);font-size:13.5px;z-index:40">
+        <div style="display:flex;align-items:center;gap:19px">
+          <div style="width:13px;height:13px;border-radius:3px;background:#2c2925"></div>
+          <span style="font-weight:600">Finder</span>
+          <span style="opacity:.7">File</span><span style="opacity:.7">Edit</span><span style="opacity:.7">View</span><span style="opacity:.7">Go</span><span style="opacity:.7">Window</span><span style="opacity:.7">Help</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:15px">
+          <div onClick="{{ openAi }}" style="display:flex;align-items:center;gap:6px;cursor:pointer" title="Claude credits"><div style="width:14px;height:14px;border-radius:50%;background:conic-gradient(#c8642f 0 245deg,rgba(0,0,0,.14) 245deg 360deg);display:flex;align-items:center;justify-content:center"><div style="width:8px;height:8px;border-radius:50%;background:#f3efe7"></div></div><span style="font-variant-numeric:tabular-nums">68%</span></div>
+          <div onClick="{{ toggleHub }}" style="{{ hubIconStyle }}"><div style="width:9px;height:11px;background:#fff;border-radius:2px;position:relative"><div style="position:absolute;top:-2px;left:2px;width:5px;height:3px;background:#fff;border-radius:1px;border:1px solid #c8642f"></div></div></div>
+          <div style="width:24px;height:12px;border:1.5px solid #2c2925;border-radius:3px;padding:1.5px"><div style="width:15px;height:100%;background:#2c2925;border-radius:1px"></div></div>
+          <span style="font-variant-numeric:tabular-nums">Tue 9:41 AM</span>
+        </div>
+      </div>
+
+      <!-- caret + HUB -->
+      <sc-if value="{{ hubOpen }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute;right:150px;top:29px;width:18px;height:10px;overflow:hidden;z-index:45"><div style="width:15px;height:15px;background:rgba(252,250,246,.92);border:1px solid rgba(0,0,0,.07);transform:rotate(45deg);position:absolute;top:5px;left:1.5px"></div></div>
+
+        <div style="position:absolute;right:44px;top:40px;width:456px;background:rgba(252,250,246,.93);backdrop-filter:blur(36px) saturate(1.5);border:1px solid rgba(0,0,0,.07);border-radius:16px;box-shadow:0 30px 76px rgba(40,28,14,.35);overflow:hidden;z-index:46">
+          <div style="padding:15px 15px 11px">
+            <div style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.05);border-radius:10px;padding:10px 13px">
+              <div style="width:16px;height:16px;border:2px solid #b3a99b;border-radius:50%;flex:none"></div>
+              <input value="{{ query }}" onChange="{{ onQuery }}" placeholder="Search clipboard, notes, snippets…" style="flex:1;border:none;outline:none;background:transparent;font-size:14.5px;color:#2c2925" />
+            </div>
+          </div>
+          <div style="display:flex;gap:3px;padding:0 13px 13px;font-size:12.5px;font-weight:600">
+            <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="6">
+              <div onClick="{{ tb.onClick }}" style="{{ tb.style }}">{{ tb.label }}</div>
+            </sc-for>
+          </div>
+
+          <div style="max-height:600px;overflow:auto">
+            <!-- CLIPBOARD -->
+            <sc-if value="{{ isClipboard }}" hint-placeholder-val="{{ true }}">
+              <div style="padding:0 9px 4px">
+                <sc-if value="{{ hasPinned }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.5px;color:#a39a8c;padding:4px 11px 7px"><div style="width:11px;height:11px;border-radius:50%;border:2px solid #c8642f;position:relative"><div style="position:absolute;inset:1.5px;border-radius:50%;background:#c8642f"></div></div>PINNED</div>
+                  <sc-for list="{{ pinnedItems }}" as="it" hint-placeholder-count="1">
+                    <div onClick="{{ it.onCopy }}" style-hover="background:rgba(200,100,47,0.10)" style="display:flex;align-items:center;gap:13px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:background .12s">
+                      <sc-if value="{{ it.isThumb }}" hint-placeholder-val="{{ false }}"><div style="width:30px;height:30px;border-radius:8px;flex:none;border:1px solid rgba(0,0,0,.08);background:{{ it.thumbCss }}"></div></sc-if>
+                      <sc-if value="{{ it.isIcon }}" hint-placeholder-val="{{ true }}"><div style="width:30px;height:30px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ it.iconBg }}"><span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:700;color:{{ it.iconFg }}">{{ it.iconText }}</span></div></sc-if>
+                      <div style="flex:1;min-width:0"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</div><div style="font-size:12px;color:#9a948a">{{ it.sub }}</div></div>
+                      <sc-if value="{{ it.hasPreview }}" hint-placeholder-val="{{ false }}"><div style="width:58px;height:38px;border-radius:6px;flex:none;border:1px solid rgba(0,0,0,.08);position:relative;overflow:hidden;background:{{ it.previewCss }}"><sc-if value="{{ it.previewBadge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:2px;right:3px;padding:1px 4px;border-radius:3px;{{ it.previewBadgeStyle }}">{{ it.previewBadge }}</span></sc-if></div></sc-if>
+                      <sc-if value="{{ it.badge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;{{ it.badgeStyle }}">{{ it.badge }}</span></sc-if>
+                      <div onClick="{{ it.onPin }}" style="{{ it.pinStyle }}"></div>
+                    </div>
+                  </sc-for>
+                </sc-if>
+                <sc-if value="{{ hasRecent }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#a39a8c;padding:13px 11px 7px">RECENT</div>
+                  <sc-for list="{{ recentItems }}" as="it" hint-placeholder-count="5">
+                    <div onClick="{{ it.onCopy }}" style-hover="background:rgba(200,100,47,0.10)" style="display:flex;align-items:center;gap:13px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:background .12s">
+                      <sc-if value="{{ it.isThumb }}" hint-placeholder-val="{{ false }}"><div style="width:30px;height:30px;border-radius:8px;flex:none;border:1px solid rgba(0,0,0,.08);background:{{ it.thumbCss }}"></div></sc-if>
+                      <sc-if value="{{ it.isIcon }}" hint-placeholder-val="{{ true }}"><div style="width:30px;height:30px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;background:{{ it.iconBg }}"><span style="font-family:ui-monospace,monospace;font-size:13px;font-weight:700;color:{{ it.iconFg }}">{{ it.iconText }}</span></div></sc-if>
+                      <div style="flex:1;min-width:0"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.title }}</div><div style="font-size:12px;color:#9a948a">{{ it.sub }}</div></div>
+                      <sc-if value="{{ it.hasPreview }}" hint-placeholder-val="{{ false }}"><div style="width:58px;height:38px;border-radius:6px;flex:none;border:1px solid rgba(0,0,0,.08);position:relative;overflow:hidden;background:{{ it.previewCss }}"><sc-if value="{{ it.previewBadge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:2px;right:3px;padding:1px 4px;border-radius:3px;{{ it.previewBadgeStyle }}">{{ it.previewBadge }}</span></sc-if></div></sc-if>
+                      <sc-if value="{{ it.badge }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;{{ it.badgeStyle }}">{{ it.badge }}</span></sc-if>
+                      <div onClick="{{ it.onPin }}" style="{{ it.pinStyle }}"></div>
+                    </div>
+                  </sc-for>
+                </sc-if>
+                <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}"><div style="padding:30px 12px;text-align:center;color:#a39a8c;font-size:13.5px">No matches for “{{ query }}”.</div></sc-if>
+              </div>
+            </sc-if>
+
+            <!-- NOTES -->
+            <sc-if value="{{ isNotes }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:2px 9px 6px">
+                <sc-for list="{{ notesList }}" as="n" hint-placeholder-count="4">
+                  <div onClick="{{ n.onOpen }}" style-hover="background:rgba(200,100,47,0.10)" style="display:flex;align-items:center;gap:12px;padding:11px;border-radius:10px;cursor:pointer;transition:background .12s">
+                    <div style="width:11px;height:11px;border-radius:3px;flex:none;background:{{ n.color }};border:1px solid rgba(0,0,0,.12)"></div>
+                    <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500">{{ n.title }}</div><div style="font-size:12px;color:#9a948a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.snippet }}</div></div>
+                    <span style="font-size:11px;color:#c8642f;font-weight:600">Open ↗</span>
+                  </div>
+                </sc-for>
+                <div onClick="{{ newNote }}" style="display:flex;align-items:center;gap:9px;padding:11px;color:#c8642f;font-weight:600;font-size:13.5px;cursor:pointer">+ New note</div>
+              </div>
+            </sc-if>
+
+            <!-- TO-DOS (quick view) -->
+            <sc-if value="{{ isTodos }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:8px 15px 14px">
+                <div onClick="{{ generateDay }}" style="{{ genBtnStyle }}">
+                  <div style="display:flex;align-items:center;gap:10px"><div style="width:22px;height:22px;border-radius:7px;background:#c8642f;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none">✶</div><div><div style="font-size:13.5px;font-weight:600;color:#7a3f1c">{{ genLabel }}</div><div style="font-size:11px;color:#b07a4a">Claude plans your day via MCP</div></div></div>
+                  <span style="font-size:14px;color:#b07a4a">→</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px;background:rgba(0,0,0,.05);border-radius:10px;padding:9px 12px;margin:11px 0 8px">
+                  <span style="color:#a39a8c;font-size:16px">+</span>
+                  <input value="{{ taskDraft }}" onChange="{{ onTaskDraft }}" onKeyDown="{{ onTaskKey }}" placeholder="Add a task — ‘Fix login #eng !high today’" style="flex:1;border:none;outline:none;background:transparent;font-size:13.5px;color:#2c2925" />
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin:6px 2px 7px"><span style="font-family:ui-rounded,'SF Pro Rounded',sans-serif;font-weight:700;font-size:15px">Today · {{ todayOpen }} open</span><span onClick="{{ openTasks }}" style="font-size:11.5px;color:#c8642f;font-weight:600;cursor:pointer">Open all tasks ↗</span></div>
+                <sc-for list="{{ todayList }}" as="t" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:9px;animation:taskin .25s ease" style-hover="background:rgba(200,100,47,0.08)">
+                    <div style="{{ t.prioStyle }}"></div>
+                    <div onClick="{{ t.onToggle }}" style="cursor:pointer;flex:none">
+                      <sc-if value="{{ t.done }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:6px;background:#c8642f;position:relative"><div style="position:absolute;left:6px;top:3px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(40deg)"></div></div></sc-if>
+                      <sc-if value="{{ t.notDone }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:6px;border:2px solid #c9bfae"></div></sc-if>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;align-items:center;gap:7px"><span style="font-size:13.5px;{{ t.titleStyle }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</span><sc-if value="{{ t.isClaude }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:700;color:#c8642f;background:#f6ddcf;padding:1px 6px;border-radius:5px;flex:none">✶</span></sc-if></div>
+                      <div style="display:flex;align-items:center;gap:5px;margin-top:3px"><sc-for list="{{ t.chips }}" as="c" hint-placeholder-count="1"><span style="{{ c.style }}">{{ c.label }}</span></sc-for></div>
+                    </div>
+                    <sc-if value="{{ t.hasDue }}" hint-placeholder-val="{{ false }}"><span style="{{ t.dueStyle }}">{{ t.due }}</span></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <!-- SNIPPETS -->
+            <sc-if value="{{ isSnippets }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:4px 15px 14px">
+                <div style="font-size:12px;color:#9a948a;margin-bottom:8px">Type a trigger and Stash expands it inline — try it:</div>
+                <textarea value="{{ expandText }}" onChange="{{ onExpandInput }}" placeholder="Type :sig, :addr, :date or :shrug …" style="width:100%;height:80px;resize:none;border:1px solid rgba(0,0,0,.12);border-radius:11px;padding:11px 13px;font-size:14px;line-height:1.55;color:#2c2925;background:#fff;outline:none"></textarea>
+                <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#a39a8c;margin:11px 2px 5px">YOUR SNIPPETS</div>
+                <sc-for list="{{ snippets }}" as="sn" hint-placeholder-count="6">
+                  <div onClick="{{ sn.onInsert }}" style-hover="background:rgba(200,100,47,0.10)" style="display:flex;align-items:center;gap:12px;padding:9px 9px;border-radius:10px;cursor:pointer;transition:background .12s">
+                    <div style="width:30px;height:30px;border-radius:8px;background:#e3eee0;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-size:15px;color:#5e8a52;font-weight:700;font-family:ui-monospace,monospace">:</span></div>
+                    <div style="flex:1;min-width:0"><div style="font-size:14px">{{ sn.label }}</div><div style="font-size:12px;color:#9a948a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sn.preview }}</div></div>
+                    <span style="font-family:ui-monospace,monospace;font-size:11.5px;font-weight:600;color:#5e8a52;background:#e3eee0;padding:3px 8px;border-radius:6px">{{ sn.trigger }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <!-- WINDOWS -->
+            <sc-if value="{{ isWindows }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:6px 14px 14px">
+                <div style="font-size:12px;color:#9a948a;margin-bottom:11px">Snap the focused window — Safari</div>
+                <sc-for list="{{ winGroups }}" as="g" hint-placeholder-count="4">
+                  <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#a39a8c;margin:2px 2px 7px">{{ g.label }}</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px">
+                    <sc-for list="{{ g.items }}" as="w" hint-placeholder-count="4">
+                      <div onClick="{{ w.onSnap }}" style="{{ w.cardStyle }}">
+                        <div style="width:38px;height:25px;border:1.5px solid #c2b8a8;border-radius:4px;position:relative;flex:none;background:#fff"><div style="{{ w.diagStyle }}"></div></div>
+                        <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ w.display }}</div><div style="font-family:ui-monospace,monospace;font-size:10.5px;color:#a39a8c">{{ w.hot }}</div></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <!-- AI + MCP -->
+            <sc-if value="{{ isAi }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:6px 15px 14px">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#a39a8c;margin:2px 0 9px">MCP SERVER</div>
+                <div style="border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:13px;background:rgba(255,255,255,.5);margin-bottom:18px">
+                  <div style="display:flex;align-items:center;justify-content:space-between">
+                    <div style="display:flex;align-items:center;gap:10px"><div style="width:9px;height:9px;border-radius:50%;background:#3fa45b;animation:pulse 1.8s infinite"></div><div><div style="font-size:13.5px;font-weight:600;font-family:ui-monospace,monospace">stash-mcp</div><div style="font-size:11px;color:#9a948a">running · localhost:7878</div></div></div>
+                    <span style="font-size:11px;font-weight:600;color:#3fa45b;background:rgba(63,164,91,.12);padding:4px 9px;border-radius:7px">Connected</span>
+                  </div>
+                  <div style="font-size:11px;color:#9a948a;margin:11px 0 7px">Tools exposed to Claude &amp; Claude Code</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px">
+                    <sc-for list="{{ mcpTools }}" as="m" hint-placeholder-count="5"><span style="font-family:ui-monospace,monospace;font-size:11px;color:#5b6b86;background:#e9eef5;padding:3px 8px;border-radius:6px">{{ m }}</span></sc-for>
+                  </div>
+                  <div onClick="{{ generateDayAi }}" style="{{ genBtnStyle }};margin-top:13px">
+                    <div style="display:flex;align-items:center;gap:10px"><div style="width:22px;height:22px;border-radius:7px;background:#c8642f;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex:none">✶</div><div><div style="font-size:13.5px;font-weight:600;color:#7a3f1c">{{ genLabel }}</div><div style="font-size:11px;color:#b07a4a">{{ mcpLastRun }}</div></div></div>
+                    <span style="font-size:14px;color:#b07a4a">→</span>
+                  </div>
+                </div>
+
+                <div style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#a39a8c;margin:2px 0 10px">USAGE THIS CYCLE</div>
+                <sc-for list="{{ providers }}" as="p" hint-placeholder-count="3">
+                  <div style="margin-bottom:14px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+                      <div style="display:flex;align-items:center;gap:9px"><div style="width:9px;height:9px;border-radius:3px;background:{{ p.color }}"></div><span style="font-size:14px;font-weight:500">{{ p.name }}</span><span style="font-size:12px;color:#9a948a">{{ p.plan }}</span></div>
+                      <span style="font-size:13px;font-weight:600;color:{{ p.color }}">{{ p.pctLabel }}</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(0,0,0,.07);overflow:hidden"><div style="height:100%;border-radius:3px;width:{{ p.pct }}%;background:{{ p.color }}"></div></div>
+                    <div style="font-size:11px;color:#a39a8c;margin-top:5px">{{ p.reset }}</div>
+                  </div>
+                </sc-for>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 9px"><span style="font-size:11px;font-weight:700;letter-spacing:.5px;color:#a39a8c">ACTIVE SESSIONS</span><span style="font-size:11px;color:#9a948a">{{ sessionSummary }}</span></div>
+                <sc-for list="{{ sessions }}" as="se" hint-placeholder-count="3">
+                  <div onClick="{{ se.onFocus }}" style-hover="background:rgba(200,100,47,0.10)" style="display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background .12s">
+                    <div style="width:30px;height:30px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;background:{{ se.iconBg }}"><span style="font-size:11px;font-weight:700;color:#fff">{{ se.iconText }}</span></div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:600">{{ se.repo }}</span> <span style="font-family:ui-monospace,monospace;font-size:12px;color:#9a948a">{{ se.branch }}</span></div>
+                      <div style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#9a948a;margin-top:2px"><div style="{{ se.dotStyle }}"></div>{{ se.line }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 17px;border-top:1px solid rgba(0,0,0,.06);font-size:12.5px;color:#8a8378">
+            <span>{{ footerLeft }}</span>
+            <div style="display:flex;align-items:center;gap:13px"><span>Preferences</span><div style="width:16px;height:16px;border-radius:50%;border:1.5px solid #8a8378;position:relative"><div style="position:absolute;inset:4px;border-radius:50%;border:1.5px solid #8a8378"></div></div></div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- toast -->
+      <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:50%;bottom:92px;transform:translateX(-50%);background:rgba(44,41,37,.92);color:#fff;font-size:13px;padding:9px 16px;border-radius:10px;box-shadow:0 10px 26px rgba(0,0,0,.3);z-index:60">{{ toast }}</div>
+      </sc-if>
+
+      <!-- toggle pill -->
+      <div onClick="{{ toggleStickies }}" style="position:absolute;left:50%;bottom:36px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(44,41,37,.84);backdrop-filter:blur(14px);padding:10px 18px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.32);cursor:pointer;z-index:52">
+        <span style="font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.18);padding:4px 9px;border-radius:7px">⌥ Space</span>
+        <span style="font-size:14px;color:#f3eee6">{{ stickyToggleLabel }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    hubOpen: true,
+    tab: 'clipboard',
+    query: '',
+    stickiesVisible: true,
+    notesOpen: false,
+    tasksOpen: false,
+    activeNoteId: 'today',
+    toast: '',
+    demo: 'Left Half',
+    expandText: 'Hey Mara — sending the address now: ',
+    taskDraft: '',
+    generating: false,
+    expandedTask: null,
+    filterType: 'today',
+    filterValue: null,
+    notes: [
+      { id:'today', title:'Today ✶', color:'#fdf0c2', accent:'#c8642f', kind:'todo', onDesktop:true,
+        items:[{t:'Reply to Dana',done:true},{t:'Ship Stash v2.3 build',done:false},{t:'Review onboarding copy',done:false}] },
+      { id:'standup', title:'Standup', color:'#fcdcc6', accent:'#b97a4a', kind:'text', onDesktop:true,
+        body:'Demo new clipboard search → ask about sync timeline. Mara owns the migration script this week.' },
+      { id:'reading', title:'Reading list', color:'#d4e4f2', accent:'#5b86b8', kind:'text', onDesktop:true,
+        body:'Designing Data-Intensive Apps\nThe Humane Interface\nShape Up' },
+      { id:'project', title:'Project Stash', color:'#d9ecda', accent:'#5e8a52', kind:'text', onDesktop:false,
+        body:'Ship menu-bar hub + desktop stickies first. Snippets engine next. Sync via iCloud, encrypted at rest.' }
+    ],
+    tasks: [
+      { id:'t0', title:'Triage inbox', done:false, tags:['admin'], priority:'med', due:'Today', project:'Work', repeat:'Daily', source:'you' },
+      { id:'t1', title:'Reply to Dana about Q3 roadmap', done:true, tags:['admin'], priority:'med', due:'Today', project:'Work', source:'you' },
+      { id:'t2', title:'Ship Stash v2.3 build', done:false, tags:['eng'], priority:'high', due:'Today', project:'Work', source:'you', subs:[{t:'Tag release v2.3',done:true},{t:'Update changelog',done:false},{t:'Notify beta users',done:false}] },
+      { id:'t3', title:'Review onboarding copy', done:false, tags:['design'], priority:'med', due:'Today', project:'Work', source:'you' },
+      { id:'t4', title:'Pull clipboard analytics', done:false, tags:['eng','data'], priority:'low', due:'Tomorrow', project:'Work', source:'you' },
+      { id:'t5', title:'Book dentist', done:false, tags:['personal'], priority:'low', due:'Tomorrow', project:'Personal', source:'you' },
+      { id:'t6', title:'Draft launch tweet', done:false, tags:['marketing'], priority:'med', due:'Upcoming', project:'Stash', source:'you' }
+    ],
+    snippets: [
+      { trigger:':sig', label:'Email signature', expand:'Best,\nDana — Head of Design' },
+      { trigger:':addr', label:'Office address', expand:'2261 Market St, San Francisco, CA 94114' },
+      { trigger:':ty', label:'Thanks reply', expand:'Thanks so much — really appreciate it!' },
+      { trigger:':cal', label:'Booking link', expand:'cal.com/dana/30min' },
+      { trigger:':date', label:'Today’s date', dynamic:'date' },
+      { trigger:':shrug', label:'Shrug', expand:'¯\\_(ツ)_/¯' }
+    ],
+    clip: [
+      { id:'color', kind:'color', pinned:true, title:'#C8642F', sub:'Brand / terracotta', short:'#C8642F' },
+      { id:'link', kind:'link', pinned:false, title:'STH‑241 · Toggle stickies', sub:'linear.app · 2m ago', short:'link' },
+      { id:'img', kind:'img', pinned:false, title:'Screenshot 2026‑06‑18 at 9.41.png', sub:'1280×824 · PNG · 5m ago', short:'screenshot' },
+      { id:'gif', kind:'gif', pinned:false, title:'reaction.gif', sub:'480×270 · 11m ago', short:'reaction.gif' },
+      { id:'code', kind:'code', pinned:false, title:'const toggle = () => set(v => !v)', sub:'14m ago · VS Code', short:'code' },
+      { id:'text', kind:'text', pinned:false, title:'Migration plan — paste into doc', sub:'38m ago · Notes', short:'text' }
+    ],
+    providers: [
+      { name:'Claude', plan:'Max 20×', pct:68, color:'#c8642f', reset:'Resets Jun 24 · 5-hour window' },
+      { name:'Codex', plan:'Pro', pct:41, color:'#5b86b8', reset:'Resets in 9 days' },
+      { name:'Stash AI', plan:'1,240 / 2,000 credits', pct:62, color:'#5e8a52', reset:'Monthly allowance' }
+    ],
+    sessions: [
+      { agent:'Claude Code', repo:'stash-app', branch:'feat/clipboard-sync', status:'running', tokens:14200, elapsed:182, dot:'#3fa45b', pulse:true },
+      { agent:'Claude Code', repo:'marketing-site', branch:'main', status:'waiting', tokens:5100, elapsed:48, dot:'#d8a13a', pulse:false },
+      { agent:'Codex', repo:'infra', branch:'fix/ci', status:'idle', tokens:38900, elapsed:300, dot:'#a39a8c', pulse:false }
+    ]
+  };
+
+  TAGC = { eng:['#e7eef7','#4a72a8'], design:['#ece6f5','#7a5fb0'], urgent:['#f6dcd0','#b5532a'], personal:['#e3eee0','#4f7a45'], data:['#eef0e6','#7a7d4a'], marketing:['#f6ead8','#a8742f'], admin:['#eceae6','#7a746a'] };
+  PRIC = { high:'#c8642f', med:'#d8a13a', low:'#b3a99b' };
+  PRIN = { high:3, med:2, low:1 };
+
+  componentDidMount(){
+    try{ const rn=localStorage.getItem('stash.notes.v2'); if(rn){ const n=JSON.parse(rn); if(Array.isArray(n)&&n.length){ const ids=n.map(x=>x.id); this.setState({notes:n, activeNoteId: ids.indexOf(this.state.activeNoteId)!==-1?this.state.activeNoteId:ids[0]}); } } }catch(e){}
+    try{ const rt=localStorage.getItem('stash.tasks.v3'); if(rt){ const t=JSON.parse(rt); if(Array.isArray(t)) this.setState({tasks:t}); } }catch(e){}
+    this._timers=[];
+    this._tick=setInterval(()=>{ this.setState(s=>({ sessions:s.sessions.map(se=> se.status==='running'?{...se,tokens:se.tokens+Math.round(60+Math.random()*240),elapsed:se.elapsed+2}: se.status==='waiting'?{...se,elapsed:se.elapsed+2}:se) })); }, 1600);
+    this._key = (e)=>{
+      const tag=(e.target&&e.target.tagName)||'';
+      if(e.code==='Space' && e.altKey){ e.preventDefault(); this.setState(s=>({stickiesVisible:!s.stickiesVisible})); }
+      if(e.key==='Escape' && tag!=='INPUT' && tag!=='TEXTAREA'){ this.setState({notesOpen:false, tasksOpen:false}); }
+    };
+    window.addEventListener('keydown', this._key);
+  }
+  componentWillUnmount(){ window.removeEventListener('keydown', this._key); clearTimeout(this._t); clearInterval(this._tick); (this._timers||[]).forEach(clearTimeout); }
+
+  flash(m){ clearTimeout(this._t); this.setState({toast:m}); this._t=setTimeout(()=>this.setState({toast:''}),1700); }
+
+  persist(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  setNotes(notes){ this.setState({notes}); this.persist('stash.notes.v2', notes); }
+  setTasks(tasks){ this.setState({tasks}); this.persist('stash.tasks.v3', tasks); }
+
+  copyClip(it){ this.flash('Copied to clipboard'); }
+  togglePin(id){ this.setState(s=>({clip:s.clip.map(c=>c.id===id?{...c,pinned:!c.pinned}:c)})); }
+
+  toggleTodo(id,i){ this.setNotes(this.state.notes.map(n=>n.id===id?{...n,items:n.items.map((x,j)=>j===i?{...x,done:!x.done}:x)}:n)); }
+  toggleDesktop(id){ const n=this.state.notes.find(x=>x.id===id); this.flash(n&&n.onDesktop?'Removed from desktop':'Pinned to desktop'); this.setNotes(this.state.notes.map(x=>x.id===id?{...x,onDesktop:!x.onDesktop}:x)); }
+  editTitle(id,v){ this.setNotes(this.state.notes.map(n=>n.id===id?{...n,title:v}:n)); }
+  editBody(id,v){ this.setNotes(this.state.notes.map(n=>n.id===id?{...n,body:v}:n)); }
+  editItem(id,i,v){ this.setNotes(this.state.notes.map(n=>n.id===id?{...n,items:n.items.map((x,j)=>j===i?{...x,t:v}:x)}:n)); }
+  addNoteTask(id){ this.setNotes(this.state.notes.map(n=>n.id===id?{...n,items:[...n.items,{t:'',done:false}]}:n)); }
+  openNote(id){ this.setState({notesOpen:true, activeNoteId:id}); }
+  addNote(){
+    const palette=[['#d4e4f2','#5b86b8'],['#e9dcf2','#8a6bb0'],['#fcdcc6','#b97a4a'],['#d9ecda','#5e8a52']];
+    const c=palette[this.state.notes.length % palette.length]; const id='n'+Date.now();
+    this.setState({activeNoteId:id, notesOpen:true});
+    this.setNotes([...this.state.notes,{id,title:'Untitled note',color:c[0],accent:c[1],kind:'text',onDesktop:false,body:''}]);
+  }
+  snap(name){ this.setState({demo:name}); this.flash('Snapped: '+name); }
+
+  // tasks
+  toggleTask(id){
+    const t=this.state.tasks.find(x=>x.id===id);
+    if(t && t.repeat && !t.done){
+      this.setTasks(this.state.tasks.map(x=>x.id===id?{...x,done:true}:x));
+      this.flash('Repeats '+t.repeat.toLowerCase()+' — resets for next time');
+      const tm=setTimeout(()=>{ this.setTasks(this.state.tasks.map(x=>x.id===id?{...x,done:false}:x)); }, 1100);
+      this._timers.push(tm); return;
+    }
+    this.setTasks(this.state.tasks.map(x=>x.id===id?{...x,done:!x.done}:x));
+  }
+  toggleExpand(id){ this.setState(s=>({expandedTask:s.expandedTask===id?null:id})); }
+  toggleSub(id,i){ this.setTasks(this.state.tasks.map(t=>t.id===id?{...t,subs:t.subs.map((su,j)=>j===i?{...su,done:!su.done}:su)}:t)); }
+  addSub(id){ this.setTasks(this.state.tasks.map(t=>t.id===id?{...t,subs:[...(t.subs||[]),{t:'New subtask',done:false}]}:t)); this.setState({expandedTask:id}); }
+  setFilter(type,value){ this.setState({filterType:type, filterValue:value}); }
+  openTasks(){ this.setState({tasksOpen:true}); }
+  closeTasks(){ this.setState({tasksOpen:false}); }
+  onTaskDraft(e){ this.setState({taskDraft:e.target.value}); }
+  onTaskKey(e){ if(e.key==='Enter'){ e.preventDefault(); this.addTaskFromDraft(); } }
+  parseTask(raw){
+    let text=(raw||'').trim(); if(!text) return null;
+    const tags=[]; let priority=null; let due='Upcoming';
+    text=text.replace(/#(\w+)/g,(m,g)=>{ tags.push(g.toLowerCase()); return ''; });
+    text=text.replace(/!(high|med|medium|low|h|m|l|1|2|3)\b/ig,(m,g)=>{ g=g.toLowerCase(); priority=(g==='high'||g==='h'||g==='1')?'high':(g==='low'||g==='l'||g==='3')?'low':'med'; return ''; });
+    text=text.replace(/\b(today|tomorrow)\b/i,(m,g)=>{ due=/tom/i.test(g)?'Tomorrow':'Today'; return ''; });
+    let repeat=null;
+    text=text.replace(/\b(daily|every\s*day|weekdays|weekly|every\s*week)\b/i,(m,g)=>{ g=g.toLowerCase(); repeat=/weekday/.test(g)?'Weekdays':/week/.test(g)?'Weekly':'Daily'; return ''; });
+    const title=text.replace(/\s+/g,' ').trim(); if(!title) return null;
+    const project = this.state.filterType==='project' ? this.state.filterValue : 'Work';
+    return { id:'u'+Date.now(), title, tags, priority, due, repeat, project, done:false, source:'you' };
+  }
+  addTaskFromDraft(){
+    const t=this.parseTask(this.state.taskDraft);
+    if(!t){ this.setState({taskDraft:''}); return; }
+    this.setTasks([t, ...this.state.tasks]);
+    this.setState({taskDraft:''});
+    this.flash('Added “'+t.title+'”');
+  }
+  generateDay(){
+    if(this.state.generating) return;
+    const plan=[
+      { title:'Prep Stash launch checklist', tags:['marketing'], priority:'high', due:'Today', project:'Stash' },
+      { title:'Sync with Mara on migration script', tags:['eng'], priority:'high', due:'Today', project:'Work' },
+      { title:'Review 3 onboarding screens', tags:['design'], priority:'med', due:'Today', project:'Work' },
+      { title:'Reply to investor update thread', tags:['admin'], priority:'med', due:'Today', project:'Work' },
+      { title:'30-min walk + lunch', tags:['personal'], priority:'low', due:'Today', project:'Personal' }
+    ];
+    this.setTasks(this.state.tasks.filter(t=>t.source!=='claude'));
+    this.setState({generating:true, filterType:'today', filterValue:null});
+    this.flash('Claude is planning your day…');
+    plan.forEach((p,i)=>{
+      const tm=setTimeout(()=>{
+        this.setTasks([...this.state.tasks, {...p, id:'c'+Date.now()+i, done:false, source:'claude'}]);
+        if(i===plan.length-1){ this.setState({generating:false}); this.flash('Claude added '+plan.length+' tasks via MCP'); }
+      }, 480*(i+1));
+      this._timers.push(tm);
+    });
+  }
+
+  resolveSnip(sn){
+    if(sn.dynamic==='date') return new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+    if(sn.dynamic==='time') return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    return sn.expand;
+  }
+  expand(raw){ for(const sn of this.state.snippets){ if(raw.endsWith(sn.trigger)) return {text:raw.slice(0,-sn.trigger.length)+this.resolveSnip(sn), hit:sn}; } return {text:raw, hit:null}; }
+  onExpand(e){ const r=this.expand(e.target.value); this.setState({expandText:r.text}); if(r.hit) this.flash('Expanded '+r.hit.trigger); }
+  insertSnip(sn){ this.setState(s=>({ expandText:(s.expandText && !s.expandText.endsWith(' ')?s.expandText+' ':s.expandText)+this.resolveSnip(sn) })); this.flash('Inserted '+sn.trigger); }
+
+  decorateTask(t){
+    const chips=(t.tags||[]).map(tag=>{ const c=this.TAGC[tag]||['#eceae6','#7a746a']; return { label:'#'+tag, style:'font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:6px;color:'+c[1]+';background:'+c[0] }; });
+    if(t.repeat) chips.push({ label:'↻ '+t.repeat, style:'font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:6px;color:#5b6b86;background:#e9eef5' });
+    const pc=this.PRIC[t.priority]||'transparent';
+    const dueC = t.due==='Today' ? ['#f6ddcf','#b5532a'] : (t.due==='Tomorrow' ? ['#eceae6','#6b655c'] : ['#eceae6','#9a948a']);
+    const subs=(t.subs||[]).map((su,i)=>({ t:su.t, done:su.done, notDone:!su.done, textStyle:su.done?'text-decoration:line-through;color:#a8a298':'', onToggle:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleSub(t.id,i); } }));
+    const subDone=subs.filter(x=>x.done).length;
+    return {
+      id:t.id, title:t.title, done:t.done, notDone:!t.done, project:t.project,
+      isClaude: t.source==='claude',
+      titleStyle: t.done ? 'text-decoration:line-through;color:#a8a298' : 'color:#2c2925',
+      prioStyle: 'width:7px;height:7px;border-radius:50%;flex:none;background:'+pc,
+      chips,
+      hasDue: t.due!=='Upcoming',
+      due: t.due,
+      dueStyle: 'font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:6px;flex:none;color:'+dueC[1]+';background:'+dueC[0],
+      rowStyle: 'display:flex;align-items:center;gap:11px;padding:9px 8px;border-radius:9px;transition:background .12s;animation:taskin .25s ease',
+      onToggle: ()=>this.toggleTask(t.id),
+      hasSubs: subs.length>0, subProgress: subDone+'/'+subs.length, subs, expanded: this.state.expandedTask===t.id,
+      onToggleExpand:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleExpand(t.id); },
+      onAddSub:()=>this.addSub(t.id)
+    };
+  }
+
+  renderVals(){
+    const s = this.state;
+    const tItem = (noteId,it,i)=>({ t:it.t, done:it.done, notDone:!it.done, textStyle: it.done?'text-decoration:line-through;color:#a39a8c':'', onToggle:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleTodo(noteId,i); } });
+
+    const decorate = (it)=>{
+      const d = { id:it.id, title:it.title, sub:it.sub, pinned:it.pinned, onCopy:()=>this.copyClip(it), onPin:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.togglePin(it.id); }, isThumb:false, thumbCss:'', isIcon:true, iconBg:'#eee', iconFg:'#888', iconText:'', hasPreview:false, previewCss:'', previewBadge:'', previewBadgeStyle:'', badge:'', badgeStyle:'', pinStyle: it.pinned?'width:14px;height:14px;border-radius:50%;background:#c8642f;cursor:pointer;flex:none':'width:14px;height:14px;border-radius:50%;border:2px solid #cabfae;cursor:pointer;flex:none' };
+      if(it.kind==='color'){ d.iconBg=it.title; d.badge='Color'; d.badgeStyle='color:#b07a3a;background:#f6ead8'; }
+      else if(it.kind==='link'){ d.iconBg='#2c2640'; d.iconFg='#b9b2e0'; d.iconText='↗'; d.hasPreview=true; d.previewCss='linear-gradient(#2c2640 0 13px,#fff 13px)'; }
+      else if(it.kind==='img'){ d.isThumb=true; d.isIcon=false; d.thumbCss='repeating-linear-gradient(45deg,#d9d2c4 0 5px,#cec6b6 5px 10px)'; d.hasPreview=true; d.previewCss='repeating-linear-gradient(45deg,#d9d2c4 0 7px,#cec6b6 7px 14px)'; d.previewBadge='PNG'; d.previewBadgeStyle='font-family:ui-monospace,monospace;font-size:8px;color:#7a7164;background:rgba(255,255,255,.75)'; }
+      else if(it.kind==='gif'){ d.isThumb=true; d.isIcon=false; d.thumbCss='repeating-linear-gradient(-45deg,#d6dcc6 0 5px,#c9d0b8 5px 10px)'; d.hasPreview=true; d.previewCss='repeating-linear-gradient(-45deg,#d6dcc6 0 7px,#c9d0b8 7px 14px)'; d.previewBadge='GIF'; d.previewBadgeStyle='font-size:8px;font-weight:700;color:#fff;background:#c8642f'; }
+      else if(it.kind==='code'){ d.iconBg='#ece6f5'; d.iconFg='#7a5fb0'; d.iconText='{}'; d.badge='Code'; d.badgeStyle='color:#7a5fb0;background:#ece6f5'; }
+      else { d.iconBg='#f6ead8'; d.iconFg='#b07a3a'; d.iconText='≡'; d.badge='Text'; d.badgeStyle='color:#b07a3a;background:#f6ead8'; }
+      return d;
+    };
+    const q=(s.query||'').toLowerCase();
+    const match=(it)=> !q || (it.title+' '+it.sub).toLowerCase().indexOf(q)!==-1;
+    const visible=s.clip.filter(match);
+    const pinnedItems=visible.filter(c=>c.pinned).map(decorate);
+    const recentItems=visible.filter(c=>!c.pinned).map(decorate);
+
+    const posMap={ today:{l:96,t:104,r:-2.5}, standup:{l:372,t:236,r:2.2}, reading:{l:140,t:430,r:-1.4}, project:{l:360,t:140,r:1.5} };
+    const desktopNotes=s.notes.filter(n=>n.onDesktop).map((n,k)=>{ const p=posMap[n.id]||{l:540+k*30,t:430,r:0}; return { id:n.id, title:n.title, color:n.color, accent:n.accent, left:p.l, top:p.t, rot:p.r, isTodo:n.kind==='todo', isText:n.kind!=='todo', body:n.body||'', onOpen:()=>this.openNote(n.id), items:(n.items||[]).map((it,i)=>tItem(n.id,it,i)) }; });
+    const notesList=s.notes.map(n=>({ id:n.id, title:n.title, color:n.color, onOpen:()=>this.openNote(n.id), sideStyle:'display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;'+(n.id===s.activeNoteId?'background:rgba(200,100,47,.13)':''), snippet:n.kind==='todo'?(n.items.filter(x=>!x.done).length+' open · '+n.items.length+' tasks'):((n.body||'').replace(/\n/g,'  ').slice(0,40)||'Empty note') }));
+    const an=s.notes.find(n=>n.id===s.activeNoteId)||s.notes[0];
+    const activeNote={ title:an.title, isTodo:an.kind==='todo', isText:an.kind!=='todo', body:an.body||'', onTitle:(e)=>this.editTitle(an.id,e.target.value), onBody:(e)=>this.editBody(an.id,e.target.value), onAddTask:()=>this.addNoteTask(an.id), onPinDesktop:()=>this.toggleDesktop(an.id), items:(an.items||[]).map((it,i)=>({ t:it.t, done:it.done, notDone:!it.done, textStyle:it.done?'text-decoration:line-through;color:#a39a8c':'', onToggle:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); this.toggleTodo(an.id,i); }, onText:(e)=>this.editItem(an.id,i,e.target.value) })) };
+    const pinDesktopLabel=an.onDesktop?'On desktop ✓':'Pin to desktop';
+    const pinDesktopStyle='font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;'+(an.onDesktop?'color:#fff;background:#c8642f':'color:#c8642f;background:rgba(200,100,47,.12)');
+
+    // ===== TASKS =====
+    const tasks=s.tasks;
+    const isOpen=(t)=>!t.done;
+    const todayOpen=tasks.filter(t=>t.due==='Today'&&isOpen(t)).length;
+    const upcomingOpen=tasks.filter(t=>(t.due==='Tomorrow'||t.due==='Upcoming')&&isOpen(t)).length;
+    const allOpen=tasks.filter(isOpen).length;
+    const doneCount=tasks.filter(t=>t.done).length;
+    const sortFn=(a,b)=> (a.done-b.done) || ((this.PRIN[b.priority]||0)-(this.PRIN[a.priority]||0));
+    const todayList=tasks.filter(t=>t.due==='Today').slice().sort(sortFn).map(t=>this.decorateTask(t));
+
+    const projects=[...new Set(tasks.map(t=>t.project))];
+    const tagSet=[...new Set([].concat(...tasks.map(t=>t.tags||[])))];
+
+    const slStyle=(active)=>'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;'+(active?'background:rgba(200,100,47,.13);font-weight:600':'');
+    const smartLists=[['today','Today',todayOpen],['upcoming','Upcoming',upcomingOpen],['all','All',allOpen],['done','Completed',doneCount]].map(([key,label,count])=>({ label, count, onClick:()=>this.setFilter(key,null), style:slStyle(s.filterType===key) }));
+    const projectList=projects.map(p=>({ label:p, count:tasks.filter(t=>t.project===p&&isOpen(t)).length, onClick:()=>this.setFilter('project',p), style:slStyle(s.filterType==='project'&&s.filterValue===p) }));
+    const tagList=tagSet.map(tg=>{ const active=s.filterType==='tag'&&s.filterValue===tg; const c=this.TAGC[tg]||['#eceae6','#7a746a']; return { label:'#'+tg, onClick:()=>this.setFilter('tag',tg), style:'font-size:11px;font-weight:600;padding:3px 8px;border-radius:7px;cursor:pointer;color:'+c[1]+';background:'+c[0]+(active?';box-shadow:0 0 0 2px '+c[1]:'') }; });
+
+    let filtered;
+    if(s.filterType==='today') filtered=tasks.filter(t=>t.due==='Today');
+    else if(s.filterType==='upcoming') filtered=tasks.filter(t=>t.due==='Tomorrow'||t.due==='Upcoming');
+    else if(s.filterType==='done') filtered=tasks.filter(t=>t.done);
+    else if(s.filterType==='project') filtered=tasks.filter(t=>t.project===s.filterValue);
+    else if(s.filterType==='tag') filtered=tasks.filter(t=>(t.tags||[]).indexOf(s.filterValue)!==-1);
+    else filtered=tasks.slice();
+    filtered=filtered.slice().sort(sortFn);
+    const filteredTasks=filtered.map(t=>this.decorateTask(t));
+    const filterTitle = s.filterType==='today'?'Today' : s.filterType==='upcoming'?'Upcoming' : s.filterType==='all'?'All tasks' : s.filterType==='done'?'Completed' : s.filterType==='project'?s.filterValue : '#'+s.filterValue;
+    const filterCount = filtered.filter(isOpen).length;
+    const filterEmpty = filtered.length===0;
+
+    const genLabel = s.generating ? 'Planning your day…' : 'Generate my day';
+    const genBtnStyle='display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-radius:11px;cursor:pointer;background:linear-gradient(#fbe9dd,#f6dccb);border:1px solid #eccbb4'+(s.generating?';opacity:.7;pointer-events:none':'');
+    const genMiniStyle='font-size:11.5px;font-weight:600;color:#fff;background:#c8642f;padding:6px 11px;border-radius:8px;cursor:pointer'+(s.generating?';opacity:.7;pointer-events:none':'');
+
+    // windows
+    const AX=40,AY=50,AW=1360,AH=820,G=14; const hw=(AW-G)/2,hh=(AH-G)/2,tw=(AW-2*G)/3;
+    const R={ 'Left Half':[AX,AY,hw,AH],'Right Half':[AX+hw+G,AY,hw,AH],'Top Half':[AX,AY,AW,hh],'Bottom Half':[AX,AY+hh+G,AW,hh],'Top Left':[AX,AY,hw,hh],'Top Right':[AX+hw+G,AY,hw,hh],'Bottom Left':[AX,AY+hh+G,hw,hh],'Bottom Right':[AX+hw+G,AY+hh+G,hw,hh],'Left Third':[AX,AY,tw,AH],'Center Third':[AX+tw+G,AY,tw,AH],'Right Third':[AX+2*(tw+G),AY,tw,AH],'Maximize':[AX,AY,AW,AH],'Center':[310,180,820,560],'Reasonable Size':[260,130,920,660] };
+    const HOT={ 'Left Half':'⌃⌥←','Right Half':'⌃⌥→','Top Half':'⌃⌥↑','Bottom Half':'⌃⌥↓','Top Left':'⌃⌥U','Top Right':'⌃⌥I','Bottom Left':'⌃⌥J','Bottom Right':'⌃⌥K','Left Third':'⌃⌥D','Center Third':'⌃⌥F','Right Third':'⌃⌥G','Maximize':'⌃⌥↵','Center':'⌃⌥C','Reasonable Size':'⌃⌥R' };
+    const FW=34,FH=21;
+    const mkDiag=(rc)=>{ const fx=(rc[0]-AX)/AW,fy=(rc[1]-AY)/AH,fw=rc[2]/AW,fh=rc[3]/AH; return 'position:absolute;left:'+(2+fx*FW).toFixed(1)+'px;top:'+(2+fy*FH).toFixed(1)+'px;width:'+(fw*FW).toFixed(1)+'px;height:'+(fh*FH).toFixed(1)+'px;border-radius:1.5px;background:#c8642f'; };
+    const mkItem=(name)=>({ name, display:name, hot:HOT[name]||'', onSnap:()=>this.snap(name), diagStyle:mkDiag(R[name]), cardStyle:'display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:all .12s;border:1px solid '+(name===s.demo?'#c8642f':'rgba(0,0,0,.08)')+';background:'+(name===s.demo?'rgba(200,100,47,.09)':'rgba(255,255,255,.4)') });
+    const winGroups=[{label:'HALVES',items:['Left Half','Right Half','Top Half','Bottom Half'].map(mkItem)},{label:'QUARTERS',items:['Top Left','Top Right','Bottom Left','Bottom Right'].map(mkItem)},{label:'THIRDS',items:['Left Third','Center Third','Right Third'].map(mkItem)},{label:'FULL SCREEN',items:['Maximize','Center','Reasonable Size'].map(mkItem)}];
+    const r=R[s.demo]||R['Left Half'];
+    const demoStyle='position:absolute;left:'+r[0]+'px;top:'+r[1]+'px;width:'+r[2]+'px;height:'+r[3]+'px;background:rgba(252,250,246,.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.45);border-radius:13px;box-shadow:0 18px 44px rgba(40,28,14,.16);transition:all .34s cubic-bezier(.4,0,.2,1);z-index:5';
+
+    // AI
+    const STATUS={ running:'Running', waiting:'Waiting for input', idle:'Idle' };
+    const providers=s.providers.map(p=>({ name:p.name, plan:p.plan, pct:p.pct, color:p.color, reset:p.reset, pctLabel:p.pct+'% left' }));
+    const fmtTok=(n)=> n>=1000?(n/1000).toFixed(1)+'k':(''+n);
+    const fmtT=(x)=> x<60?(Math.round(x)+'s'):(Math.floor(x/60)+'m');
+    const sessions=s.sessions.map(se=>{ let line; if(se.status==='running') line='Running · '+fmtTok(se.tokens)+' tok · '+fmtT(se.elapsed); else if(se.status==='waiting') line='Waiting for input · '+fmtT(se.elapsed); else line='Idle · done 5m ago'; return { repo:se.repo, branch:se.branch, iconBg:se.agent==='Codex'?'#3a6ea5':'#c8642f', iconText:se.agent==='Codex'?'CX':'CC', line, dotStyle:'width:8px;height:8px;border-radius:50%;flex:none;background:'+se.dot+(se.pulse?';animation:pulse 1.8s infinite':''), onFocus:()=>this.flash('Focused '+se.agent+' · '+se.repo) }; });
+    const running=s.sessions.filter(x=>x.status==='running').length;
+    const waiting=s.sessions.filter(x=>x.status==='waiting').length;
+    const sessionSummary=running+' running · '+waiting+' waiting';
+    const mcpTools=['create_task','list_tasks','complete_task','add_note','search_clipboard','snap_window'];
+    const snippets=s.snippets.map(sn=>({ trigger:sn.trigger, label:sn.label, preview:(this.resolveSnip(sn)||'').split('\n').join(' '), onInsert:()=>this.insertSnip(sn) }));
+
+    const tabDefs=[['Clipboard','clipboard'],['Notes','notes'],['To‑dos','todos'],['Snippets','snippets'],['Windows','windows'],['AI','ai']];
+    const tabs=tabDefs.map(([label,key])=>({ label, onClick:()=>this.setState({tab:key}), style:(key===s.tab?'padding:6px 9px;border-radius:9px;background:#c8642f;color:#fff;cursor:pointer;white-space:nowrap':'padding:6px 9px;border-radius:9px;color:#7a746a;cursor:pointer;white-space:nowrap') }));
+
+    return {
+      hubOpen:s.hubOpen, notesOpen:s.notesOpen, tasksOpen:s.tasksOpen, toast:s.toast, query:s.query, expandText:s.expandText, taskDraft:s.taskDraft,
+      toggleHub:()=>this.setState(x=>({hubOpen:!x.hubOpen})),
+      openAi:()=>this.setState({hubOpen:true, tab:'ai'}),
+      toggleStickies:()=>this.setState(x=>({stickiesVisible:!x.stickiesVisible})),
+      closeNotes:()=>this.setState({notesOpen:false}),
+      closeTasks:()=>this.setState({tasksOpen:false}),
+      openTasks:()=>this.setState({tasksOpen:true}),
+      onQuery:(e)=>this.setState({query:e.target.value}),
+      onExpandInput:(e)=>this.onExpand(e),
+      onTaskDraft:(e)=>this.onTaskDraft(e),
+      onTaskKey:(e)=>this.onTaskKey(e),
+      newNote:()=>this.addNote(),
+      generateDay:()=>this.generateDay(),
+      generateDayAi:()=>{ this.setState({tab:'todos'}); this.generateDay(); },
+      hubIconStyle:'width:22px;height:22px;border-radius:6px;background:#c8642f;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:box-shadow .15s;'+(s.hubOpen?'box-shadow:0 0 0 2px rgba(255,255,255,.7)':''),
+      isClipboard:s.tab==='clipboard', isNotes:s.tab==='notes', isTodos:s.tab==='todos', isSnippets:s.tab==='snippets', isWindows:s.tab==='windows', isAi:s.tab==='ai',
+      tabs,
+      pinnedItems, recentItems, hasPinned:pinnedItems.length>0, hasRecent:recentItems.length>0, noResults:visible.length===0,
+      notesList, activeNote, pinDesktopLabel, pinDesktopStyle,
+      desktopNotes,
+      todayList, todayOpen,
+      smartLists, projectList, tagList, filteredTasks, filterTitle, filterCount, filterEmpty,
+      genLabel, genBtnStyle, genMiniStyle, mcpTools, mcpLastRun:(s.generating?'Running now…':'Claude Code · last run 2m ago'),
+      snippets, winGroups,
+      providers, sessions, sessionSummary,
+      stickyOpacity:s.stickiesVisible?'1':'0', stickyTransform:s.stickiesVisible?'translateY(0) scale(1)':'translateY(-10px) scale(.97)', stickyPe:s.stickiesVisible?'auto':'none', stickyToggleLabel:s.stickiesVisible?'Hide stickies':'Show stickies',
+      demoStyle, demoLabel:s.demo,
+      footerLeft: s.tab==='clipboard'?(s.clip.length+' items · Clear all'):(s.tab==='notes'?(s.notes.length+' notes · saved'):(s.tab==='todos'?(allOpen+' open · '+doneCount+' done'):(s.tab==='snippets'?(s.snippets.length+' snippets active'):(s.tab==='ai'?'MCP connected · '+running+' sessions':'Stash'))))
+    };
+  }
+}
+</script>
+</body>
+</html>
