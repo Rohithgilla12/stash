@@ -57,9 +57,11 @@ final class TasksViewModel {
     }
 
     func add(_ rawTitle: String) async {
+        let title = rawTitle.trimmingCharacters(in: .whitespaces)
+        guard !title.isEmpty else { return }
         let id = UUID().uuidString
         let now = Int64(Date().timeIntervalSince1970 * 1000)
-        try? await store.create(title: rawTitle, due: .Today, now: now, id: id)
+        try? await store.create(title: title, due: .Today, now: now, id: id)
     }
 
     func toggle(_ task: TaskItem) async {

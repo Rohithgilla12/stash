@@ -1,3 +1,4 @@
+import Foundation
 import GRDB
 
 actor TasksStore {
@@ -14,14 +15,18 @@ actor TasksStore {
     }
 
     func upsert(_ task: TaskItem) throws {
-        try pool.write { try task.save($0) }
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
+        var updated = task
+        updated.updatedAt = now
+        try pool.write { try updated.save($0) }
     }
 
     func setDone(id: String, done: Bool) throws {
+        let now = Int64(Date().timeIntervalSince1970 * 1000)
         try pool.write { db in
             try db.execute(
-                sql: "UPDATE tasks SET done = ? WHERE id = ?",
-                arguments: [done, id]
+                sql: "UPDATE tasks SET done = ?, updated_at = ? WHERE id = ?",
+                arguments: [done, now, id]
             )
         }
     }

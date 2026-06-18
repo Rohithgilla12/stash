@@ -229,10 +229,10 @@ private struct FullTaskRow: View {
 
     private var priorityColor: Color {
         switch task.priority {
-        case .high: Color(hex: "#c8642f")
-        case .med: Color(hex: "#d8a13a")
-        case .low: Color(hex: "#b3a99b")
-        case nil: Color(hex: "#b3a99b")
+        case .high: Tokens.priorityHigh
+        case .med: Tokens.priorityMed
+        case .low: Tokens.priorityLow
+        case nil: Tokens.priorityLow
         }
     }
 
@@ -270,8 +270,8 @@ private struct FullTaskRow: View {
                     .padding(.vertical, 2)
                     .background(Color.black.opacity(0.07), in: Capsule())
             }
-            if task.repeatRule != nil {
-                Text("↻ Daily")
+            if let rule = task.repeatRule {
+                Text("↻ \(rule.capitalized)")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Tokens.textSecondary)
                     .padding(.horizontal, 5)
