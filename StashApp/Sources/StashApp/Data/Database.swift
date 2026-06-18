@@ -22,16 +22,24 @@ enum AppPaths {
 }
 
 struct StashDatabase: Sendable {
-    let pool: DatabasePool
+    let pool: any DatabaseWriter
 
     init(path: String) throws {
-        try FileManager.default.createDirectory(
-            at: URL(fileURLWithPath: path).deletingLastPathComponent(),
-            withIntermediateDirectories: true)
-        var config = Configuration()
-        config.prepareDatabase { db in try db.execute(sql: "PRAGMA journal_mode = WAL") }
-        pool = try DatabasePool(path: path, configuration: config)
-        try Self.migrator().migrate(pool)
+        let isMemory = path == ":memory:"
+        if isMemory {
+            let queue = try DatabaseQueue()
+            try Self.migrator().migrate(queue)
+            pool = queue
+        } else {
+            try FileManager.default.createDirectory(
+                at: URL(fileURLWithPath: path).deletingLastPathComponent(),
+                withIntermediateDirectories: true)
+            var config = Configuration()
+            config.prepareDatabase { db in try db.execute(sql: "PRAGMA journal_mode = WAL") }
+            let dbPool = try DatabasePool(path: path, configuration: config)
+            try Self.migrator().migrate(dbPool)
+            pool = dbPool
+        }
     }
 
     static func migrator() -> DatabaseMigrator {
