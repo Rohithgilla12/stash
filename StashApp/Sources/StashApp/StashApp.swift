@@ -29,6 +29,7 @@ private struct ContentView: View {
         HubView(selection: $selection, query: $viewModel.query) {
             switch selection {
             case .clipboard: ClipboardTab(model: env.viewModel)
+            case .notes: NotesTab(model: env.notesViewModel)
             default: ComingSoonView(tab: selection)
             }
         }
