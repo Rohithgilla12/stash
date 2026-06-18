@@ -1,0 +1,7 @@
+.DS_Store
+node_modules/
+mcp-server/dist/
+*.xcodeproj
+StashApp/.build/
+StashApp/DerivedData/
+DerivedData/
