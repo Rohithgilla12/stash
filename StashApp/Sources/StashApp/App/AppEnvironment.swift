@@ -6,6 +6,7 @@ final class AppEnvironment {
     let viewModel: ClipboardViewModel
     let notesViewModel: NotesViewModel
     let tasksViewModel: TasksViewModel
+    let snippetsViewModel: SnippetsViewModel
     private let monitor: ClipboardMonitor
 
     init() {
@@ -24,6 +25,8 @@ final class AppEnvironment {
         self.notesViewModel = NotesViewModel(db: db, store: notesStore)
         let tasksStore = TasksStore(pool: db.pool)
         self.tasksViewModel = TasksViewModel(db: db.pool, store: tasksStore)
+        let snippetsStore = SnippetsStore(pool: db.pool)
+        self.snippetsViewModel = SnippetsViewModel(db: db.pool, store: snippetsStore)
         // MenuBarExtra content is lazy, so start capture eagerly here; start() is idempotent.
         start()
     }
@@ -32,6 +35,8 @@ final class AppEnvironment {
         viewModel.startObserving()
         notesViewModel.startObserving()
         tasksViewModel.startObserving()
+        snippetsViewModel.startObserving()
         Task { await monitor.start() }
+        Task { await snippetsViewModel.seed() }
     }
 }

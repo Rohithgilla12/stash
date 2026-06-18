@@ -42,6 +42,7 @@ private struct ContentView: View {
             case .clipboard: ClipboardTab(model: env.viewModel)
             case .notes: NotesTab(model: env.notesViewModel)
             case .todos: TodosTab(model: env.tasksViewModel)
+            case .snippets: SnippetsTab(model: env.snippetsViewModel)
             default: ComingSoonView(tab: selection)
             }
         }
