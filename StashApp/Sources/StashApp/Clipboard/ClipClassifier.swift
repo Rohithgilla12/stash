@@ -33,7 +33,7 @@ enum ClipClassifier {
     }
 
     private static func isImageFile(_ url: URL) -> Bool {
-        ["png", "jpg", "jpeg", "gif", "tiff", "heic", "webp"].contains(url.pathExtension.lowercased())
+        ["png", "jpg", "jpeg", "gif", "tiff", "heic", "webp", "bmp"].contains(url.pathExtension.lowercased())
     }
 
     private static func asWebURL(_ s: String) -> URL? {

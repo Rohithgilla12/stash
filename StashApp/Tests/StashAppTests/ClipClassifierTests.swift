@@ -38,3 +38,10 @@ private final class FakePB: PasteboardReading, @unchecked Sendable {
 @Test func blankStringIsNil() {
     #expect(ClipClassifier.classify(FakePB(_string: "   ")) == nil)
 }
+
+@Test func classifiesImageFileURLAsImage() {
+    let url = URL(fileURLWithPath: "/tmp/photo.png")
+    let c = ClipClassifier.classify(FakePB(_file: url))
+    guard case let .image(_, name) = c else { Issue.record("expected image"); return }
+    #expect(name == "photo.png")
+}
