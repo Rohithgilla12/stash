@@ -46,7 +46,11 @@ actor ClipboardMonitor {
                 item.previewPath = paths.thumbPath
             }
         }
-        do { try await store.insert(item); return true } catch { return false }
+        do {
+            let removed = try await store.insert(item)
+            for path in removed { cache.delete(thumbPath: path) }
+            return true
+        } catch { return false }
     }
 
     func start() {

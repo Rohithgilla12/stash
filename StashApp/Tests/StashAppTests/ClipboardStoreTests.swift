@@ -7,6 +7,11 @@ private func mk(_ id: String, _ text: String, pinned: Bool = false, at: Int64) -
              createdAt: at, title: text, previewPath: nil)
 }
 
+private func mkImage(_ id: String, previewPath: String, at: Int64) -> ClipItem {
+    ClipItem(id: id, kind: .image, text: nil, app: nil, pinned: false,
+             createdAt: at, title: "Image", previewPath: previewPath)
+}
+
 @Test func insertAndFetch() async throws {
     let db = try StashDatabase(path: ":memory:")
     let store = ClipboardStore(pool: db.pool)
@@ -51,4 +56,13 @@ private func mk(_ id: String, _ text: String, pinned: Bool = false, at: Int64) -
     try await store.insert(mk("a", "x", at: 1))
     try await store.setPinned(id: "a", pinned: true)
     #expect(try await store.all().first?.pinned == true)
+}
+
+@Test func trimReturnsEvictedPreviewPaths() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = ClipboardStore(pool: db.pool, cap: 1)
+    try await store.insert(mkImage("a", previewPath: "/tmp/x/a_thumb.png", at: 1))
+    let evicted = try await store.insert(mk("b", "two", at: 2))
+    _ = try await store.insert(mk("c", "three", at: 3))
+    #expect(evicted.contains("/tmp/x/a_thumb.png"))
 }

@@ -18,6 +18,7 @@ final class AppEnvironment {
             makeID: { UUID().uuidString })
         self.monitor = monitor
         self.viewModel = ClipboardViewModel(db: db, store: store, monitor: monitor)
+        // MenuBarExtra content is lazy, so start capture eagerly here; start() is idempotent.
         start()
     }
 

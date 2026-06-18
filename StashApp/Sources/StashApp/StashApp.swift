@@ -32,6 +32,5 @@ private struct ContentView: View {
             default: ComingSoonView(tab: selection)
             }
         }
-        .task { env.start() }
     }
 }

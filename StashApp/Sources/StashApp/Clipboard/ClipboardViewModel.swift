@@ -40,7 +40,11 @@ final class ClipboardViewModel {
                 for try await rows in observation.values(in: self.db.pool) {
                     self.items = rows
                 }
-            } catch { /* observation ended */ }
+            } catch {
+                #if DEBUG
+                print("ClipboardViewModel observation error:", error)
+                #endif
+            }
         }
     }
 
@@ -51,9 +55,11 @@ final class ClipboardViewModel {
     func copyBack(_ item: ClipItem) async {
         let pb = NSPasteboard.general
         pb.clearContents()
-        if item.kind == .image, let path = item.previewPath,
-           let img = NSImage(contentsOfFile: path) {
-            pb.writeObjects([img])
+        if item.kind == .image, let path = item.previewPath {
+            let full = ThumbnailCache.fullPath(forThumbPath: path)
+            if let img = NSImage(contentsOfFile: full) ?? NSImage(contentsOfFile: path) {
+                pb.writeObjects([img])
+            }
         } else if let text = item.text {
             pb.setString(text, forType: .string)
         }

@@ -5,6 +5,16 @@ struct ThumbnailCache: Sendable {
     let dir: URL
     init(dir: URL) { self.dir = dir }
 
+    static func fullPath(forThumbPath thumbPath: String) -> String {
+        guard thumbPath.hasSuffix("_thumb.png") else { return thumbPath }
+        return String(thumbPath.dropLast("_thumb.png".count)) + ".png"
+    }
+
+    func delete(thumbPath: String) {
+        try? FileManager.default.removeItem(atPath: thumbPath)
+        try? FileManager.default.removeItem(atPath: Self.fullPath(forThumbPath: thumbPath))
+    }
+
     func store(_ image: NSImage, id: String) throws -> (fullPath: String, thumbPath: String) {
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let full = dir.appendingPathComponent("\(id).png")
