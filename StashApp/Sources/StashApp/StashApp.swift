@@ -43,6 +43,7 @@ private struct ContentView: View {
             case .notes: NotesTab(model: env.notesViewModel)
             case .todos: TodosTab(model: env.tasksViewModel)
             case .snippets: SnippetsTab(model: env.snippetsViewModel)
+            case .windows: WindowsTab()
             default: ComingSoonView(tab: selection)
             }
         }
