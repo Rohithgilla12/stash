@@ -18,6 +18,9 @@ enum Tokens {
     static let textPrimary = Color(hex: "#2c2925")
     static let textSecondary = Color(hex: "#6b655c")
     static let textTertiary = Color(hex: "#9a948a")
+    static let priorityHigh = accent
+    static let priorityMed = Color(hex: "#d8a13a")
+    static let priorityLow = Color(hex: "#b3a99b")
     static let panelRadius: CGFloat = 16
     static let rowRadius: CGFloat = 9
     static let panelWidth: CGFloat = 456

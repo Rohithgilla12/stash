@@ -78,6 +78,24 @@ struct StashDatabase: Sendable {
             if !cols.contains("on_desktop") { try db.alter(table: "notes") { $0.add(column: "on_desktop", .integer).notNull().defaults(to: 0) } }
             if !cols.contains("created_at") { try db.alter(table: "notes") { $0.add(column: "created_at", .integer).notNull().defaults(to: 0) } }
         }
+        m.registerMigration("v4_tasks") { db in
+            if try !db.tableExists("tasks") {
+                try db.create(table: "tasks") { t in
+                    t.column("id", .text).primaryKey()
+                    t.column("title", .text).notNull()
+                    t.column("done", .integer).notNull().defaults(to: 0)
+                    t.column("priority", .text)
+                    t.column("due", .text)
+                    t.column("project", .text).notNull().defaults(to: "Inbox")
+                    t.column("tags", .text).notNull().defaults(to: "[]")
+                    t.column("repeat", .text)
+                    t.column("subs", .text).notNull().defaults(to: "[]")
+                    t.column("source", .text).notNull().defaults(to: "you")
+                    t.column("created_at", .integer).notNull()
+                    t.column("updated_at", .integer).notNull()
+                }
+            }
+        }
         return m
     }
 }
