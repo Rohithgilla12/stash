@@ -15,7 +15,7 @@ struct NotesTab: View {
                 ForEach(model.notes) { note in
                     NoteRowView(note: note) {
                         model.selectedId = note.id
-                        openWindow(id: "notes")
+                        openWindow.openActivating(id: "notes")
                     }
                 }
             }
@@ -27,7 +27,7 @@ struct NotesTab: View {
             Task {
                 if let n = await model.newNote() {
                     model.selectedId = n.id
-                    openWindow(id: "notes")
+                    openWindow.openActivating(id: "notes")
                 }
             }
         } label: {

@@ -65,7 +65,7 @@ struct TodosTab: View {
     private var actionButtons: some View {
         HStack(spacing: 8) {
             Button {
-                openWindow(id: "tasks")
+                openWindow.openActivating(id: "tasks")
             } label: {
                 HStack(spacing: 4) {
                     Text("Open all tasks")
