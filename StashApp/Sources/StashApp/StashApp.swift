@@ -10,6 +10,12 @@ struct StashApp: App {
             ContentView(env: env, selection: $selection)
         }
         .menuBarExtraStyle(.window)
+
+        Window("Notes", id: "notes") {
+            NotesWindow(model: env.notesViewModel)
+                .frame(minWidth: 560, idealWidth: 560, minHeight: 520, idealHeight: 520)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
