@@ -96,6 +96,17 @@ struct StashDatabase: Sendable {
                 }
             }
         }
+        m.registerMigration("v5_snippets") { db in
+            if try !db.tableExists("snippets") {
+                try db.create(table: "snippets") { t in
+                    t.column("trigger", .text).primaryKey()
+                    t.column("label", .text).notNull()
+                    t.column("expand", .text)
+                    t.column("dynamic", .text)
+                    t.column("created_at", .integer).notNull().defaults(to: 0)
+                }
+            }
+        }
         return m
     }
 }

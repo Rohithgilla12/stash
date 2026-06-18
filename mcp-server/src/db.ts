@@ -50,6 +50,13 @@ CREATE TABLE IF NOT EXISTS clipboard (
   title        TEXT,                       -- display label (link title / filename / first line)
   preview_path TEXT                        -- sidecar file for image/GIF thumbnails
 );
+CREATE TABLE IF NOT EXISTS snippets (
+  trigger    TEXT PRIMARY KEY,
+  label      TEXT NOT NULL,
+  expand     TEXT,
+  dynamic    TEXT,
+  created_at INTEGER NOT NULL DEFAULT 0
+);
 `);
 
 export type TaskRow = {
