@@ -4,6 +4,21 @@ import Foundation
 struct ChecklistItem: Codable, Sendable, Equatable {
     var t: String
     var done: Bool
+
+    init(t: String, done: Bool) {
+        self.t = t
+        self.done = done
+    }
+
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        t = try c.decode(String.self, forKey: .t)
+        if let b = try? c.decode(Bool.self, forKey: .done) {
+            done = b
+        } else {
+            done = (try c.decode(Int.self, forKey: .done)) != 0
+        }
+    }
 }
 
 struct Note: Codable, FetchableRecord, PersistableRecord, Identifiable, Sendable, Equatable {
