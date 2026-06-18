@@ -61,6 +61,23 @@ struct StashDatabase: Sendable {
             if !cols.contains("title") { try db.alter(table: "clipboard") { $0.add(column: "title", .text) } }
             if !cols.contains("preview_path") { try db.alter(table: "clipboard") { $0.add(column: "preview_path", .text) } }
         }
+        m.registerMigration("v3_notes_fields") { db in
+            if try !db.tableExists("notes") {
+                try db.create(table: "notes") { t in
+                    t.column("id", .text).primaryKey()
+                    t.column("title", .text).notNull()
+                    t.column("body", .text).notNull().defaults(to: "")
+                    t.column("color", .text)
+                    t.column("updated_at", .integer).notNull().defaults(to: 0)
+                }
+            }
+            let cols = try db.columns(in: "notes").map(\.name)
+            if !cols.contains("kind") { try db.alter(table: "notes") { $0.add(column: "kind", .text).notNull().defaults(to: "text") } }
+            if !cols.contains("items") { try db.alter(table: "notes") { $0.add(column: "items", .text).notNull().defaults(to: "[]") } }
+            if !cols.contains("accent") { try db.alter(table: "notes") { $0.add(column: "accent", .text) } }
+            if !cols.contains("on_desktop") { try db.alter(table: "notes") { $0.add(column: "on_desktop", .integer).notNull().defaults(to: 0) } }
+            if !cols.contains("created_at") { try db.alter(table: "notes") { $0.add(column: "created_at", .integer).notNull().defaults(to: 0) } }
+        }
         return m
     }
 }
