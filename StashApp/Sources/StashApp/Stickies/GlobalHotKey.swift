@@ -31,6 +31,7 @@ private func carbonHotKeyEventHandler(
     return OSStatus(eventNotHandledErr)
 }
 
+@MainActor
 final class GlobalHotKey {
     nonisolated(unsafe) private let hotKeyRef: EventHotKeyRef
     private let hotKeyID: UInt32

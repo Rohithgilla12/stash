@@ -11,6 +11,7 @@ final class AppEnvironment {
     private let monitor: ClipboardMonitor
     private let stickyManager: StickyNotesManager
     private let db: StashDatabase
+    private var stickyObservationTask: Task<Void, Never>?
 
     init() {
         let database = (try? StashDatabase(path: AppPaths.dbURL().path))
@@ -34,12 +35,8 @@ final class AppEnvironment {
         self.snippetsViewModel = SnippetsViewModel(db: database.pool, store: snippetsStore)
 
         self.stickyManager = StickyNotesManager(
-            onToggleItem: { note, _ in
-                Task { await notesVM.update(note) }
-            },
-            onOpenNote: { note in
-                notesVM.selectedId = note.id
-            }
+            onToggleItem: { [weak notesVM] note, _ in Task { await notesVM?.update(note) } },
+            onOpenNote: { [weak notesVM] note in notesVM?.selectedId = note.id }
         )
 
         start()
@@ -57,10 +54,11 @@ final class AppEnvironment {
     }
 
     private func startStickyObservation() {
+        guard stickyObservationTask == nil else { return }
         let observation = ValueObservation.tracking { db in
             try Note.filter(Column("on_desktop") == true).fetchAll(db)
         }
-        Task { [weak self] in
+        stickyObservationTask = Task { [weak self] in
             guard let self else { return }
             do {
                 for try await notes in observation.values(in: self.db.pool) {

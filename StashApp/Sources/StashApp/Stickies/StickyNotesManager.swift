@@ -34,7 +34,7 @@ final class StickyNotesManager {
                 }
             } else {
                 orderedIDs.append(note.id)
-                let index = orderedIDs.firstIndex(of: note.id) ?? (orderedIDs.count - 1)
+                let index = orderedIDs.count - 1
                 let screen = NSScreen.main?.visibleFrame ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
                 let size = CGSize(width: 220, height: 220)
                 let frame = StickyLayout.frame(index: index, in: screen, size: size)
