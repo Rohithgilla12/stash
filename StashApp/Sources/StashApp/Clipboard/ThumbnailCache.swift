@@ -25,7 +25,7 @@ struct ThumbnailCache: Sendable {
 
     private func resized(_ image: NSImage, maxEdge: CGFloat) -> NSImage {
         let s = image.size
-        let scale = min(1, maxEdge / max(s.width, s.height))
+        let scale = min(1, maxEdge / max(max(s.width, s.height), 1))
         return scaled(image, to: NSSize(width: s.width * scale, height: s.height * scale))
     }
 

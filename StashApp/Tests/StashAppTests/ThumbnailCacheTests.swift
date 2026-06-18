@@ -16,4 +16,5 @@ import Foundation
 
     let thumb = NSImage(contentsOfFile: paths.thumbPath)!
     #expect(thumb.size.width <= 58.5)
+    #expect(thumb.size.height <= 38.5)
 }
