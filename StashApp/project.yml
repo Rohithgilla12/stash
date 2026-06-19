@@ -24,6 +24,7 @@ targets:
       path: Sources/StashApp/Info.plist
       properties:
         LSUIElement: true
+        LSMultipleInstancesProhibited: true
         CFBundleDisplayName: Stash
         NSHumanReadableCopyright: ""
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
