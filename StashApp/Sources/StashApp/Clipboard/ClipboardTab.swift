@@ -36,13 +36,21 @@ struct ClipboardTab: View {
                 }
 
                 if !model.recent.isEmpty {
-                    SectionHeader("Recent", count: model.recent.count)
+                    HStack(spacing: 0) {
+                        SectionHeader("Recent", count: model.recent.count)
+                        Button("Clear") { Task { await model.clearUnpinned() } }
+                            .buttonStyle(.plain)
+                            .font(.ui(10, .medium))
+                            .foregroundStyle(Tokens.textTertiary)
+                            .padding(.trailing, Space.xs)
+                    }
 
                     ForEach(model.recent) { item in
                         ClipRowView(
                             item: item,
                             onCopy: { copy(item) },
-                            onTogglePin: { Task { await model.togglePin(item) } }
+                            onTogglePin: { Task { await model.togglePin(item) } },
+                            onDelete: { Task { await model.delete(item) } }
                         )
                     }
                 }

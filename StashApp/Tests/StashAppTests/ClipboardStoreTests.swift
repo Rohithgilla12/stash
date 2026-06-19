@@ -66,3 +66,34 @@ private func mkImage(_ id: String, previewPath: String, at: Int64) -> ClipItem {
     _ = try await store.insert(mk("c", "three", at: 3))
     #expect(evicted.contains("/tmp/x/a_thumb.png"))
 }
+
+@Test func deleteRemovesOneItem() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = ClipboardStore(pool: db.pool)
+    try await store.insert(mk("a", "first", at: 1))
+    try await store.insert(mk("b", "second", at: 2))
+    try await store.delete(id: "a")
+    let all = try await store.all()
+    #expect(all.count == 1)
+    #expect(all.first?.id == "b")
+}
+
+@Test func clearUnpinnedLeavesOnlyPinned() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = ClipboardStore(pool: db.pool)
+    try await store.insert(mk("a", "pinned-item", pinned: true, at: 1))
+    try await store.insert(mk("b", "unpinned-item", at: 2))
+    try await store.clearUnpinned()
+    let all = try await store.all()
+    #expect(all.count == 1)
+    #expect(all.first?.id == "a")
+}
+
+@Test func clearAllRemovesEverything() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = ClipboardStore(pool: db.pool)
+    try await store.insert(mk("a", "first", at: 1))
+    try await store.insert(mk("b", "second", at: 2))
+    try await store.clearAll()
+    #expect(try await store.all().isEmpty)
+}

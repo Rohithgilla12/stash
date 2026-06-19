@@ -5,4 +5,5 @@ protocol PasteboardReading: Sendable {
     func string() -> String?
     func image() -> NSImage?
     func fileURL() -> URL?
+    func isConcealed() -> Bool
 }

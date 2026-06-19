@@ -52,6 +52,18 @@ final class ClipboardViewModel {
         try? await store.setPinned(id: item.id, pinned: !item.pinned)
     }
 
+    func delete(_ item: ClipItem) async {
+        try? await store.delete(id: item.id)
+    }
+
+    func clearAll() async {
+        try? await store.clearAll()
+    }
+
+    func clearUnpinned() async {
+        try? await store.clearUnpinned()
+    }
+
     func copyBack(_ item: ClipItem) async {
         let pb = NSPasteboard.general
         pb.clearContents()

@@ -41,6 +41,24 @@ actor ClipboardStore {
         }
     }
 
+    func delete(id: String) throws {
+        _ = try pool.write { db in
+            try ClipItem.deleteOne(db, key: id)
+        }
+    }
+
+    func clearAll() throws {
+        _ = try pool.write { db in
+            try db.execute(sql: "DELETE FROM clipboard")
+        }
+    }
+
+    func clearUnpinned() throws {
+        _ = try pool.write { db in
+            try db.execute(sql: "DELETE FROM clipboard WHERE pinned = 0")
+        }
+    }
+
     private static func trim(_ db: Database, cap: Int) throws -> [String] {
         let predicate = """
             pinned = 0 AND id NOT IN (
