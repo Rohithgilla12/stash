@@ -3,6 +3,10 @@ import CryptoKit
 import Foundation
 import LinkPresentation
 
+// LPLinkMetadata and NSItemProvider predate Sendable and are not annotated as such.
+// These boxes are single-use bridges from the LP/NSItemProvider completion callbacks
+// into Swift concurrency. @unchecked Sendable is the standard workaround for bridging
+// Objective-C framework types that have not yet adopted Sendable.
 private struct MetadataBox: @unchecked Sendable {
     let title: String?
     let imageProvider: NSItemProvider?
