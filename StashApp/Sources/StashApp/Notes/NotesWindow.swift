@@ -4,126 +4,37 @@ struct NotesWindow: View {
     @Bindable var model: NotesViewModel
 
     var body: some View {
-        HSplitView {
-            NotesSidebar(model: model)
-                .frame(minWidth: 160, idealWidth: 200, maxWidth: 240)
-            NotesEditor(model: model)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .background(Color(hex: "#faf8f4"))
-    }
-}
-
-private struct NotesSidebar: View {
-    @Bindable var model: NotesViewModel
-    @Environment(\.openWindow) private var openWindow
-
-    var body: some View {
-        VStack(spacing: 0) {
-            sidebarHeader
-            Rectangle().fill(Tokens.hairline).frame(height: 1)
-            ScrollView {
-                LazyVStack(spacing: Space.xs) {
-                    ForEach(model.notes) { note in
-                        SidebarRow(note: note, isSelected: model.selectedId == note.id) {
-                            model.selectedId = note.id
+        NavigationSplitView {
+            List(model.notes, id: \.id, selection: Binding(
+                get: { model.selectedId },
+                set: { model.selectedId = $0 }
+            )) { note in
+                SidebarRow(note: note, isSelected: model.selectedId == note.id)
+                    .tag(note.id)
+                    .contextMenu {
+                        Button("Delete", role: .destructive) {
+                            Task { await model.delete(note) }
                         }
-                        .contextMenu {
-                            Button("Delete", role: .destructive) {
-                                Task { await model.delete(note) }
+                    }
+            }
+            .listStyle(.sidebar)
+            .navigationTitle("Notes")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        Task {
+                            if let n = await model.newNote() {
+                                model.selectedId = n.id
                             }
                         }
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .foregroundStyle(Tokens.accent)
                     }
+                    .help("New note")
                 }
-                .padding(Space.sm)
             }
-        }
-        .background(Color(hex: "#f3efe8"))
-    }
-
-    private var sidebarHeader: some View {
-        HStack {
-            Text("Notes")
-                .font(.rounded(16, .semibold))
-                .foregroundStyle(Tokens.textPrimary)
-            Spacer()
-            Button {
-                Task {
-                    if let n = await model.newNote() {
-                        model.selectedId = n.id
-                    }
-                }
-            } label: {
-                Image(systemName: "square.and.pencil")
-                    .foregroundStyle(Tokens.accent)
-            }
-            .buttonStyle(.plain)
-            .help("New note")
-        }
-        .padding(.horizontal, Space.md)
-        .padding(.vertical, Space.md)
-    }
-}
-
-private struct SidebarRow: View {
-    let note: Note
-    let isSelected: Bool
-    let onTap: () -> Void
-
-    private var chipColor: Color {
-        Color(hex: note.color ?? "#fdf0c2")
-    }
-
-    private var snippet: String {
-        if note.kind == .todo, let first = note.items.first {
-            return first.t.isEmpty ? "No tasks" : first.t
-        }
-        let trimmed = note.body.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "No content" : trimmed
-    }
-
-    var body: some View {
-        HoverRow { hovering in
-            HStack(spacing: Space.sm) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(chipColor)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .strokeBorder(Tokens.hairline, lineWidth: 0.5)
-                    )
-                    .frame(width: 14, height: 34)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(note.title.isEmpty ? "Untitled" : note.title)
-                        .font(.rounded(13, .medium))
-                        .foregroundStyle(isSelected ? Tokens.accent : Tokens.textPrimary)
-                        .lineLimit(1)
-                    Text(snippet)
-                        .font(.ui(11))
-                        .foregroundStyle(Tokens.textTertiary)
-                        .lineLimit(1)
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, Space.sm)
-            .padding(.vertical, Space.xs)
-            .background(
-                isSelected
-                    ? Tokens.rowSelected
-                    : (hovering ? Tokens.rowHover : Color.clear),
-                in: RoundedRectangle(cornerRadius: Tokens.rowRadius)
-            )
-            .contentShape(Rectangle())
-            .onTapGesture(perform: onTap)
-        }
-    }
-}
-
-private struct NotesEditor: View {
-    @Bindable var model: NotesViewModel
-
-    var body: some View {
-        Group {
+        } detail: {
             if let note = model.selected {
                 EditorPane(note: note, onUpdate: { updated in
                     Task { await model.update(updated) }
@@ -133,8 +44,7 @@ private struct NotesEditor: View {
                 emptyState
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(hex: "#faf8f4"))
+        .tint(Tokens.accent)
     }
 
     private var emptyState: some View {
@@ -150,6 +60,49 @@ private struct NotesEditor: View {
                 .foregroundStyle(Tokens.textTertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private struct SidebarRow: View {
+    let note: Note
+    let isSelected: Bool
+
+    private var chipColor: Color {
+        Color(hex: note.color ?? "#fdf0c2")
+    }
+
+    private var snippet: String {
+        if note.kind == .todo, let first = note.items.first {
+            return first.t.isEmpty ? "No tasks" : first.t
+        }
+        let trimmed = note.body.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "No content" : trimmed
+    }
+
+    var body: some View {
+        HStack(spacing: Space.sm) {
+            RoundedRectangle(cornerRadius: 4)
+                .fill(chipColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Tokens.hairline, lineWidth: 0.5)
+                )
+                .frame(width: 14, height: 34)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(note.title.isEmpty ? "Untitled" : note.title)
+                    .font(.rounded(13, .medium))
+                    .foregroundStyle(isSelected ? Tokens.accent : Tokens.textPrimary)
+                    .lineLimit(1)
+                Text(snippet)
+                    .font(.ui(11))
+                    .foregroundStyle(Tokens.textTertiary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Space.sm)
+        .padding(.vertical, Space.xs)
     }
 }
 
@@ -174,23 +127,17 @@ private struct EditorPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            editorToolbar
-            Rectangle().fill(Tokens.hairline).frame(height: 1)
             titleField
             Rectangle().fill(Tokens.hairline).frame(height: 1)
             bodyArea
         }
-    }
-
-    private var editorToolbar: some View {
-        HStack(spacing: Space.sm) {
-            colorSwatches
-            Spacer()
-            kindToggle
-            pinButton
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                colorSwatches
+                kindToggle
+                pinButton
+            }
         }
-        .padding(.horizontal, Space.lg)
-        .padding(.vertical, Space.sm)
     }
 
     private var colorSwatches: some View {

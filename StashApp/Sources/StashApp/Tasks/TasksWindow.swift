@@ -4,27 +4,10 @@ struct TasksWindow: View {
     @Bindable var model: TasksViewModel
 
     var body: some View {
-        HSplitView {
-            TasksSidebar(model: model)
-                .frame(minWidth: 160, idealWidth: 180, maxWidth: 220)
-            TasksMainPane(model: model)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .frame(minWidth: 560, idealWidth: 560, minHeight: 580, idealHeight: 580)
-        .background(Tokens.panelFill)
-    }
-}
-
-private struct TasksSidebar: View {
-    @Bindable var model: TasksViewModel
-
-    var body: some View {
-        VStack(spacing: 0) {
-            sidebarHeader
-            Divider()
+        NavigationSplitView {
             List(TaskFilter.allCases, id: \.self, selection: Binding(
-                get: { model.filter },
-                set: { model.filter = $0 }
+                get: { model.filter as TaskFilter? },
+                set: { model.filter = $0 ?? .all }
             )) { filter in
                 SidebarFilterRow(
                     filter: filter,
@@ -34,18 +17,12 @@ private struct TasksSidebar: View {
                 .tag(filter)
             }
             .listStyle(.sidebar)
+            .navigationTitle("Tasks")
+        } detail: {
+            TasksMainPane(model: model)
         }
-    }
-
-    private var sidebarHeader: some View {
-        HStack {
-            Text("Tasks")
-                .font(.system(.headline, design: .rounded).weight(.semibold))
-                .foregroundStyle(Tokens.textPrimary)
-            Spacer()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .tint(Tokens.accent)
+        .frame(minWidth: 560, idealWidth: 560, minHeight: 580, idealHeight: 580)
     }
 
     private func countForFilter(_ filter: TaskFilter) -> Int {
