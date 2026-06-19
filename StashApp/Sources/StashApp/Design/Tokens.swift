@@ -27,4 +27,18 @@ enum Tokens {
     static let panelHeight: CGFloat = 560
     static let contentMaxHeight: CGFloat = 600
     static let thumbSize = CGSize(width: 58, height: 38)
+
+    static let hairline = Color(hex: "#2c2925").opacity(0.06)
+    static let rowHover = Color(hex: "#2c2925").opacity(0.04)
+    static let rowSelected = accent.opacity(0.10)
+    static let surface = Color(.sRGB, red: 1, green: 0.996, blue: 0.99, opacity: 0.6)
+
+    static let linkColor = Color(hex: "#5b86b8")
+    static let imageColor = Color(hex: "#8a6db0")
+    static let codeColor = Color(hex: "#5f7a8a")
+    static let textColor = Color(hex: "#9a8c7a")
+
+    static let running = Color(hex: "#3fa45b")
+    static let waiting = Color(hex: "#d8a13a")
+    static let idle = Color(hex: "#a39a8c")
 }

@@ -4,52 +4,118 @@ struct ClipRowView: View {
     let item: ClipItem
     let onCopy: () -> Void
     let onTogglePin: () -> Void
+    var onDelete: (() -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: 10) {
-            preview
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.title ?? item.text ?? "Untitled")
-                    .lineLimit(1)
-                    .font(.system(.callout).weight(.medium))
-                    .foregroundStyle(Tokens.textPrimary)
-                Text(sub).font(.caption).foregroundStyle(Tokens.textTertiary).lineLimit(1)
+        HoverRow { hovering in
+            HStack(spacing: 10) {
+                previewTile
+                    .frame(width: 40, height: 40)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.title ?? item.text ?? "Untitled")
+                        .font(.ui(13, .medium))
+                        .foregroundStyle(Tokens.textPrimary)
+                        .lineLimit(1)
+
+                    Text(ClipPresentation.metaLine(for: item))
+                        .font(.ui(11))
+                        .foregroundStyle(Tokens.textTertiary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                trailingContent(hovering: hovering)
             }
-            Spacer()
-            Button(action: onTogglePin) {
-                Circle()
-                    .fill(item.pinned ? Tokens.accent : Color.black.opacity(0.18))
-                    .frame(width: 8, height: 8)
-            }.buttonStyle(.plain)
-            Text(item.kind.rawValue.uppercased())
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(Tokens.textTertiary)
+            .padding(.vertical, 7)
+            .padding(.horizontal, 8)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onCopy)
         }
-        .padding(8)
-        .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onCopy)
     }
 
-    @ViewBuilder private var preview: some View {
+    @ViewBuilder private var previewTile: some View {
+        let presentation = ClipPresentation.style(for: item)
+
         if item.kind == .image, let path = item.previewPath, let img = NSImage(contentsOfFile: path) {
-            Image(nsImage: img).resizable().aspectRatio(contentMode: .fill)
-                .frame(width: Tokens.thumbSize.width, height: Tokens.thumbSize.height)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+            Image(nsImage: img)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 40, height: 40)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else if let swatchColor = ClipPresentation.detectedColor(in: item.text) {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(swatchColor)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
+                )
         } else {
-            RoundedRectangle(cornerRadius: 7).fill(Tokens.accent.opacity(0.12))
-                .frame(width: 30, height: 30)
-                .overlay(Image(systemName: icon).foregroundStyle(Tokens.accent).font(.system(size: 13)))
+            RoundedRectangle(cornerRadius: 8)
+                .fill(presentation.tint.opacity(0.14))
+                .overlay(
+                    Image(systemName: presentation.icon)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(presentation.tint)
+                )
         }
     }
 
-    private var icon: String {
-        switch item.kind { case .text: "doc.text"; case .link: "link"; case .image: "photo" }
+    @ViewBuilder private func trailingContent(hovering: Bool) -> some View {
+        let presentation = ClipPresentation.style(for: item)
+
+        if hovering {
+            HStack(spacing: 2) {
+                ghostButton(icon: item.pinned ? "pin.fill" : "pin", action: onTogglePin)
+
+                ghostButton(icon: "doc.on.doc", action: onCopy)
+
+                if let onDelete {
+                    ghostButton(icon: "xmark", action: onDelete)
+                }
+            }
+        } else {
+            HStack(spacing: Space.sm) {
+                if item.pinned {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Tokens.accent)
+                }
+
+                Chip(text: presentation.label, color: presentation.tint)
+            }
+        }
     }
 
-    private var sub: String {
-        let t = Date(timeIntervalSince1970: TimeInterval(item.createdAt) / 1000)
-        let rel = RelativeDateTimeFormatter().localizedString(for: t, relativeTo: Date())
-        return [rel, item.app].compactMap { $0 }.joined(separator: " · ")
+    private func ghostButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Tokens.textTertiary)
+                .frame(width: 26, height: 26)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(GhostIconButtonStyle())
+    }
+}
+
+private struct GhostIconButtonStyle: ButtonStyle {
+    @State private var hovering = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(hovering ? Tokens.accent : Tokens.textTertiary)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(hovering ? Tokens.accent.opacity(0.10) : Color.clear)
+            )
+            .scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .animation(.easeOut(duration: 0.10), value: configuration.isPressed)
+            .onHover { isHovering in
+                withAnimation(.easeOut(duration: 0.10)) {
+                    hovering = isHovering
+                }
+            }
     }
 }
