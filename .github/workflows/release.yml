@@ -1,0 +1,83 @@
+name: Release
+
+# Tag a release to build a signed + notarized DMG and publish it as a GitHub Release:
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# Required repo SECRETS (Settings → Secrets and variables → Actions):
+#   DEVID_CERT_P12_BASE64  – your "Developer ID Application" cert+key exported as .p12,
+#                            base64-encoded:  base64 -i DeveloperID.p12 | pbcopy
+#   DEVID_CERT_PASSWORD    – the password you set when exporting the .p12
+#   AC_APPLE_ID            – your Apple ID email (e.g. gillarohith@gmail.com)
+#   AC_APP_PASSWORD        – an app-specific password from appleid.apple.com
+#   (Team ID 7D2V3RM56T is hard-coded below; change if needed.)
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # to create the GitHub Release
+
+jobs:
+  release:
+    runs-on: macos-15
+    env:
+      TEAM_ID: "7D2V3RM56T"
+      SIGN_IDENTITY: "Developer ID Application: Rohith Gilla (7D2V3RM56T)"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Import Developer ID certificate
+        env:
+          CERT_P12_BASE64: ${{ secrets.DEVID_CERT_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.DEVID_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN=build.keychain
+          KEYCHAIN_PW=$(uuidgen)
+          echo "$CERT_P12_BASE64" | base64 --decode > cert.p12
+          security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN"
+          security import cert.p12 -k "$KEYCHAIN" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PW" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          rm cert.p12
+
+      - name: Build & sign (hardened runtime)
+        working-directory: StashApp
+        run: |
+          xcodegen generate
+          xcodebuild -scheme StashApp -configuration Release \
+            -derivedDataPath .build-release build CODE_SIGNING_ALLOWED=NO
+          APP=".build-release/Build/Products/Release/StashApp.app"
+          codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP"
+          codesign --verify --strict "$APP"
+
+      - name: Package DMG
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          APP="StashApp/.build-release/Build/Products/Release/StashApp.app"
+          STAGE="$(mktemp -d)"
+          cp -R "$APP" "$STAGE/Stash.app"
+          ln -s /Applications "$STAGE/Applications"
+          hdiutil create -volname "Stash" -srcfolder "$STAGE" -ov -format UDZO "Stash-$VERSION.dmg"
+          echo "DMG=Stash-$VERSION.dmg" >> "$GITHUB_ENV"
+
+      - name: Notarize & staple
+        env:
+          AC_APPLE_ID: ${{ secrets.AC_APPLE_ID }}
+          AC_APP_PASSWORD: ${{ secrets.AC_APP_PASSWORD }}
+        run: |
+          xcrun notarytool submit "$DMG" \
+            --apple-id "$AC_APPLE_ID" --password "$AC_APP_PASSWORD" --team-id "$TEAM_ID" --wait
+          xcrun stapler staple "$DMG"
+          xcrun stapler validate "$DMG"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.DMG }}
+          generate_release_notes: true
