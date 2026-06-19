@@ -73,7 +73,9 @@ struct PasteCardView: View {
 
     @ViewBuilder
     private var imagePreview: some View {
-        if let path = item.previewPath, let img = NSImage(contentsOfFile: path) {
+        if let thumb = item.previewPath,
+           let img = NSImage(contentsOfFile: ThumbnailCache.fullPath(forThumbPath: thumb))
+               ?? NSImage(contentsOfFile: thumb) {
             Image(nsImage: img)
                 .resizable()
                 .scaledToFill()

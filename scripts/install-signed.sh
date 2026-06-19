@@ -25,7 +25,10 @@ codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
 codesign --verify --strict "$APP" && echo "    signature verified"
 
 echo "==> installing to $APP_DEST"
-pkill -f "Stash.app/Contents/MacOS" 2>/dev/null || true
+# Kill BOTH the installed signed app and any stale Debug build (…/StashApp.app/…)
+# so an old instance doesn't keep capturing the clipboard with outdated code.
+pkill -f "StashApp.app/Contents/MacOS/StashApp" 2>/dev/null || true
+pkill -f "Stash.app/Contents/MacOS/StashApp" 2>/dev/null || true
 rm -rf "$APP_DEST"
 mkdir -p "$HOME/Applications"
 cp -R "$APP" "$APP_DEST"
