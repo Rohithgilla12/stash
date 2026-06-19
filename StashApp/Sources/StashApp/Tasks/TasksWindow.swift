@@ -17,6 +17,7 @@ struct TasksWindow: View {
                 .tag(filter)
             }
             .listStyle(.sidebar)
+            .tint(Tokens.accent)
             .navigationTitle("Tasks")
         } detail: {
             TasksMainPane(model: model)
@@ -38,16 +39,16 @@ private struct SidebarFilterRow: View {
     var body: some View {
         HStack {
             Image(systemName: filterIcon)
-                .foregroundStyle(isSelected ? Tokens.accent : Tokens.textTertiary)
+                .foregroundStyle(isSelected ? Tokens.accent : Color(nsColor: .tertiaryLabelColor))
                 .frame(width: 16)
             Text(filterLabel)
                 .font(.system(.callout).weight(isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? Tokens.accent : Tokens.textPrimary)
+                .foregroundStyle(isSelected ? Tokens.accent : Color.primary)
             Spacer()
             if count > 0 {
                 Text("\(count)")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Tokens.textTertiary)
+                    .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Color.black.opacity(0.06), in: Capsule())
@@ -108,11 +109,11 @@ private struct TasksMainPane: View {
         HStack(spacing: 8) {
             Text(filterTitle)
                 .font(.system(.title2, design: .rounded).weight(.semibold))
-                .foregroundStyle(Tokens.textPrimary)
+                .foregroundStyle(.primary)
             if model.filter != .done {
                 Text("\(openCount) open")
                     .font(.system(.callout))
-                    .foregroundStyle(Tokens.textTertiary)
+                    .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
             }
             Spacer()
         }
@@ -142,10 +143,10 @@ private struct TasksMainPane: View {
             VStack(spacing: 12) {
                 Image(systemName: "checkmark.circle")
                     .font(.system(size: 32))
-                    .foregroundStyle(Tokens.textTertiary.opacity(0.5))
+                    .foregroundStyle(Color(nsColor: .tertiaryLabelColor).opacity(0.5))
                 Text("No tasks here")
                     .font(.callout)
-                    .foregroundStyle(Tokens.textTertiary)
+                    .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
@@ -216,7 +217,7 @@ private struct FullTaskRow: View {
     private var checkboxButton: some View {
         Button(action: onToggle) {
             Image(systemName: task.done ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(task.done ? Tokens.accent : Tokens.textTertiary)
+                .foregroundStyle(task.done ? Tokens.accent : Color(nsColor: .tertiaryLabelColor))
                 .font(.system(size: 16))
         }
         .buttonStyle(.plain)
@@ -226,13 +227,13 @@ private struct FullTaskRow: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(task.title)
                 .font(.system(.callout))
-                .foregroundStyle(task.done ? Tokens.textTertiary : Tokens.textPrimary)
-                .strikethrough(task.done, color: Tokens.textTertiary)
+                .foregroundStyle(task.done ? Color(nsColor: .tertiaryLabelColor) : Color.primary)
+                .strikethrough(task.done, color: Color(nsColor: .tertiaryLabelColor))
                 .lineLimit(1)
             if !task.project.isEmpty && task.project != "Inbox" {
                 Text(task.project)
                     .font(.system(size: 10))
-                    .foregroundStyle(Tokens.textTertiary)
+                    .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
             }
         }
     }
@@ -242,7 +243,7 @@ private struct FullTaskRow: View {
             ForEach(task.tags, id: \.self) { tag in
                 Text(tag)
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Tokens.textSecondary)
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
                     .background(Color.black.opacity(0.07), in: Capsule())
@@ -250,7 +251,7 @@ private struct FullTaskRow: View {
             if let rule = task.repeatRule {
                 Text("↻ \(rule.capitalized)")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Tokens.textSecondary)
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
                     .background(Color.black.opacity(0.07), in: Capsule())
@@ -261,7 +262,7 @@ private struct FullTaskRow: View {
                 } label: {
                     Text("☑ \(doneSubsCount)/\(totalSubs)")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Tokens.textSecondary)
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 5)
                         .padding(.vertical, 2)
                         .background(Color.black.opacity(0.07), in: Capsule())
@@ -272,7 +273,7 @@ private struct FullTaskRow: View {
                 let isToday = due == .Today
                 Text(due.rawValue)
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(isToday ? Color.white : Tokens.textSecondary)
+                    .foregroundStyle(isToday ? Color.white : .secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
@@ -297,12 +298,12 @@ private struct FullTaskRow: View {
                 let sub = task.subs[idx]
                 HStack(spacing: 6) {
                     Image(systemName: sub.done ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(sub.done ? Tokens.accent : Tokens.textTertiary)
+                        .foregroundStyle(sub.done ? Tokens.accent : Color(nsColor: .tertiaryLabelColor))
                         .font(.system(size: 13))
                     Text(sub.t)
                         .font(.system(.caption))
-                        .foregroundStyle(sub.done ? Tokens.textTertiary : Tokens.textPrimary)
-                        .strikethrough(sub.done, color: Tokens.textTertiary)
+                        .foregroundStyle(sub.done ? Color(nsColor: .tertiaryLabelColor) : Color.primary)
+                        .strikethrough(sub.done, color: Color(nsColor: .tertiaryLabelColor))
                 }
             }
         }

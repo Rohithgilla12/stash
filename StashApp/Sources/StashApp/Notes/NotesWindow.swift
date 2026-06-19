@@ -18,6 +18,7 @@ struct NotesWindow: View {
                     }
             }
             .listStyle(.sidebar)
+            .tint(Tokens.accent)
             .navigationTitle("Notes")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
@@ -54,10 +55,10 @@ struct NotesWindow: View {
                 .foregroundStyle(Tokens.accent.opacity(0.4))
             Text("Select or create a note")
                 .font(.rounded(15, .medium))
-                .foregroundStyle(Tokens.textSecondary)
+                .foregroundStyle(.secondary)
             Text("Your notes live here and sync to the menu bar.")
                 .font(.ui(12))
-                .foregroundStyle(Tokens.textTertiary)
+                .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -92,11 +93,11 @@ private struct SidebarRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(note.title.isEmpty ? "Untitled" : note.title)
                     .font(.rounded(13, .medium))
-                    .foregroundStyle(isSelected ? Tokens.accent : Tokens.textPrimary)
+                    .foregroundStyle(isSelected ? Tokens.accent : .primary)
                     .lineLimit(1)
                 Text(snippet)
                     .font(.ui(11))
-                    .foregroundStyle(Tokens.textTertiary)
+                    .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
@@ -197,7 +198,7 @@ private struct EditorPane: View {
                 } label: {
                     Text("Text")
                         .font(.ui(11, .semibold))
-                        .foregroundStyle(isText ? .white : Tokens.textSecondary)
+                        .foregroundStyle(isText ? .white : .secondary)
                         .frame(width: 52)
                         .padding(.vertical, 4)
                 }
@@ -209,7 +210,7 @@ private struct EditorPane: View {
                 } label: {
                     Text("To-do")
                         .font(.ui(11, .semibold))
-                        .foregroundStyle(!isText ? .white : Tokens.textSecondary)
+                        .foregroundStyle(!isText ? .white : .secondary)
                         .frame(width: 52)
                         .padding(.vertical, 4)
                 }
@@ -227,10 +228,10 @@ private struct EditorPane: View {
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: draft.onDesktop ? "pin.fill" : "pin")
-                    .foregroundStyle(draft.onDesktop ? Tokens.accent : Tokens.textTertiary)
+                    .foregroundStyle(draft.onDesktop ? Tokens.accent : Color(nsColor: .tertiaryLabelColor))
                 Text("Pin")
                     .font(.ui(11))
-                    .foregroundStyle(Tokens.textSecondary)
+                    .foregroundStyle(.secondary)
             }
         }
         .buttonStyle(.plain)
@@ -243,7 +244,7 @@ private struct EditorPane: View {
         ))
         .textFieldStyle(.plain)
         .font(.rounded(22, .semibold))
-        .foregroundStyle(Tokens.textPrimary)
+        .foregroundStyle(.primary)
         .padding(.horizontal, Space.lg)
         .padding(.vertical, Space.md)
         .onChange(of: draft.title) { _, _ in onUpdate(draft) }
@@ -257,7 +258,7 @@ private struct EditorPane: View {
                 set: { draft.body = $0; onUpdate(draft) }
             ))
             .font(.ui(14))
-            .foregroundStyle(Tokens.textPrimary)
+            .foregroundStyle(.primary)
             .scrollContentBackground(.hidden)
             .background(Color.clear)
             .lineSpacing(4)
@@ -295,7 +296,7 @@ private struct EditorPane: View {
                             .foregroundStyle(Tokens.accent)
                         Text("Add task")
                             .font(.ui(13))
-                            .foregroundStyle(Tokens.textSecondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .buttonStyle(.plain)
@@ -343,14 +344,14 @@ private struct ChecklistRow: View {
             ))
             .textFieldStyle(.plain)
             .font(.ui(13))
-            .foregroundStyle(item.done ? Tokens.textTertiary : Tokens.textPrimary)
-            .strikethrough(item.done, color: Tokens.textTertiary)
+            .foregroundStyle(item.done ? Color(nsColor: .tertiaryLabelColor) : Color.primary)
+            .strikethrough(item.done, color: Color(nsColor: .tertiaryLabelColor))
 
             if isHovering {
                 Button(action: onDelete) {
                     Image(systemName: "xmark")
                         .font(.ui(10))
-                        .foregroundStyle(Tokens.textTertiary)
+                        .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
                 }
                 .buttonStyle(.plain)
             }
