@@ -8,45 +8,60 @@ struct ClipRowView: View {
 
     @State private var ogPreview: LinkPreview?
 
+    private var titleText: String {
+        if item.kind == .link {
+            return ogPreview?.title ?? item.title ?? item.text ?? "Untitled"
+        }
+        return item.title ?? item.text ?? "Untitled"
+    }
+
     var body: some View {
         HoverRow { hovering in
-            HStack(spacing: 10) {
-                previewTile
-                    .frame(width: 40, height: 40)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.kind == .link ? (ogPreview?.title ?? item.title ?? item.text ?? "Untitled") : (item.title ?? item.text ?? "Untitled"))
-                        .font(.ui(13, .medium))
-                        .foregroundStyle(Tokens.textPrimary)
-                        .lineLimit(1)
-
-                    HStack(spacing: 3) {
-                        if let icon = AppIconProvider.icon(forBundleID: item.appBundleID) {
-                            Image(nsImage: icon)
-                                .resizable()
-                                .frame(width: 13, height: 13)
-                                .clipShape(RoundedRectangle(cornerRadius: 3))
-                        }
-                        Text(ClipPresentation.metaLine(for: item))
-                            .font(.ui(11))
-                            .foregroundStyle(Tokens.textTertiary)
-                            .lineLimit(1)
+            rowContent(hovering: hovering)
+                .padding(.vertical, 7)
+                .padding(.horizontal, 8)
+                .contentShape(Rectangle())
+                .onTapGesture(perform: onCopy)
+                .task {
+                    if item.kind == .link {
+                        ogPreview = await LinkPreviewService.shared.preview(for: item.text ?? "")
                     }
                 }
+        }
+    }
 
-                Spacer()
+    private func rowContent(hovering: Bool) -> some View {
+        HStack(spacing: 10) {
+            previewTile
+                .frame(width: 40, height: 40)
+            details
+            Spacer()
+            trailingContent(hovering: hovering)
+        }
+    }
 
-                trailingContent(hovering: hovering)
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(titleText)
+                .font(.ui(13, .medium))
+                .foregroundStyle(Tokens.textPrimary)
+                .lineLimit(1)
+            metaRow
+        }
+    }
+
+    private var metaRow: some View {
+        HStack(spacing: 3) {
+            if let icon = AppIconProvider.icon(forBundleID: item.appBundleID) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 13, height: 13)
+                    .clipShape(RoundedRectangle(cornerRadius: 3))
             }
-            .padding(.vertical, 7)
-            .padding(.horizontal, 8)
-            .contentShape(Rectangle())
-            .onTapGesture(perform: onCopy)
-            .task {
-                if item.kind == .link {
-                    ogPreview = await LinkPreviewService.shared.preview(for: item.text ?? "")
-                }
-            }
+            Text(ClipPresentation.metaLine(for: item))
+                .font(.ui(11))
+                .foregroundStyle(Tokens.textTertiary)
+                .lineLimit(1)
         }
     }
 
