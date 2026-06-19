@@ -7,3 +7,4 @@ StashApp/DerivedData/
 StashApp/Sources/StashApp/Info.plist
 DerivedData/
 StashApp/.build-release/
+*.dmg
