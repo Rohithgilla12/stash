@@ -5,7 +5,6 @@ struct AITab: View {
 
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 1.0
-    @State private var now: Date = Date()
 
     var body: some View {
         ScrollView {
@@ -16,7 +15,6 @@ struct AITab: View {
             }
         }
         .task { await model.start() }
-        .onAppear { now = Date() }
     }
 
     private var mcpServerCard: some View {
@@ -114,7 +112,7 @@ struct AITab: View {
 
     private var claudeUsageRow: some View {
         let total = model.todayInput + model.todayOutput
-        let fraction = min(1.0, Double(total) / 5_000_000)
+        let fraction = min(1.0, Double(total) / 5_000_000) // soft visual scale (~a heavy day of tokens), not an API quota
 
         return HStack(spacing: 8) {
             Text("Claude")
@@ -199,9 +197,9 @@ struct AITab: View {
     }
 
     private func sessionRow(_ session: UsageAggregator.SessionSummary) -> some View {
-        let status = UsageAggregator.status(lastSeen: session.lastSeen, now: now)
+        let status = UsageAggregator.status(lastSeen: session.lastSeen, now: model.now)
         let dotColor = statusColor(status)
-        let elapsed = elapsedString(from: session.firstSeen, to: now)
+        let elapsed = elapsedString(from: session.firstSeen, to: model.now)
 
         return HStack(spacing: 8) {
             Circle()
@@ -240,6 +238,7 @@ struct AITab: View {
 
     private func elapsedString(from start: Date, to end: Date) -> String {
         let seconds = Int(end.timeIntervalSince(start))
+        if seconds <= 0 { return "now" }
         if seconds < 60 { return "\(seconds)s" }
         let minutes = seconds / 60
         if minutes < 60 { return "\(minutes)m" }

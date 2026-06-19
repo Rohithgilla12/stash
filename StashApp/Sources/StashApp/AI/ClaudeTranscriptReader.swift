@@ -39,9 +39,7 @@ struct ClaudeTranscriptReader: Sendable {
                       mtime >= cutoff
                 else { continue }
 
-                guard let data = try? Data(contentsOf: file),
-                      let text = String(data: data, encoding: .utf8)
-                else { continue }
+                guard let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
 
                 for line in text.components(separatedBy: "\n") {
                     guard line.contains("\"usage\"") else { continue }

@@ -8,6 +8,7 @@ final class AIViewModel {
     var todayOutput: Int = 0
     var sessions: [UsageAggregator.SessionSummary] = []
     var loaded: Bool = false
+    var now: Date = Date()
 
     private let reader: ClaudeTranscriptReader
     private var refreshTask: Task<Void, Never>?
@@ -18,15 +19,16 @@ final class AIViewModel {
 
     func refresh() async {
         let capturedReader = reader
+        let n = Date()
         let records = await Task.detached {
-            capturedReader.read(modifiedWithin: 6 * 3600, now: Date())
+            capturedReader.read(modifiedWithin: 6 * 3600, now: n)
         }.value
 
-        let now = Date()
-        let totals = UsageAggregator.todayTotals(records, now: now)
+        let totals = UsageAggregator.todayTotals(records, now: n)
         todayInput = totals.input
         todayOutput = totals.output
-        sessions = UsageAggregator.sessions(records, now: now, activeWithin: 6 * 3600)
+        sessions = UsageAggregator.sessions(records, now: n, activeWithin: 6 * 3600)
+        self.now = n
         loaded = true
     }
 
@@ -39,6 +41,5 @@ final class AIViewModel {
                 await refresh()
             }
         }
-        await refreshTask?.value
     }
 }
