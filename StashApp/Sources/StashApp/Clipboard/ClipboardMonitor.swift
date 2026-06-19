@@ -23,7 +23,7 @@ actor ClipboardMonitor {
     func noteSelfCopy(changeCount: Int) { ignoreChangeCount = changeCount }
 
     @discardableResult
-    func capture(frontApp: String?) async -> Bool {
+    func capture(frontApp: String?, frontAppBundleID: String? = nil) async -> Bool {
         let cc = pasteboard.changeCount
         if cc == lastSeenChangeCount { return false }
         lastSeenChangeCount = cc
@@ -33,7 +33,8 @@ actor ClipboardMonitor {
 
         let id = makeID()
         var item = ClipItem(id: id, kind: .text, text: nil, app: frontApp,
-                            pinned: false, createdAt: now(), title: nil, previewPath: nil)
+                            pinned: false, createdAt: now(), title: nil, previewPath: nil,
+                            appBundleID: frontAppBundleID)
         switch content {
         case let .text(s):
             item.kind = .text; item.text = s
@@ -58,8 +59,11 @@ actor ClipboardMonitor {
         guard loop == nil else { return }
         loop = Task { [weak self] in
             while !Task.isCancelled {
-                let app = await MainActor.run { NSWorkspace.shared.frontmostApplication?.localizedName }
-                await self?.capture(frontApp: app)
+                let front = await MainActor.run {
+                    (NSWorkspace.shared.frontmostApplication?.localizedName,
+                     NSWorkspace.shared.frontmostApplication?.bundleIdentifier)
+                }
+                await self?.capture(frontApp: front.0, frontAppBundleID: front.1)
                 try? await Task.sleep(for: .milliseconds(500))
             }
         }

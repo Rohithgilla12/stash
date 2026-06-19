@@ -9,6 +9,7 @@ struct ClipItem: Codable, FetchableRecord, PersistableRecord, Identifiable, Send
     var createdAt: Int64
     var title: String?
     var previewPath: String?
+    var appBundleID: String?
 
     static let databaseTableName = "clipboard"
 
@@ -17,5 +18,6 @@ struct ClipItem: Codable, FetchableRecord, PersistableRecord, Identifiable, Send
         case createdAt = "created_at"
         case title
         case previewPath = "preview_path"
+        case appBundleID = "app_bundle_id"
     }
 }

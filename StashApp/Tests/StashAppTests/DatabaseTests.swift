@@ -7,7 +7,7 @@ import Foundation
     let q = try DatabaseQueue()
     try StashDatabase.migrator().migrate(q)
     let cols = try q.read { db in try db.columns(in: "clipboard").map(\.name) }
-    #expect(Set(cols).isSuperset(of: ["id","kind","text","app","pinned","created_at","title","preview_path"]))
+    #expect(Set(cols).isSuperset(of: ["id","kind","text","app","pinned","created_at","title","preview_path","app_bundle_id"]))
 }
 
 @Test func migratorUpgradesNodeStyleTableWithoutDataLoss() throws {

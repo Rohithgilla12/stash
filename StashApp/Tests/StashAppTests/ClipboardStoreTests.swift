@@ -4,12 +4,12 @@ import GRDB
 
 private func mk(_ id: String, _ text: String, pinned: Bool = false, at: Int64) -> ClipItem {
     ClipItem(id: id, kind: .text, text: text, app: nil, pinned: pinned,
-             createdAt: at, title: text, previewPath: nil)
+             createdAt: at, title: text, previewPath: nil, appBundleID: nil)
 }
 
 private func mkImage(_ id: String, previewPath: String, at: Int64) -> ClipItem {
     ClipItem(id: id, kind: .image, text: nil, app: nil, pinned: false,
-             createdAt: at, title: "Image", previewPath: previewPath)
+             createdAt: at, title: "Image", previewPath: previewPath, appBundleID: nil)
 }
 
 @Test func insertAndFetch() async throws {
@@ -96,4 +96,23 @@ private func mkImage(_ id: String, previewPath: String, at: Int64) -> ClipItem {
     try await store.insert(mk("b", "second", at: 2))
     try await store.clearAll()
     #expect(try await store.all().isEmpty)
+}
+
+@Test func clipItemBundleIDRoundTrips() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = ClipboardStore(pool: db.pool)
+
+    let withBundle = ClipItem(id: "x1", kind: .text, text: "hello", app: "Xcode",
+                              pinned: false, createdAt: 1, title: "hello", previewPath: nil,
+                              appBundleID: "com.apple.dt.Xcode")
+    try await store.insert(withBundle)
+    let fetched = try await store.all().first(where: { $0.id == "x1" })
+    #expect(fetched?.appBundleID == "com.apple.dt.Xcode")
+
+    let withNilBundle = ClipItem(id: "x2", kind: .text, text: "world", app: nil,
+                                 pinned: false, createdAt: 2, title: "world", previewPath: nil,
+                                 appBundleID: nil)
+    try await store.insert(withNilBundle)
+    let fetchedNil = try await store.all().first(where: { $0.id == "x2" })
+    #expect(fetchedNil?.appBundleID == nil)
 }

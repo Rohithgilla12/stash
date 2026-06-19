@@ -41,14 +41,15 @@ CREATE TABLE IF NOT EXISTS notes (
   created_at INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS clipboard (
-  id           TEXT PRIMARY KEY,
-  kind         TEXT NOT NULL,              -- 'text' | 'link' | 'image' | ...
-  text         TEXT,
-  app          TEXT,
-  pinned       INTEGER NOT NULL DEFAULT 0,
-  created_at   INTEGER NOT NULL,
-  title        TEXT,                       -- display label (link title / filename / first line)
-  preview_path TEXT                        -- sidecar file for image/GIF thumbnails
+  id             TEXT PRIMARY KEY,
+  kind           TEXT NOT NULL,              -- 'text' | 'link' | 'image' | ...
+  text           TEXT,
+  app            TEXT,
+  pinned         INTEGER NOT NULL DEFAULT 0,
+  created_at     INTEGER NOT NULL,
+  title          TEXT,                       -- display label (link title / filename / first line)
+  preview_path   TEXT,                       -- sidecar file for image/GIF thumbnails
+  app_bundle_id  TEXT                        -- source app bundle identifier
 );
 CREATE TABLE IF NOT EXISTS snippets (
   trigger    TEXT PRIMARY KEY,

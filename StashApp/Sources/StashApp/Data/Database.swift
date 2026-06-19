@@ -107,6 +107,14 @@ struct StashDatabase: Sendable {
                 }
             }
         }
+        m.registerMigration("v6_clipboard_app_bundle_id") { db in
+            let cols = try db.columns(in: "clipboard").map(\.name)
+            if !cols.contains("app_bundle_id") {
+                try db.alter(table: "clipboard") { t in
+                    t.add(column: "app_bundle_id", .text)
+                }
+            }
+        }
         return m
     }
 }

@@ -18,10 +18,18 @@ struct ClipRowView: View {
                         .foregroundStyle(Tokens.textPrimary)
                         .lineLimit(1)
 
-                    Text(ClipPresentation.metaLine(for: item))
-                        .font(.ui(11))
-                        .foregroundStyle(Tokens.textTertiary)
-                        .lineLimit(1)
+                    HStack(spacing: 3) {
+                        if let icon = AppIconProvider.icon(forBundleID: item.appBundleID) {
+                            Image(nsImage: icon)
+                                .resizable()
+                                .frame(width: 13, height: 13)
+                                .clipShape(RoundedRectangle(cornerRadius: 3))
+                        }
+                        Text(ClipPresentation.metaLine(for: item))
+                            .font(.ui(11))
+                            .foregroundStyle(Tokens.textTertiary)
+                            .lineLimit(1)
+                    }
                 }
 
                 Spacer()
