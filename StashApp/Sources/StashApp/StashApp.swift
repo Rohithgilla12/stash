@@ -53,7 +53,6 @@ private struct ContentView: View {
             case .snippets: SnippetsTab(model: env.snippetsViewModel)
             case .windows: WindowsTab()
             case .ai: AITab(model: env.aiViewModel)
-            default: ComingSoonView(tab: selection)
             }
         }
     }
