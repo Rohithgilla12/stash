@@ -47,6 +47,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.fusang.stash.tests
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   StashApp:
     build:

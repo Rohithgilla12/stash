@@ -8,6 +8,7 @@ final class AppEnvironment {
     let notesViewModel: NotesViewModel
     let tasksViewModel: TasksViewModel
     let snippetsViewModel: SnippetsViewModel
+    let aiViewModel: AIViewModel
     private let systemExpander = SystemExpander()
     private let monitor: ClipboardMonitor
     private let stickyManager: StickyNotesManager
@@ -36,6 +37,7 @@ final class AppEnvironment {
         self.tasksViewModel = TasksViewModel(db: database.pool, store: tasksStore)
         let snippetsStore = SnippetsStore(pool: database.pool)
         self.snippetsViewModel = SnippetsViewModel(db: database.pool, store: snippetsStore)
+        self.aiViewModel = AIViewModel(reader: ClaudeTranscriptReader())
 
         self.stickyManager = StickyNotesManager(
             onToggleItem: { [weak notesVM] note, _ in Task { await notesVM?.update(note) } },

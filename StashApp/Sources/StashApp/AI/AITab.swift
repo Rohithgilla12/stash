@@ -1,8 +1,11 @@
 import SwiftUI
 
 struct AITab: View {
+    let model: AIViewModel
+
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 1.0
+    @State private var now: Date = Date()
 
     var body: some View {
         ScrollView {
@@ -12,6 +15,8 @@ struct AITab: View {
                 activeSessionsCard
             }
         }
+        .task { await model.start() }
+        .onAppear { now = Date() }
     }
 
     private var mcpServerCard: some View {
@@ -89,31 +94,99 @@ struct AITab: View {
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(Tokens.textTertiary)
 
-            Text("Connect provider keys in Preferences to see usage.")
-                .font(.system(size: 12))
+            VStack(spacing: 6) {
+                claudeUsageRow
+                dimRow(name: "Codex")
+                dimRow(name: "Stash AI")
+            }
+
+            Text("From local Claude Code sessions")
+                .font(.system(size: 10))
+                .foregroundStyle(Tokens.textTertiary.opacity(0.7))
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                .fill(Tokens.panelFill)
+                .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
+        )
+    }
+
+    private var claudeUsageRow: some View {
+        let total = model.todayInput + model.todayOutput
+        let fraction = min(1.0, Double(total) / 5_000_000)
+
+        return HStack(spacing: 8) {
+            Text("Claude")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Tokens.textPrimary)
+                .frame(width: 70, alignment: .leading)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color(hex: "#e0dbd6"))
+                        .frame(height: 5)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Tokens.accent)
+                        .frame(width: geo.size.width * fraction, height: 5)
+                }
+            }
+            .frame(height: 5)
+
+            Text("\(formatTokenCount(model.todayInput))↑  \(formatTokenCount(model.todayOutput))↓")
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(Tokens.textSecondary)
+                .frame(width: 80, alignment: .trailing)
+                .lineLimit(1)
+        }
+    }
+
+    private func dimRow(name: String) -> some View {
+        HStack(spacing: 8) {
+            Text(name)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Tokens.textTertiary.opacity(0.6))
+                .frame(width: 70, alignment: .leading)
+
+            GeometryReader { _ in
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color(hex: "#e0dbd6"))
+                    .frame(height: 5)
+            }
+            .frame(height: 5)
+
+            Text("Not connected")
+                .font(.system(size: 11))
+                .foregroundStyle(Tokens.textTertiary.opacity(0.6))
+                .frame(width: 80, alignment: .trailing)
+                .lineLimit(1)
+        }
+        .opacity(0.55)
+    }
+
+    private var activeSessionsCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("ACTIVE SESSIONS")
+                .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(Tokens.textTertiary)
 
-            VStack(spacing: 6) {
-                ForEach(placeholderProviders, id: \.name) { provider in
-                    HStack(spacing: 8) {
-                        Text(provider.name)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(Tokens.textTertiary.opacity(0.6))
-                            .frame(width: 70, alignment: .leading)
-
-                        GeometryReader { geo in
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color(hex: "#e0dbd6"))
-                                .frame(height: 5)
-                        }
-                        .frame(height: 5)
-
-                        Text("—")
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(Tokens.textTertiary.opacity(0.6))
-                            .frame(width: 28, alignment: .trailing)
+            if model.sessions.isEmpty {
+                VStack(spacing: 6) {
+                    Image(systemName: "circle.slash")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Tokens.textTertiary.opacity(0.5))
+                    Text("No active sessions")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Tokens.textTertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(model.sessions.prefix(6), id: \.sessionId) { session in
+                        sessionRow(session)
                     }
-                    .opacity(0.55)
                 }
             }
         }
@@ -125,44 +198,69 @@ struct AITab: View {
         )
     }
 
-    private var activeSessionsCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("ACTIVE SESSIONS")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(Tokens.textTertiary)
+    private func sessionRow(_ session: UsageAggregator.SessionSummary) -> some View {
+        let status = UsageAggregator.status(lastSeen: session.lastSeen, now: now)
+        let dotColor = statusColor(status)
+        let elapsed = elapsedString(from: session.firstSeen, to: now)
 
-            VStack(spacing: 6) {
-                Image(systemName: "circle.slash")
-                    .font(.system(size: 22))
-                    .foregroundStyle(Tokens.textTertiary.opacity(0.5))
-                Text("No active sessions")
-                    .font(.system(size: 12))
+        return HStack(spacing: 8) {
+            Circle()
+                .fill(dotColor)
+                .frame(width: 8, height: 8)
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text(session.repo)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Tokens.textPrimary)
+                    if let branch = session.branch {
+                        Text("·")
+                            .foregroundStyle(Tokens.textTertiary)
+                        Text(branch)
+                            .font(.system(size: 11))
+                            .foregroundStyle(Tokens.textSecondary)
+                    }
+                }
+                Text("\(formatTokenCount(session.totalTokens)) tokens · \(elapsed)")
+                    .font(.system(size: 11))
                     .foregroundStyle(Tokens.textTertiary)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+
+            Spacer()
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: Tokens.rowRadius)
-                .fill(Tokens.panelFill)
-                .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
-        )
+    }
+
+    private func statusColor(_ status: SessionStatus) -> Color {
+        switch status {
+        case .running: return Color(hex: "#3fa45b")
+        case .waiting: return Color(hex: "#d8a13a")
+        case .idle:    return Color(hex: "#a39a8c")
+        }
+    }
+
+    private func elapsedString(from start: Date, to end: Date) -> String {
+        let seconds = Int(end.timeIntervalSince(start))
+        if seconds < 60 { return "\(seconds)s" }
+        let minutes = seconds / 60
+        if minutes < 60 { return "\(minutes)m" }
+        let hours = minutes / 60
+        return "\(hours)h \(minutes % 60)m"
+    }
+
+    private func formatTokenCount(_ n: Int) -> String {
+        if n >= 1_000_000 {
+            let m = Double(n) / 1_000_000
+            return String(format: "%.1fM", m)
+        } else if n >= 1_000 {
+            let k = Double(n) / 1_000
+            return String(format: "%.1fK", k)
+        }
+        return "\(n)"
     }
 
     private let mcpTools = [
         "create_task", "list_tasks", "complete_task",
         "update_task", "add_note", "search_clipboard"
-    ]
-
-    private struct ProviderPlaceholder {
-        let name: String
-    }
-
-    private let placeholderProviders = [
-        ProviderPlaceholder(name: "Claude"),
-        ProviderPlaceholder(name: "Codex"),
-        ProviderPlaceholder(name: "Stash AI")
     ]
 }
 
