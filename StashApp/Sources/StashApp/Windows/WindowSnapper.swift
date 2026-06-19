@@ -40,11 +40,12 @@ final class WindowSnapper {
         var windowRef: CFTypeRef?
         let windowErr = AXUIElementCopyAttributeValue(axApp, kAXFocusedWindowAttribute as CFString, &windowRef)
         guard windowErr == .success, let windowRef else { return }
+        let window = windowRef as! AXUIElement
 
         // Use the primary screen to derive the AX coordinate origin.
         // For v1 we snap into NSScreen.main's usable area; multi-display is a follow-up.
         guard let screen = NSScreen.main else { return }
-        let primaryHeight = NSScreen.screens.first!.frame.height
+        let primaryHeight = NSScreen.screens.first?.frame.height ?? screen.frame.height
 
         // visibleFrame is in AppKit coords (bottom-left origin).
         // Convert to AX space (top-left origin of the primary display).
@@ -52,7 +53,7 @@ final class WindowSnapper {
 
         // WindowLayout produces a frame in the same coordinate system as its input rect.
         // We supply visibleAX so the output is already in AX global coordinates.
-        var frame = WindowLayout.frame(for: target, in: visibleAX, gap: 8)
+        let frame = WindowLayout.frame(for: target, in: visibleAX, gap: 8)
 
         var point = frame.origin
         var size = frame.size
@@ -62,8 +63,12 @@ final class WindowSnapper {
             let axSize  = AXValueCreate(.cgSize,  &size)
         else { return }
 
-        let window = windowRef as! AXUIElement
-        AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, axPoint)
-        AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, axSize)
+        let posErr = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, axPoint)
+        let sizeErr = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, axSize)
+        #if DEBUG
+        if posErr != .success || sizeErr != .success {
+            print("WindowSnapper: set frame partial — pos \(posErr.rawValue), size \(sizeErr.rawValue)")
+        }
+        #endif
     }
 }

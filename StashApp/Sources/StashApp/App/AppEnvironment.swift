@@ -54,7 +54,7 @@ final class AppEnvironment {
         startStickyObservation()
         stickyManager.registerHotKey()
         registerSnapHotKeys()
-        snapper.ensureTrusted()
+        if !snapper.isTrusted { snapper.ensureTrusted() }
     }
 
     private func registerSnapHotKeys() {
