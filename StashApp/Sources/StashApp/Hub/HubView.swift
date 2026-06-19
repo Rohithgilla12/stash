@@ -3,6 +3,7 @@ import SwiftUI
 struct HubView<Content: View>: View {
     @Binding var selection: HubTab
     @Binding var query: String
+    var onPreferences: () -> Void = {}
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -46,7 +47,7 @@ struct HubView<Content: View>: View {
     private var footer: some View {
         HStack {
             Spacer()
-            Button("Preferences…") {}.buttonStyle(.plain)
+            Button("Preferences…") { onPreferences() }.buttonStyle(.plain)
                 .font(.caption).foregroundStyle(Tokens.textTertiary)
         }
     }

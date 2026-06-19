@@ -27,6 +27,10 @@ private struct ImageBox: @unchecked Sendable {
     }
 
     func preview(for urlString: String) async -> LinkPreview? {
+        guard UserDefaults.standard.object(forKey: "linkPreviewsEnabled") as? Bool ?? true else {
+            return nil
+        }
+
         let key = cacheKey(for: urlString)
 
         if let cached = memoryCache[key] { return cached }

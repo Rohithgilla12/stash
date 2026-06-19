@@ -28,6 +28,12 @@ struct StashApp: App {
             TasksWindow(model: env.tasksViewModel)
         }
         .windowResizability(.contentSize)
+
+        Window("Stash Preferences", id: "preferences") {
+            PreferencesView(env: env)
+                .frame(width: 480, height: 420)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
@@ -36,6 +42,7 @@ private struct ContentView: View {
     let env: AppEnvironment
     @Bindable var viewModel: ClipboardViewModel
     @Binding var selection: HubTab
+    @Environment(\.openWindow) private var openWindow
 
     init(env: AppEnvironment, selection: Binding<HubTab>) {
         self.env = env
@@ -44,7 +51,11 @@ private struct ContentView: View {
     }
 
     var body: some View {
-        HubView(selection: $selection, query: $viewModel.query) {
+        HubView(
+            selection: $selection,
+            query: $viewModel.query,
+            onPreferences: { openWindow.openActivating(id: "preferences") }
+        ) {
             switch selection {
             case .clipboard: ClipboardTab(model: env.viewModel)
             case .notes: NotesTab(model: env.notesViewModel)
