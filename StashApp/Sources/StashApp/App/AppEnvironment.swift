@@ -49,7 +49,7 @@ final class AppEnvironment {
     private func wireExpander() {
         let expander = systemExpander
         snippetsViewModel.onExpanderToggled = { [weak expander] isOn in
-            expander?.setEnabled(isOn)
+            expander?.setEnabled(isOn) ?? false
         }
         snippetsViewModel.onSnippetsChanged = { [weak expander] snippets in
             expander?.snippets = snippets

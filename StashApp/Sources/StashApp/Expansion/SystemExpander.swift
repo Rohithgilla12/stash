@@ -39,14 +39,16 @@ final class SystemExpander {
     private var runLoopSource: CFRunLoopSource?
     private(set) var enabled = false
 
-    func setEnabled(_ on: Bool) {
-        guard on != enabled else { return }
+    @discardableResult
+    func setEnabled(_ on: Bool) -> Bool {
+        guard on != enabled else { return enabled }
 
         if on {
             installTap()
         } else {
             tearDownTap()
         }
+        return enabled
     }
 
     private func installTap() {
@@ -107,6 +109,8 @@ final class SystemExpander {
         #endif
     }
 
+    // Note: injected expansion text is re-observed by this listen-only tap; buffer.reset() after a match
+    // means a replacement ending in a trigger could double-expand (bounded, not a loop). Acceptable for v1.
     func handleKeyDown(_ event: CGEvent) {
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
 
