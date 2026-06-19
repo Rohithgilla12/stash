@@ -18,15 +18,9 @@ final class WindowSnapper {
 
     var isTrusted: Bool { AXIsProcessTrusted() }
 
-    func ensureTrusted() {
-        let key = kAXTrustedCheckOptionPrompt.takeRetainedValue() as String
-        let options = [key: true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
-    }
-
     func snap(_ target: SnapTarget) {
         guard AXIsProcessTrusted() else {
-            ensureTrusted()
+            AccessibilityAuthorizer.requestOnce()
             return
         }
 

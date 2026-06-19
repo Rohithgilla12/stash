@@ -53,8 +53,7 @@ final class SystemExpander {
 
     private func installTap() {
         if !AXIsProcessTrusted() {
-            let options = [kAXTrustedCheckOptionPrompt.takeRetainedValue() as String: true] as CFDictionary
-            AXIsProcessTrustedWithOptions(options)
+            AccessibilityAuthorizer.requestOnce()
             return
         }
 

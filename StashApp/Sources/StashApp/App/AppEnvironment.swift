@@ -68,7 +68,9 @@ final class AppEnvironment {
         startStickyObservation()
         stickyManager.registerHotKey()
         registerSnapHotKeys()
-        if !snapper.isTrusted { snapper.ensureTrusted() }
+        // Do NOT prompt for Accessibility at launch — only when the user actually
+        // uses a feature that needs it (a snap hotkey, or enabling the expander),
+        // and then at most once per launch (see AccessibilityAuthorizer).
         if snippetsViewModel.expanderEnabled {
             systemExpander.setEnabled(true)
         }
