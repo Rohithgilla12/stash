@@ -16,6 +16,7 @@ final class AppEnvironment {
     private var stickyObservationTask: Task<Void, Never>?
     private let snapper = WindowSnapper()
     private var snapHotKeys: [GlobalHotKey] = []
+    private let pasteBrowser = PasteBrowserController()
 
     init() {
         let database = (try? StashDatabase(path: AppPaths.dbURL().path))
@@ -45,7 +46,12 @@ final class AppEnvironment {
         )
 
         wireExpander()
+        wirePasteBrowser()
         start()
+    }
+
+    private func wirePasteBrowser() {
+        pasteBrowser.itemsProvider = { [weak self] in self?.viewModel.items ?? [] }
     }
 
     private func wireExpander() {
@@ -67,6 +73,7 @@ final class AppEnvironment {
         Task { await snippetsViewModel.seed() }
         startStickyObservation()
         stickyManager.registerHotKey()
+        pasteBrowser.registerHotKey()
         registerSnapHotKeys()
         // Do NOT prompt for Accessibility at launch — only when the user actually
         // uses a feature that needs it (a snap hotkey, or enabling the expander),
