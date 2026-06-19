@@ -4,9 +4,28 @@ import GRDB
 @MainActor
 @Observable
 final class SnippetsViewModel {
-    var snippets: [Snippet] = []
+    var snippets: [Snippet] = [] {
+        didSet { onSnippetsChanged?(snippets) }
+    }
     var demoText: String = ""
     var lastExpanded: String?
+
+    var expanderEnabled: Bool {
+        didSet {
+            let requested = expanderEnabled
+            let actual = onExpanderToggled?(requested) ?? requested
+            UserDefaults.standard.set(actual, forKey: "expanderEnabled")
+            // If the install failed, revert the toggle to reflect the real state.
+            // The recursive didSet will also compute actual == false, and since the
+            // hook returns false == newValue the guard below prevents a third pass.
+            if actual != requested {
+                expanderEnabled = actual
+            }
+        }
+    }
+
+    var onExpanderToggled: ((Bool) -> Bool)?
+    var onSnippetsChanged: (([Snippet]) -> Void)?
 
     private let db: any DatabaseWriter
     private let store: SnippetsStore
@@ -15,6 +34,7 @@ final class SnippetsViewModel {
     init(db: any DatabaseWriter, store: SnippetsStore) {
         self.db = db
         self.store = store
+        self.expanderEnabled = UserDefaults.standard.bool(forKey: "expanderEnabled")
     }
 
     func startObserving() {

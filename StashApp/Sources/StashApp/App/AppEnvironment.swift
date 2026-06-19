@@ -8,6 +8,7 @@ final class AppEnvironment {
     let notesViewModel: NotesViewModel
     let tasksViewModel: TasksViewModel
     let snippetsViewModel: SnippetsViewModel
+    private let systemExpander = SystemExpander()
     private let monitor: ClipboardMonitor
     private let stickyManager: StickyNotesManager
     private let db: StashDatabase
@@ -41,7 +42,18 @@ final class AppEnvironment {
             onOpenNote: { [weak notesVM] note in notesVM?.selectedId = note.id }
         )
 
+        wireExpander()
         start()
+    }
+
+    private func wireExpander() {
+        let expander = systemExpander
+        snippetsViewModel.onExpanderToggled = { [weak expander] isOn in
+            expander?.setEnabled(isOn) ?? false
+        }
+        snippetsViewModel.onSnippetsChanged = { [weak expander] snippets in
+            expander?.snippets = snippets
+        }
     }
 
     func start() {
@@ -55,6 +67,9 @@ final class AppEnvironment {
         stickyManager.registerHotKey()
         registerSnapHotKeys()
         if !snapper.isTrusted { snapper.ensureTrusted() }
+        if snippetsViewModel.expanderEnabled {
+            systemExpander.setEnabled(true)
+        }
     }
 
     private func registerSnapHotKeys() {
