@@ -31,7 +31,7 @@ struct TodosTab: View {
                 }
         }
         .padding(8)
-        .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
     }
 
     private var sectionHeader: some View {
@@ -111,7 +111,7 @@ struct TaskRowView: View {
             }
         }
         .padding(8)
-        .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
     }
 
     private var priorityDot: some View {
@@ -156,7 +156,7 @@ struct TaskRowView: View {
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(
-                    isToday ? Tokens.accent : Color.black.opacity(0.08),
+                    isToday ? Tokens.accent : Color.primary.opacity(0.10),
                     in: Capsule()
                 )
         }

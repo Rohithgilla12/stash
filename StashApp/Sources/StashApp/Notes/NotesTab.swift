@@ -39,7 +39,7 @@ struct NotesTab: View {
                 Spacer()
             }
             .padding(8)
-            .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
         }
         .buttonStyle(.plain)
     }
@@ -68,7 +68,7 @@ private struct NoteRowView: View {
                 .foregroundStyle(Tokens.textTertiary)
         }
         .padding(8)
-        .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
     }
@@ -79,7 +79,7 @@ private struct NoteRowView: View {
             .frame(width: 14, height: 30)
             .overlay(
                 RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
             )
     }
 

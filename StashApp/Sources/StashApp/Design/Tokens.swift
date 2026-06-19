@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 extension Color {
@@ -10,14 +11,33 @@ extension Color {
         let b = Double(v & 0xFF) / 255
         self = Color(.sRGB, red: r, green: g, blue: b, opacity: 1)
     }
+
+    init(light: Color, dark: Color) {
+        self = Color(nsColor: NSColor(name: nil) { appearance in
+            appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(dark) : NSColor(light)
+        })
+    }
 }
 
 enum Tokens {
     static let accent = Color(hex: "#c8642f")
-    static let panelFill = Color(.sRGB, red: 252/255, green: 250/255, blue: 246/255, opacity: 0.93)
-    static let textPrimary = Color(hex: "#2c2925")
-    static let textSecondary = Color(hex: "#6b655c")
-    static let textTertiary = Color(hex: "#9a948a")
+    static let panelFill = Color(
+        light: Color(.sRGB, red: 252/255, green: 250/255, blue: 246/255, opacity: 0.93),
+        dark:  Color(.sRGB, red: 32/255,  green: 30/255,  blue: 27/255,  opacity: 0.96)
+    )
+    static let textPrimary = Color(
+        light: Color(hex: "#2C2925"),
+        dark:  Color(hex: "#F3EFE9")
+    )
+    static let textSecondary = Color(
+        light: Color(hex: "#6B655C"),
+        dark:  Color(hex: "#B5ADA3")
+    )
+    static let textTertiary = Color(
+        light: Color(hex: "#9A948A"),
+        dark:  Color(hex: "#8D867C")
+    )
     static let priorityHigh = accent
     static let priorityMed = Color(hex: "#d8a13a")
     static let priorityLow = Color(hex: "#b3a99b")
@@ -28,10 +48,22 @@ enum Tokens {
     static let contentMaxHeight: CGFloat = 600
     static let thumbSize = CGSize(width: 58, height: 38)
 
-    static let hairline = Color(hex: "#2c2925").opacity(0.06)
-    static let rowHover = Color(hex: "#2c2925").opacity(0.04)
-    static let rowSelected = accent.opacity(0.10)
-    static let surface = Color(.sRGB, red: 1, green: 0.996, blue: 0.99, opacity: 0.6)
+    static let hairline = Color(
+        light: Color(hex: "#2c2925").opacity(0.06),
+        dark:  Color.white.opacity(0.09)
+    )
+    static let rowHover = Color(
+        light: Color(hex: "#2c2925").opacity(0.04),
+        dark:  Color.white.opacity(0.05)
+    )
+    static let rowSelected = Color(
+        light: accent.opacity(0.10),
+        dark:  accent.opacity(0.16)
+    )
+    static let surface = Color(
+        light: Color(.sRGB, red: 1, green: 0.996, blue: 0.99, opacity: 0.6),
+        dark:  Color(.sRGB, red: 42/255, green: 39/255, blue: 36/255, opacity: 0.9)
+    )
 
     static let linkColor = Color(hex: "#5b86b8")
     static let imageColor = Color(hex: "#8a6db0")

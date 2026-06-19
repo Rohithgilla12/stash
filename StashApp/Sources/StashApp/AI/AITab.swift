@@ -123,7 +123,7 @@ struct AITab: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(Color(hex: "#e0dbd6"))
+                        .fill(Color.primary.opacity(0.12))
                         .frame(height: 5)
                     RoundedRectangle(cornerRadius: 3)
                         .fill(Tokens.accent)

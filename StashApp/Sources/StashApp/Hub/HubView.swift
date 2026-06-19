@@ -24,7 +24,7 @@ struct HubView<Content: View>: View {
             TextField("Search", text: $query).textFieldStyle(.plain)
         }
         .padding(8)
-        .background(Color.black.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
     }
 
     private var tabBar: some View {

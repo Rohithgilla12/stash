@@ -49,7 +49,7 @@ struct ClipRowView: View {
                 .fill(swatchColor)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
+                        .strokeBorder(Color.primary.opacity(0.10), lineWidth: 1)
                 )
         } else {
             RoundedRectangle(cornerRadius: 8)

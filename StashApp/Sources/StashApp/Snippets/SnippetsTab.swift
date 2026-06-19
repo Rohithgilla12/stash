@@ -54,7 +54,7 @@ struct SnippetsTab: View {
                 .font(.callout)
                 .foregroundStyle(Tokens.textPrimary)
                 .padding(8)
-                .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+                .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
                 .onChange(of: model.demoText) { _, _ in model.onDemoChange() }
         }
     }
@@ -109,7 +109,7 @@ private struct SnippetRowView: View {
             Spacer()
         }
         .padding(8)
-        .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
     }
