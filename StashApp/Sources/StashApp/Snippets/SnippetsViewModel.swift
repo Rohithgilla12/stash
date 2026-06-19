@@ -76,7 +76,39 @@ final class SnippetsViewModel {
     }
 
     func insert(_ s: Snippet) {
-        let resolved = ExpansionEngine.resolve(s, now: Date())
-        demoText += resolved
+        guard !s.trigger.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        Task {
+            do {
+                try await store.upsert(s)
+            } catch {
+                #if DEBUG
+                print("SnippetsViewModel insert error:", error)
+                #endif
+            }
+        }
+    }
+
+    func update(_ s: Snippet) {
+        Task {
+            do {
+                try await store.upsert(s)
+            } catch {
+                #if DEBUG
+                print("SnippetsViewModel update error:", error)
+                #endif
+            }
+        }
+    }
+
+    func delete(_ s: Snippet) {
+        Task {
+            do {
+                try await store.delete(trigger: s.trigger)
+            } catch {
+                #if DEBUG
+                print("SnippetsViewModel delete error:", error)
+                #endif
+            }
+        }
     }
 }
