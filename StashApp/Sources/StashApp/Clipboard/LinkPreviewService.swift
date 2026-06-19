@@ -49,7 +49,8 @@ private struct ImageBox: @unchecked Sendable {
 
         let box = await withCheckedContinuation { (continuation: CheckedContinuation<MetadataBox?, Never>) in
             nonisolated(unsafe) var resumed = false
-            provider.startFetchingMetadata(for: url) { meta, _ in
+            provider.startFetchingMetadata(for: url) { [provider] meta, _ in
+                _ = provider
                 guard !resumed else { return }
                 resumed = true
                 guard let meta else {
@@ -87,7 +88,21 @@ private struct ImageBox: @unchecked Sendable {
                     try? FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
                     try? data.write(to: pngURL)
                     imagePath = pngURL.path
+                } else {
+                    // TODO: distinguish transient image-load failure from "link has no og:image"
+                    // Currently cached as success-no-image; a link with a real og:image that
+                    // fails transiently here will never retry until its cache entry is evicted.
+                    #if DEBUG
+                    print("[LinkPreview] image load failed or unavailable for \(url.host ?? urlString); caching title-only result")
+                    #endif
                 }
+            } else {
+                // TODO: distinguish transient image-load failure from "link has no og:image"
+                // Currently cached as success-no-image; a link with a real og:image that
+                // fails transiently here will never retry until its cache entry is evicted.
+                #if DEBUG
+                print("[LinkPreview] image load failed or unavailable for \(url.host ?? urlString); caching title-only result")
+                #endif
             }
         }
 
