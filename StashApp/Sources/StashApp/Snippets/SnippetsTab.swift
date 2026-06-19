@@ -7,6 +7,7 @@ struct SnippetsTab: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            expanderToggle
             demoField
             snippetList
         }
@@ -28,6 +29,19 @@ struct SnippetsTab: View {
                 withAnimation { showToast = false }
             }
         }
+    }
+
+    private var expanderToggle: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Toggle("Expand snippets system-wide", isOn: $model.expanderEnabled)
+                .toggleStyle(.switch)
+                .font(.callout)
+                .foregroundStyle(Tokens.textPrimary)
+            Text("Requires Accessibility permission")
+                .font(.caption)
+                .foregroundStyle(Tokens.textTertiary)
+        }
+        .padding(.bottom, 2)
     }
 
     private var demoField: some View {

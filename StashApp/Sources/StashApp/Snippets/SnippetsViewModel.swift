@@ -4,9 +4,21 @@ import GRDB
 @MainActor
 @Observable
 final class SnippetsViewModel {
-    var snippets: [Snippet] = []
+    var snippets: [Snippet] = [] {
+        didSet { onSnippetsChanged?(snippets) }
+    }
     var demoText: String = ""
     var lastExpanded: String?
+
+    var expanderEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(expanderEnabled, forKey: "expanderEnabled")
+            onExpanderToggled?(expanderEnabled)
+        }
+    }
+
+    var onExpanderToggled: ((Bool) -> Void)?
+    var onSnippetsChanged: (([Snippet]) -> Void)?
 
     private let db: any DatabaseWriter
     private let store: SnippetsStore
@@ -15,6 +27,7 @@ final class SnippetsViewModel {
     init(db: any DatabaseWriter, store: SnippetsStore) {
         self.db = db
         self.store = store
+        self.expanderEnabled = UserDefaults.standard.bool(forKey: "expanderEnabled")
     }
 
     func startObserving() {
