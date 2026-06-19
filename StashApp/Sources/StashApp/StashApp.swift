@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct StashApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var env = AppEnvironment()
     @State private var selection: HubTab = .clipboard
 

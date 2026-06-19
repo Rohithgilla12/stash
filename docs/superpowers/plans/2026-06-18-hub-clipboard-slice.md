@@ -45,7 +45,7 @@ Expected: `xcodegen` on PATH (`xcodegen --version` prints a version).
 ```yaml
 name: StashApp
 options:
-  bundleIdPrefix: co.fusang.stash
+  bundleIdPrefix: com.rohithgilla.stash
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
@@ -75,7 +75,7 @@ targets:
       base:
         ENABLE_APP_SANDBOX: NO
         GENERATE_INFOPLIST_FILE: NO
-        PRODUCT_BUNDLE_IDENTIFIER: co.fusang.stash.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.rohithgilla.stash.app
         COMBINE_HIDPI_IMAGES: YES
     dependencies:
       - package: GRDB
@@ -89,7 +89,7 @@ targets:
       - package: GRDB
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: co.fusang.stash.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.rohithgilla.stash.tests
 schemes:
   StashApp:
     build:

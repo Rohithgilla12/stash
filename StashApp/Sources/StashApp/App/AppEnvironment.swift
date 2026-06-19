@@ -4,6 +4,9 @@ import GRDB
 @MainActor
 @Observable
 final class AppEnvironment {
+    /// Set in init so the URL-scheme handler (AppDelegate) can reach the live instance.
+    static weak var shared: AppEnvironment?
+
     let viewModel: ClipboardViewModel
     let notesViewModel: NotesViewModel
     let tasksViewModel: TasksViewModel
@@ -48,6 +51,60 @@ final class AppEnvironment {
         wireExpander()
         wirePasteBrowser()
         start()
+        AppEnvironment.shared = self
+    }
+
+    /// Handles `stash://` deeplinks (so Karabiner / Shortcuts / `open` can drive any
+    /// action without relying on Stash's built-in global hotkeys).
+    ///   stash://paste                          — toggle the Paste browser
+    ///   stash://snap?target=leftHalf           — snap the focused window (SnapTarget rawValue)
+    ///   stash://stickies                       — toggle desktop sticky notes
+    ///   stash://expander?state=on|off|toggle   — system-wide text expander
+    ///   stash://note?title=...&body=...        — create a note
+    ///   stash://task?title=...                 — create a task (due Today)
+    func handleDeeplink(_ url: URL) {
+        guard url.scheme == "stash" else { return }
+        // The action is the host (stash://paste) or the first path segment.
+        let action = (url.host?.isEmpty == false ? url.host : nil)
+            ?? url.pathComponents.first(where: { $0 != "/" })
+            ?? ""
+        let comps = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        func q(_ name: String) -> String? { comps?.queryItems?.first { $0.name == name }?.value }
+
+        switch action.lowercased() {
+        case "paste":
+            pasteBrowser.toggle()
+        case "snap":
+            if let raw = q("target") ?? url.pathComponents.dropFirst(2).first,
+               let target = SnapTarget(rawValue: raw) {
+                snapper.snap(target)
+            }
+        case "stickies":
+            stickyManager.toggleVisibility()
+        case "expander":
+            switch (q("state") ?? "toggle").lowercased() {
+            case "on": snippetsViewModel.expanderEnabled = true
+            case "off": snippetsViewModel.expanderEnabled = false
+            default: snippetsViewModel.expanderEnabled.toggle()
+            }
+        case "note":
+            let title = q("title"); let body = q("body")
+            Task { [weak self] in
+                if let note = await self?.notesViewModel.newNote() {
+                    var n = note
+                    if let title { n.title = title }
+                    if let body { n.body = body }
+                    if title != nil || body != nil { await self?.notesViewModel.update(n) }
+                    self?.notesViewModel.selectedId = n.id
+                }
+            }
+        case "task":
+            if let title = q("title"), !title.isEmpty {
+                Task { [weak self] in await self?.tasksViewModel.add(title) }
+            }
+        default:
+            break
+        }
     }
 
     private func wirePasteBrowser() {
