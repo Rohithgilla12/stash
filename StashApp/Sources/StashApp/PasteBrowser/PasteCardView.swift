@@ -5,6 +5,8 @@ struct PasteCardView: View {
     let isSelected: Bool
     let onPaste: () -> Void
 
+    @State private var ogPreview: LinkPreview?
+
     private let cardWidth: CGFloat = 200
     private let cardHeight: CGFloat = 220
     private let cornerRadius: CGFloat = 12
@@ -30,6 +32,11 @@ struct PasteCardView: View {
             .frame(width: cardWidth, height: cardHeight)
         }
         .buttonStyle(CardButtonStyle(isSelected: isSelected, cornerRadius: cornerRadius))
+        .task {
+            if item.kind == .link {
+                ogPreview = await LinkPreviewService.shared.preview(for: item.text ?? "")
+            }
+        }
     }
 
     @ViewBuilder
@@ -67,7 +74,7 @@ struct PasteCardView: View {
                 textPreview
             }
         case .link:
-            linkPreview
+            linkPreviewContent
         }
     }
 
@@ -114,20 +121,43 @@ struct PasteCardView: View {
             .fixedSize(horizontal: false, vertical: false)
     }
 
-    private var linkPreview: some View {
-        VStack(alignment: .leading, spacing: Space.xs) {
-            if let title = item.title {
-                Text(title)
-                    .font(.ui(12, .semibold))
+    @ViewBuilder
+    private var linkPreviewContent: some View {
+        if let path = ogPreview?.imagePath, let ogImage = NSImage(contentsOfFile: path) {
+            VStack(alignment: .leading, spacing: Space.xs) {
+                Image(nsImage: ogImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: 110)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                Text(ogPreview?.title ?? item.title ?? ogPreview?.domain ?? item.text ?? "")
+                    .font(.rounded(12, .semibold))
                     .foregroundStyle(Tokens.textPrimary)
+                    .lineLimit(2)
+
+                if let domain = ogPreview?.domain {
+                    Text(domain)
+                        .font(.mono(10))
+                        .foregroundStyle(Tokens.textTertiary)
+                        .lineLimit(1)
+                }
+            }
+        } else {
+            VStack(alignment: .leading, spacing: Space.xs) {
+                if let title = ogPreview?.title ?? item.title {
+                    Text(title)
+                        .font(.ui(12, .semibold))
+                        .foregroundStyle(Tokens.textPrimary)
+                        .lineLimit(3)
+                }
+                Text(ogPreview?.domain ?? item.text ?? "")
+                    .font(.ui(11))
+                    .foregroundStyle(Tokens.textTertiary)
                     .lineLimit(3)
             }
-            Text(item.text ?? "")
-                .font(.ui(11))
-                .foregroundStyle(Tokens.textTertiary)
-                .lineLimit(3)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
     private var footerMeta: some View {

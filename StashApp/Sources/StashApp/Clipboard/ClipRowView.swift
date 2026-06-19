@@ -6,6 +6,8 @@ struct ClipRowView: View {
     let onTogglePin: () -> Void
     var onDelete: (() -> Void)? = nil
 
+    @State private var ogPreview: LinkPreview?
+
     var body: some View {
         HoverRow { hovering in
             HStack(spacing: 10) {
@@ -13,7 +15,7 @@ struct ClipRowView: View {
                     .frame(width: 40, height: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.title ?? item.text ?? "Untitled")
+                    Text(item.kind == .link ? (ogPreview?.title ?? item.title ?? item.text ?? "Untitled") : (item.title ?? item.text ?? "Untitled"))
                         .font(.ui(13, .medium))
                         .foregroundStyle(Tokens.textPrimary)
                         .lineLimit(1)
@@ -40,6 +42,11 @@ struct ClipRowView: View {
             .padding(.horizontal, 8)
             .contentShape(Rectangle())
             .onTapGesture(perform: onCopy)
+            .task {
+                if item.kind == .link {
+                    ogPreview = await LinkPreviewService.shared.preview(for: item.text ?? "")
+                }
+            }
         }
     }
 
@@ -50,6 +57,12 @@ struct ClipRowView: View {
             Image(nsImage: img)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .frame(width: 40, height: 40)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else if item.kind == .link, let path = ogPreview?.imagePath, let img = NSImage(contentsOfFile: path) {
+            Image(nsImage: img)
+                .resizable()
+                .scaledToFill()
                 .frame(width: 40, height: 40)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         } else if let swatchColor = ClipPresentation.detectedColor(in: item.text) {
