@@ -88,6 +88,11 @@ final class SnippetsViewModel {
         }
     }
 
+    func insertToDemo(_ s: Snippet) {
+        let resolved = ExpansionEngine.resolve(s, now: Date())
+        demoText += resolved
+    }
+
     func update(_ s: Snippet) {
         Task {
             do {

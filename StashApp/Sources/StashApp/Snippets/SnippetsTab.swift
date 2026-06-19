@@ -109,7 +109,7 @@ struct SnippetsTab: View {
                         ForEach(model.snippets) { snippet in
                             SnippetRowView(
                                 snippet: snippet,
-                                onTapInsert: { model.insert(snippet) },
+                                onTapInsert: { model.insertToDemo(snippet) },
                                 onEdit: { editingSnippet = snippet },
                                 onDelete: { model.delete(snippet) }
                             )
