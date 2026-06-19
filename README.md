@@ -1,12 +1,40 @@
-# Handoff: Stash — macOS productivity app
+# Stash — a warm macOS menu-bar productivity app
 
-## Overview
-**Stash** is a native macOS menu-bar productivity app. One menu-bar panel ("the hub")
-holds everything: clipboard history (with link/image/GIF previews), notes, a full to-do
-app, text-expansion snippets, Raycast-style window management, and an AI tab. Notes also
-live on the desktop as paper sticky notes that toggle with ⌥Space. Stash runs an **MCP
-server** so Claude & Claude Code can read and write the user's tasks/notes/clipboard —
+**Stash** is a native macOS menu-bar app. One panel ("the hub") holds everything:
+clipboard history (with link/image previews), notes, a full to-do app, text-expansion
+snippets (+ emoji `:rocket:`), Raycast-style window management, a Pomodoro Focus timer,
+and an AI tab. Notes also live on the desktop as paper sticky notes that toggle with
+⌥Space. There's a Paste-style clipboard browser (⌃⌥V), a `stash://` URL scheme, and an
+**MCP server** so Claude & Claude Code can read/write your tasks/notes/clipboard —
 e.g. "plan my day".
+
+## Install (beta)
+
+**Requires macOS 14 (Sonoma) or later.**
+
+1. Download the latest **`Stash-x.x.x.dmg`** from the
+   **[Releases page](https://github.com/Rohithgilla12/stash/releases/latest)**.
+2. Open the DMG and drag **Stash** into **Applications**.
+3. Launch it — Stash lives in your **menu bar** (the tray icon), not the Dock.
+4. The first time you use **window snapping** (⌃⌥ arrows) or the **text expander**,
+   grant **Accessibility** when prompted (System Settings → Privacy & Security →
+   Accessibility). That's the only permission it needs.
+
+The build is signed with a Developer ID and **notarized by Apple**, so it opens without
+Gatekeeper warnings. Power-user extras: the `stash://` URL scheme (drive any action from
+Karabiner / Raycast / Shortcuts) and the [MCP server](mcp-server/SETUP.md).
+
+### Build from source
+
+```bash
+brew install xcodegen
+cd StashApp && xcodegen generate
+xcodebuild -scheme StashApp -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO
+# or open StashApp.xcodeproj in Xcode
+```
+
+To produce a signed + notarized DMG yourself, run `scripts/release.sh` (one-time setup
+notes are at the top of the script).
 
 ## About the design files
 The HTML file in this bundle (`Stash Prototype.dc.html`) is a **design reference / interactive
