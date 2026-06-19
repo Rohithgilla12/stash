@@ -149,7 +149,7 @@ struct AITab: View {
 
             GeometryReader { _ in
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(Color(hex: "#e0dbd6"))
+                    .fill(Color.primary.opacity(0.12))
                     .frame(height: 5)
             }
             .frame(height: 5)
