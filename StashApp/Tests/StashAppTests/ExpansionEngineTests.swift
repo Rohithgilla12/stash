@@ -73,3 +73,48 @@ private func makeSnippet(trigger: String, expand: String? = nil, dynamic: String
     let result = ExpansionEngine.expanded(buffer: "no match", snippets: [], now: Date())
     #expect(result == nil)
 }
+
+@Test func testEmojiRocketExpands() {
+    let result = ExpansionEngine.match(buffer: "hello :rocket:", snippets: [], now: Date())
+    #expect(result?.replacement == "🚀")
+    #expect(result?.matchLength == 8)
+}
+
+@Test func testEmojiFireExpands() {
+    let result = ExpansionEngine.match(buffer: ":fire:", snippets: [], now: Date())
+    #expect(result?.replacement == "🔥")
+    #expect(result?.matchLength == 6)
+}
+
+@Test func testEmojiPlusOneExpands() {
+    let result = ExpansionEngine.match(buffer: ":+1:", snippets: [], now: Date())
+    #expect(result?.replacement == "👍")
+    #expect(result?.matchLength == 4)
+}
+
+@Test func testEmojiMinusOneExpands() {
+    let result = ExpansionEngine.match(buffer: ":-1:", snippets: [], now: Date())
+    #expect(result?.replacement == "👎")
+    #expect(result?.matchLength == 4)
+}
+
+@Test func testEmojiNoClosingColonReturnsNil() {
+    let result = ExpansionEngine.match(buffer: ":rocket", snippets: [], now: Date())
+    #expect(result == nil)
+}
+
+@Test func testEmojiUnknownCodeReturnsNil() {
+    let result = ExpansionEngine.match(buffer: ":notarealcode123:", snippets: [], now: Date())
+    #expect(result == nil)
+}
+
+@Test func testEmojiEmptyCodeReturnsNil() {
+    let result = ExpansionEngine.match(buffer: "::", snippets: [], now: Date())
+    #expect(result == nil)
+}
+
+@Test func testSnippetTakesPriorityOverEmoji() {
+    let rocketSnippet = makeSnippet(trigger: ":rocket:", expand: "custom rocket")
+    let result = ExpansionEngine.match(buffer: "go :rocket:", snippets: [rocketSnippet], now: Date())
+    #expect(result?.replacement == "custom rocket")
+}

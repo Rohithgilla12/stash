@@ -25,10 +25,24 @@ enum ExpansionEngine {
 
     static func match(buffer: String, snippets: [Snippet], now: Date) -> (matchLength: Int, replacement: String)? {
         let candidates = snippets.filter { buffer.hasSuffix($0.trigger) }
-        guard let best = candidates.max(by: { $0.trigger.count < $1.trigger.count }) else {
-            return nil
+        if let best = candidates.max(by: { $0.trigger.count < $1.trigger.count }) {
+            return (best.trigger.count, resolve(best, now: now))
         }
-        return (best.trigger.count, resolve(best, now: now))
+        return emojiMatch(buffer)
+    }
+
+    static func emojiMatch(_ buffer: String) -> (matchLength: Int, replacement: String)? {
+        guard buffer.hasSuffix(":") else { return nil }
+        let withoutLast = buffer.dropLast()
+        guard let openIdx = withoutLast.lastIndex(of: ":") else { return nil }
+        let codeStart = withoutLast.index(after: openIdx)
+        let code = String(withoutLast[codeStart...])
+        guard !code.isEmpty else { return nil }
+        let allowed = CharacterSet.letters.union(.decimalDigits).union(CharacterSet(charactersIn: "_+-"))
+        guard code.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
+        let lower = code.lowercased()
+        guard let emoji = EmojiShortcodes.map[lower] else { return nil }
+        return (code.count + 2, emoji)
     }
 
     static func expanded(buffer: String, snippets: [Snippet], now: Date) -> (text: String, expandedTrigger: String)? {
