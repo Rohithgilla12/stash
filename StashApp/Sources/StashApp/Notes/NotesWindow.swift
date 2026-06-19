@@ -74,10 +74,6 @@ private struct SidebarRow: View {
         Color(hex: note.color ?? "#fdf0c2")
     }
 
-    private var chipAccent: Color {
-        Color(hex: note.accent ?? "#c8642f")
-    }
-
     private var snippet: String {
         if note.kind == .todo, let first = note.items.first {
             return first.t.isEmpty ? "No tasks" : first.t
