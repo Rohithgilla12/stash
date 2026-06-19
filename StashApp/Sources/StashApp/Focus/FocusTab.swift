@@ -77,27 +77,46 @@ struct FocusTab: View {
                 .buttonStyle(.plain)
             }
 
-            Picker("Duration", selection: $preset) {
-                ForEach(Preset.allCases, id: \.self) { p in
-                    Text(p.rawValue).tag(p)
-                }
-            }
-            .pickerStyle(.segmented)
-            .frame(maxWidth: 160)
-            .onChange(of: preset) { _, newValue in
-                switch newValue {
-                case .standard:
-                    timer.focusDuration = 25 * 60
-                    timer.shortBreakDuration = 5 * 60
-                case .extended:
-                    timer.focusDuration = 50 * 60
-                    timer.shortBreakDuration = 10 * 60
-                }
-                timer.reset()
-            }
+            presetPicker
 
             Spacer(minLength: Space.sm)
         }
         .padding(.horizontal, Space.lg)
+    }
+
+    // Warm terracotta segmented control (no system-blue Picker, no inline label).
+    private var presetPicker: some View {
+        HStack(spacing: 2) {
+            ForEach(Preset.allCases, id: \.self) { p in
+                Button { select(p) } label: {
+                    Text(p.rawValue)
+                        .font(.ui(12, .medium))
+                        .foregroundStyle(preset == p ? .white : Tokens.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                        .background(
+                            preset == p ? Tokens.accent : .clear,
+                            in: RoundedRectangle(cornerRadius: 7)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(3)
+        .background(Tokens.hairline, in: RoundedRectangle(cornerRadius: 9))
+        .frame(maxWidth: 180)
+    }
+
+    private func select(_ p: Preset) {
+        preset = p
+        switch p {
+        case .standard:
+            timer.focusDuration = 25 * 60
+            timer.shortBreakDuration = 5 * 60
+        case .extended:
+            timer.focusDuration = 50 * 60
+            timer.shortBreakDuration = 10 * 60
+        }
+        timer.reset()
     }
 }
