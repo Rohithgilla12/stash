@@ -7,8 +7,14 @@ struct StashApp: App {
     @State private var selection: HubTab = .clipboard
 
     var body: some Scene {
-        MenuBarExtra("Stash", systemImage: "tray.full") {
+        MenuBarExtra {
             ContentView(env: env, selection: $selection)
+        } label: {
+            if env.pomodoro.isRunning {
+                Text(env.pomodoro.display)
+            } else {
+                Image(systemName: "tray.full")
+            }
         }
         .menuBarExtraStyle(.window)
 
@@ -43,6 +49,7 @@ private struct ContentView: View {
             case .clipboard: ClipboardTab(model: env.viewModel)
             case .notes: NotesTab(model: env.notesViewModel)
             case .todos: TodosTab(model: env.tasksViewModel)
+            case .focus: FocusTab(timer: env.pomodoro)
             case .snippets: SnippetsTab(model: env.snippetsViewModel)
             case .windows: WindowsTab()
             case .ai: AITab(model: env.aiViewModel)
