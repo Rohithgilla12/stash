@@ -1,0 +1,29 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4763f"/>
+      <stop offset="1" stop-color="#b04e1d"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#5a2410" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- warm terracotta squircle -->
+  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="url(#bg)"/>
+
+  <!-- a small stash of fanned cream cards -->
+  <g transform="rotate(-13 512 545)" filter="url(#cardShadow)">
+    <rect x="357" y="345" width="310" height="400" rx="34" fill="#e9e0d2"/>
+  </g>
+  <g transform="rotate(-1 512 545)" filter="url(#cardShadow)">
+    <rect x="357" y="335" width="310" height="400" rx="34" fill="#f1e9dc"/>
+  </g>
+  <g transform="rotate(12 512 545)" filter="url(#cardShadow)">
+    <rect x="357" y="325" width="310" height="400" rx="34" fill="#faf5ec"/>
+    <!-- note/clip lines on the front card -->
+    <rect x="397" y="392" width="190" height="24" rx="12" fill="#c8642f" opacity="0.90"/>
+    <rect x="397" y="446" width="230" height="18" rx="9" fill="#9a8c7a" opacity="0.55"/>
+    <rect x="397" y="490" width="150" height="18" rx="9" fill="#9a8c7a" opacity="0.55"/>
+  </g>
+</svg>
