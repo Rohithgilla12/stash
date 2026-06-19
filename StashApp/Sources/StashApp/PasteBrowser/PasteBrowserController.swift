@@ -30,46 +30,52 @@ final class PasteBrowserController {
         }
     }
 
-    private func show() {
-        previousApp = NSWorkspace.shared.frontmostApplication
-
-        let items = itemsProvider()
-
-        let contentView = PasteBrowserView(
-            items: items,
-            onPaste: { [weak self] item in self?.paste(item) },
-            onClose: { [weak self] in self?.hide() }
-        )
-
-        let hosting = NSHostingView(rootView: contentView)
-        hosting.translatesAutoresizingMaskIntoConstraints = false
-
+    // Reuse a single panel across opens so re-triggering the hotkey is reliable.
+    private func ensurePanel() -> KeyablePanel {
+        if let panel { return panel }
         let p = KeyablePanel(
-            contentRect: .zero,
+            contentRect: NSRect(x: 0, y: 0, width: 1100, height: 300),
             styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
         p.titlebarAppearsTransparent = true
         p.titleVisibility = .hidden
-        p.isMovable = true
+        p.standardWindowButton(.closeButton)?.isHidden = true
+        p.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        p.standardWindowButton(.zoomButton)?.isHidden = true
+        p.isMovableByWindowBackground = true
         p.backgroundColor = .clear
         p.isOpaque = false
         p.hasShadow = true
         p.level = .floating
-        p.hidesOnDeactivate = true
-        p.contentView = hosting
+        // Agent app: do NOT auto-hide on deactivate (it can self-dismiss before
+        // it's even shown). Dismiss explicitly via Esc / Enter / re-pressing ⌃⌥V.
+        p.hidesOnDeactivate = false
+        p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel = p
+        return p
+    }
+
+    private func show() {
+        previousApp = NSWorkspace.shared.frontmostApplication
+        let p = ensurePanel()
+
+        // Fresh SwiftUI view each open → fresh selection/search state.
+        let view = PasteBrowserView(
+            items: itemsProvider(),
+            onPaste: { [weak self] item in self?.paste(item) },
+            onClose: { [weak self] in self?.hide() }
+        )
+        p.contentView = NSHostingView(rootView: view)
 
         let screen = NSScreen.main ?? NSScreen.screens[0]
         let visible = screen.visibleFrame
-        let panelWidth = min(1100, visible.width * 0.86)
-        let panelHeight: CGFloat = 300
-        let x = visible.minX + (visible.width - panelWidth) / 2
+        let w = min(1100, visible.width * 0.86)
+        let h: CGFloat = 300
+        let x = visible.minX + (visible.width - w) / 2
         let y = visible.minY + visible.height * 0.18
-
-        p.setFrame(NSRect(x: x, y: y, width: panelWidth, height: panelHeight), display: false)
-
-        self.panel = p
+        p.setFrame(NSRect(x: x, y: y, width: w, height: h), display: true)
 
         NSApp.activate(ignoringOtherApps: true)
         p.makeKeyAndOrderFront(nil)
@@ -78,31 +84,30 @@ final class PasteBrowserController {
     func paste(_ item: ClipItem) {
         let pb = NSPasteboard.general
         pb.clearContents()
-
-        if item.kind == .image, let path = item.previewPath {
-            if let img = NSImage(contentsOfFile: path) {
-                pb.writeObjects([img])
-            }
+        if item.kind == .image, let path = item.previewPath, let img = NSImage(contentsOfFile: path) {
+            pb.writeObjects([img])
         } else {
             pb.setString(item.text ?? "", forType: .string)
         }
 
         hide()
-        previousApp?.activate(options: [])
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
-            guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true) else { return }
-            keyDown.flags = .maskCommand
-            keyDown.post(tap: .cghidEventTap)
-
-            guard let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: false) else { return }
-            keyUp.flags = .maskCommand
-            keyUp.post(tap: .cghidEventTap)
+        // Reactivate the app that was focused before the panel opened, then
+        // synthesize Cmd-V. Auto-paste is best-effort (needs Accessibility);
+        // the item is on the clipboard regardless.
+        previousApp?.activate()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {
+            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true) else { return }
+            down.flags = .maskCommand
+            down.post(tap: .cghidEventTap)
+            guard let up = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: false) else { return }
+            up.flags = .maskCommand
+            up.post(tap: .cghidEventTap)
         }
     }
 
     func hide() {
         panel?.orderOut(nil)
-        previousApp?.activate(options: [])
+        previousApp?.activate()
     }
 }
