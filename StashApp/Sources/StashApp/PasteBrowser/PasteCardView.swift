@@ -30,6 +30,7 @@ struct PasteCardView: View {
                 .padding(Space.md)
             }
             .frame(width: cardWidth, height: cardHeight)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
         .buttonStyle(CardButtonStyle(isSelected: isSelected, cornerRadius: cornerRadius))
         .task {
