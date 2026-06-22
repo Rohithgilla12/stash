@@ -9,6 +9,8 @@ name: Release
 #   DEVID_CERT_PASSWORD    – the password you set when exporting the .p12
 #   AC_APPLE_ID            – your Apple ID email (e.g. gillarohith@gmail.com)
 #   AC_APP_PASSWORD        – an app-specific password from appleid.apple.com
+#   SPARKLE_ED_PRIVATE_KEY – the EdDSA private key from Sparkle's generate_keys -x
+#                            (signs the auto-update; public key is in Info.plist)
 #   (Team ID 7D2V3RM56T is hard-coded below; change if needed.)
 
 on:
@@ -26,6 +28,8 @@ jobs:
       SIGN_IDENTITY: "Developer ID Application: Rohith Gilla (7D2V3RM56T)"
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history → git rev-list --count gives a real build number
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -46,19 +50,25 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
           rm cert.p12
 
+      - name: Compute version + build number
+        run: |
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+          # Monotonic build number → Sparkle's sparkle:version, so updates compare correctly.
+          echo "BUILD_NUMBER=$(git rev-list --count HEAD)" >> "$GITHUB_ENV"
+
       - name: Build & sign (hardened runtime)
         working-directory: StashApp
         run: |
           xcodegen generate
           xcodebuild -scheme StashApp -configuration Release \
-            -derivedDataPath .build-release build CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath .build-release build CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
           APP=".build-release/Build/Products/Release/StashApp.app"
           codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP"
           codesign --verify --strict "$APP"
 
       - name: Package DMG
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
           APP="StashApp/.build-release/Build/Products/Release/StashApp.app"
           STAGE="$(mktemp -d)"
           cp -R "$APP" "$STAGE/Stash.app"
@@ -76,8 +86,44 @@ jobs:
           xcrun stapler staple "$DMG"
           xcrun stapler validate "$DMG"
 
-      - name: Publish GitHub Release
+      - name: Sign with Sparkle + generate appcast
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          TOOLS="$(mktemp -d)"
+          curl -sL "https://github.com/sparkle-project/Sparkle/releases/download/2.9.3/Sparkle-2.9.3.tar.xz" -o "$TOOLS/s.tar.xz"
+          tar -xf "$TOOLS/s.tar.xz" -C "$TOOLS"
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$TOOLS/key"
+          SIG_LINE="$("$TOOLS/bin/sign_update" "$DMG" --ed-key-file "$TOOLS/key")"
+          rm -f "$TOOLS/key"
+          ED_SIG="$(printf '%s' "$SIG_LINE" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')"
+          LENGTH="$(printf '%s' "$SIG_LINE" | sed -n 's/.*length="\([^"]*\)".*/\1/p')"
+          DMG_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${DMG}"
+          PUB_DATE="$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
+          cat > appcast.xml <<EOF
+          <?xml version="1.0" standalone="yes"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+            <channel>
+              <title>Stash</title>
+              <link>https://github.com/${GITHUB_REPOSITORY}</link>
+              <item>
+                <title>Version ${VERSION}</title>
+                <pubDate>${PUB_DATE}</pubDate>
+                <sparkle:version>${BUILD_NUMBER}</sparkle:version>
+                <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                <description><![CDATA[Release notes: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}]]></description>
+                <enclosure url="${DMG_URL}" sparkle:edSignature="${ED_SIG}" length="${LENGTH}" type="application/octet-stream"/>
+              </item>
+            </channel>
+          </rss>
+          EOF
+          echo "--- appcast.xml ---"; cat appcast.xml
+
+      - name: Publish GitHub Release (DMG + appcast)
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.DMG }}
+          files: |
+            ${{ env.DMG }}
+            appcast.xml
           generate_release_notes: true
