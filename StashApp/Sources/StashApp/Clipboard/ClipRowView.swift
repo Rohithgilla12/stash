@@ -182,6 +182,8 @@ private struct QRPopoverView: View {
                     .interpolation(.none)
                     .resizable()
                     .frame(width: 220, height: 220)
+                    .padding(12)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 10))
             } else {
                 Text("Couldn't generate QR")
                     .foregroundStyle(.secondary)
