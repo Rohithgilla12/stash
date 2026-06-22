@@ -6,5 +6,5 @@ struct PaletteItem: Identifiable {
     let subtitle: String
     let symbol: String
     let kind: String
-    let run: () -> Void
+    let run: @MainActor () -> Void
 }

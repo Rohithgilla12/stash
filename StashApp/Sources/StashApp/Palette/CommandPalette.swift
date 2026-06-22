@@ -225,8 +225,10 @@ enum CommandPalette {
             let lower = item.title.lowercased()
             guard isSubsequence(q, in: lower) else { continue }
             let isPrefix = lower.hasPrefix(q)
-            let firstMatchIndex = lower.firstIndex(of: q.first!)
-                .map { lower.distance(from: lower.startIndex, to: $0) } ?? 0
+            let firstMatchIndex = q.first.flatMap { first in
+                lower.firstIndex(of: first)
+                    .map { lower.distance(from: lower.startIndex, to: $0) }
+            } ?? 0
             scored.append(Scored(
                 item: item,
                 isPrefix: isPrefix,

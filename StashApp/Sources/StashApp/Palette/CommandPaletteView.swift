@@ -52,7 +52,7 @@ struct CommandPaletteView: View {
             return .handled
         }
         .onKeyPress(.return) {
-            guard !filtered.isEmpty else { return .handled }
+            guard selection < filtered.count else { return .handled }
             filtered[selection].run()
             return .handled
         }
@@ -60,7 +60,7 @@ struct CommandPaletteView: View {
             onClose()
             return .handled
         }
-        .onKeyPress(characters: .alphanumerics.union(.punctuationCharacters).union(.symbols)) { press in
+        .onKeyPress(characters: .alphanumerics.union(.punctuationCharacters).union(.symbols).union(.whitespaces)) { press in
             query.append(press.characters)
             selection = 0
             return .handled

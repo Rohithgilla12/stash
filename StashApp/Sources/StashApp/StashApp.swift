@@ -9,7 +9,7 @@ struct StashApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            ContentView(env: env, selection: $selection)
+            ContentView(env: env, selection: $selection, checkForUpdates: { updater.checkForUpdates() })
         } label: {
             if env.pomodoro.isRunning {
                 Text(env.pomodoro.display)
@@ -43,6 +43,7 @@ private struct PaletteOverlay: View {
     let env: AppEnvironment
     let openWindow: OpenWindowAction
     let onClose: () -> Void
+    let checkForUpdates: (() -> Void)?
 
     var body: some View {
         CommandPaletteView(
@@ -50,7 +51,7 @@ private struct PaletteOverlay: View {
                 env: env,
                 openWindow: openWindow,
                 dismiss: onClose,
-                checkForUpdates: nil
+                checkForUpdates: checkForUpdates
             ),
             onClose: onClose
         )
@@ -60,13 +61,15 @@ private struct PaletteOverlay: View {
 @MainActor
 private struct ContentView: View {
     let env: AppEnvironment
+    let checkForUpdates: () -> Void
     @Bindable var viewModel: ClipboardViewModel
     @Binding var selection: HubTab
     @Environment(\.openWindow) private var openWindow
     @State private var showPalette = false
 
-    init(env: AppEnvironment, selection: Binding<HubTab>) {
+    init(env: AppEnvironment, selection: Binding<HubTab>, checkForUpdates: @escaping () -> Void) {
         self.env = env
+        self.checkForUpdates = checkForUpdates
         self.viewModel = env.viewModel
         self._selection = selection
     }
@@ -89,7 +92,7 @@ private struct ContentView: View {
         }
         .overlay {
             if showPalette {
-                PaletteOverlay(env: env, openWindow: openWindow, onClose: { showPalette = false })
+                PaletteOverlay(env: env, openWindow: openWindow, onClose: { showPalette = false }, checkForUpdates: checkForUpdates)
             }
         }
         .background {
