@@ -1,6 +1,5 @@
 import Sparkle
 import Combine
-import SwiftUI
 
 /// Owns the Sparkle updater for the app's lifetime.
 @MainActor
