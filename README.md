@@ -4,7 +4,7 @@
 clipboard history (with link/image previews), notes, a full to-do app, text-expansion
 snippets (+ emoji `:rocket:`), Raycast-style window management, a Pomodoro Focus timer,
 and an AI tab. Notes also live on the desktop as paper sticky notes that toggle with
-⌥Space. There's a Paste-style clipboard browser (⌃⌥V), a `stash://` URL scheme, and an
+⌃⌥S. There's a Paste-style clipboard browser (⌃⌥V), a `stash://` URL scheme, and an
 **MCP server** so Claude & Claude Code can read/write your tasks/notes/clipboard —
 e.g. "plan my day".
 
@@ -51,7 +51,7 @@ directly or port.
 ## Fidelity
 **High-fidelity.** Final colors, typography, spacing, and interactions are all in the prototype.
 Recreate the UI faithfully. Open `Stash Prototype.dc.html` in a browser to click through every
-state (tabs, search, pin, snippet expansion, window snapping, ⌥Space, Generate my day, subtasks).
+state (tabs, search, pin, snippet expansion, window snapping, ⌃⌥S, Generate my day, subtasks).
 
 ---
 
@@ -119,7 +119,7 @@ checklist with "+ Add subtask"), and a due pill (Today = terracotta, else neutra
 
 ### 4. Desktop sticky notes
 Paper notes scattered on the desktop (warm pastels, slight rotation, soft shadow, a pin dot at
-top). To-do notes show a checklist; text notes show body. **⌥Space** (or the bottom pill) fades
+top). To-do notes show a checklist; text notes show body. **⌃⌥S** (or the bottom pill) fades
 them all out/in together. Clicking a sticky opens it in the Notes window. Stickies are driven by
 the same note data, so edits sync.
 
@@ -134,7 +134,7 @@ the same note data, so edits sync.
   "Expanded :trigger". This mirrors how the real OS-level expander should behave.
 - **Window snap:** clicking a snap card animates the demo window to the target frame
   (`transition: all .34s cubic-bezier(.4,0,.2,1)`), toast "Snapped: <name>".
-- **⌥Space:** global toggle for stickies (opacity + translateY/scale, .3s).
+- **⌃⌥S:** global toggle for stickies (opacity + translateY/scale, .3s).
 - **Generate my day:** clears prior Claude tasks, then inserts 5 tasks one-by-one on a stagger
   (~480ms each) with a `taskin` fade animation and a `✶ Claude` badge; toast updates.
 - **Recurring task complete:** checks off, toast "Repeats daily — resets for next time", then
@@ -170,7 +170,7 @@ Prototype keeps everything in one component's state; for the app, back it with t
 | Feature | API |
 |---|---|
 | Menu-bar hub | `NSStatusItem` + `NSPopover` hosting SwiftUI |
-| Global hotkeys (⌥Space, snap keys) | `RegisterEventHotKey` / `HotKey` package |
+| Global hotkeys (⌃⌥S, snap keys) | `RegisterEventHotKey` / `HotKey` package |
 | Clipboard history | poll `NSPasteboard.general.changeCount`; store text/image/file + thumbnails |
 | Sticky notes | borderless `NSWindow` at `.floating` level, draggable; toggle together |
 | Text expansion | Accessibility permission + `CGEventTap` keydown buffer → backspaces + paste expansion |

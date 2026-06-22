@@ -25,5 +25,5 @@ Accessibility for window management + text expansion, sticky `NSWindow`s).
 - Register: `claude mcp add stash -- node ./mcp-server/dist/server.js` (after `npm run build`).
 
 ## Suggested build order
-clipboard history + hub popover → sticky notes + ⌥Space → SQLite tasks/notes + Tasks window
+clipboard history + hub popover → sticky notes + ⌃⌥S → SQLite tasks/notes + Tasks window
 → window management → text expansion (event tap) → wire MCP server → AI tab (credits + sessions).

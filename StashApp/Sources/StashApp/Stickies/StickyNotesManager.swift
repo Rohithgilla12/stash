@@ -71,7 +71,10 @@ final class StickyNotesManager {
     }
 
     func registerHotKey() {
-        hotKey = GlobalHotKey(keyCode: 49, modifiers: UInt32(optionKey)) { [weak self] in
+        // ⌃⌥S — NOT ⌥Space: that collides with launchers (Raycast/Spotlight/Alfred),
+        // which would toggle the stickies every time you open your launcher.
+        // (Also reachable via the stash://stickies deeplink / Karabiner.)
+        hotKey = GlobalHotKey(keyCode: 1, modifiers: UInt32(controlKey | optionKey)) { [weak self] in
             self?.toggleVisibility()
         }
     }
