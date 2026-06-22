@@ -5,8 +5,10 @@ struct ClipRowView: View {
     let onCopy: () -> Void
     let onTogglePin: () -> Void
     var onDelete: (() -> Void)? = nil
+    var onActed: (String) -> Void = { _ in }
 
     @State private var ogPreview: LinkPreview?
+    @State private var showQR = false
 
     private var titleText: String {
         if item.kind == .link {
@@ -27,6 +29,39 @@ struct ClipRowView: View {
                         ogPreview = await LinkPreviewService.shared.preview(for: item.text ?? "")
                     }
                 }
+        }
+        .contextMenu { contextMenuItems }
+        .popover(isPresented: $showQR) { QRPopoverView(text: item.text ?? "") }
+    }
+
+    @ViewBuilder private var contextMenuItems: some View {
+        if item.kind == .link {
+            Button("Open Link") {
+                if let u = URL(string: item.text ?? "") { NSWorkspace.shared.open(u) }
+            }
+        }
+
+        Button("Copy") { onCopy() }
+
+        if (item.kind == .text || item.kind == .link), let src = item.text, !src.isEmpty {
+            Menu("Transform") {
+                ForEach(TextTransform.allCases, id: \.self) { transform in
+                    if transform.apply(src) != nil {
+                        Button(transform.rawValue) {
+                            if let result = transform.apply(src) {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.setString(result, forType: .string)
+                                onActed("Transformed → clipboard")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (item.kind == .text || item.kind == .link), !(item.text ?? "").isEmpty {
+            Button("Show QR Code") { showQR = true }
         }
     }
 
@@ -133,6 +168,37 @@ struct ClipRowView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(GhostIconButtonStyle())
+    }
+}
+
+private struct QRPopoverView: View {
+    let text: String
+    @State private var qrImage: NSImage?
+
+    var body: some View {
+        VStack(spacing: Space.sm) {
+            if let qrImage {
+                Image(nsImage: qrImage)
+                    .interpolation(.none)
+                    .resizable()
+                    .frame(width: 220, height: 220)
+            } else {
+                Text("Couldn't generate QR")
+                    .foregroundStyle(.secondary)
+                    .frame(width: 220, height: 220)
+            }
+
+            Text(text.count > 60 ? String(text.prefix(60)) + "…" : text)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+        .padding(20)
+        .background(Color(nsColor: .windowBackgroundColor))
+        .frame(width: 260)
+        .task {
+            qrImage = await MainActor.run { QRCode.image(from: text) }
+        }
     }
 }
 

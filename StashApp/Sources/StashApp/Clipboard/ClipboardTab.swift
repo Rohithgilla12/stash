@@ -3,6 +3,7 @@ import SwiftUI
 struct ClipboardTab: View {
     @Bindable var model: ClipboardViewModel
     @State private var showCopied = false
+    @State private var toastMessage = "Copied"
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -30,7 +31,8 @@ struct ClipboardTab: View {
                         ClipRowView(
                             item: item,
                             onCopy: { copy(item) },
-                            onTogglePin: { Task { await model.togglePin(item) } }
+                            onTogglePin: { Task { await model.togglePin(item) } },
+                            onActed: { msg in showToast(msg) }
                         )
                     }
                 }
@@ -50,7 +52,8 @@ struct ClipboardTab: View {
                             item: item,
                             onCopy: { copy(item) },
                             onTogglePin: { Task { await model.togglePin(item) } },
-                            onDelete: { Task { await model.delete(item) } }
+                            onDelete: { Task { await model.delete(item) } },
+                            onActed: { msg in showToast(msg) }
                         )
                     }
                 }
@@ -85,7 +88,7 @@ struct ClipboardTab: View {
         HStack(spacing: Space.xs) {
             Image(systemName: "checkmark")
                 .font(.system(size: 10, weight: .bold))
-            Text("Copied")
+            Text(toastMessage)
                 .font(.ui(12, .medium))
         }
         .foregroundStyle(.white)
@@ -98,6 +101,11 @@ struct ClipboardTab: View {
 
     private func copy(_ item: ClipItem) {
         Task { await model.copyBack(item) }
+        showToast("Copied")
+    }
+
+    private func showToast(_ message: String) {
+        toastMessage = message
         withAnimation(.easeOut(duration: 0.20)) { showCopied = true }
         Task {
             try? await Task.sleep(for: .seconds(1.4))
