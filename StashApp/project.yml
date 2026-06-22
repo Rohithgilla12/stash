@@ -8,6 +8,9 @@ packages:
   GRDB:
     url: https://github.com/groue/GRDB.swift
     from: "7.0.0"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.9.0"
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -31,6 +34,10 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.rohithgilla.stash.url
             CFBundleURLSchemes: [stash]
+        SUFeedURL: https://raw.githubusercontent.com/Rohithgilla12/stash/main/appcast.xml
+        SUPublicEDKey: ZdBs8XYY8W59JR5tzS+Kv00LPyqW8+jfhKydJ3rDEag=
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
     settings:
       base:
         ENABLE_APP_SANDBOX: NO
@@ -40,6 +47,7 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     dependencies:
       - package: GRDB
+      - package: Sparkle
   StashAppTests:
     type: bundle.unit-test
     platform: macOS

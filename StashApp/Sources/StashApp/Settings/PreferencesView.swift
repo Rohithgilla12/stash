@@ -4,6 +4,7 @@ import ServiceManagement
 @MainActor
 struct PreferencesView: View {
     let env: AppEnvironment
+    let updater: UpdaterController
 
     @State private var launchAtLogin: Bool = SMAppService.mainApp.status == .enabled
     @State private var linkPreviewsEnabled: Bool =
@@ -15,6 +16,7 @@ struct PreferencesView: View {
             generalSection
             clipboardSection
             textExpansionSection
+            softwareUpdateSection
             aboutSection
         }
         .formStyle(.grouped)
@@ -90,6 +92,38 @@ struct PreferencesView: View {
                     )
                 )
                 Text("Requires Accessibility permission.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder private var softwareUpdateSection: some View {
+        Section("Software Update") {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Stash")
+                        .font(.headline)
+                    Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
+                        .foregroundStyle(.secondary)
+                        .font(.subheadline)
+                }
+                Spacer()
+                Button("Check for Updates…") {
+                    updater.checkForUpdates()
+                }
+                .disabled(!updater.canCheckForUpdates)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle(
+                    "Automatically check for updates",
+                    isOn: Binding(
+                        get: { updater.automaticallyChecksForUpdates },
+                        set: { updater.automaticallyChecksForUpdates = $0 }
+                    )
+                )
+                Text("Updates are downloaded from GitHub and verified before installing.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

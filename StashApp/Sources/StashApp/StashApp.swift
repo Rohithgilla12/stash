@@ -4,6 +4,7 @@ import SwiftUI
 struct StashApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var env = AppEnvironment()
+    @StateObject private var updater = UpdaterController()
     @State private var selection: HubTab = .clipboard
 
     var body: some Scene {
@@ -30,7 +31,7 @@ struct StashApp: App {
         .windowResizability(.contentSize)
 
         Window("Stash Preferences", id: "preferences") {
-            PreferencesView(env: env)
+            PreferencesView(env: env, updater: updater)
                 .frame(width: 480, height: 420)
         }
         .windowResizability(.contentSize)
