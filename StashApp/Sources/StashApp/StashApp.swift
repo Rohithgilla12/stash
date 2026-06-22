@@ -39,11 +39,31 @@ struct StashApp: App {
 }
 
 @MainActor
+private struct PaletteOverlay: View {
+    let env: AppEnvironment
+    let openWindow: OpenWindowAction
+    let onClose: () -> Void
+
+    var body: some View {
+        CommandPaletteView(
+            items: CommandPalette.items(
+                env: env,
+                openWindow: openWindow,
+                dismiss: onClose,
+                checkForUpdates: nil
+            ),
+            onClose: onClose
+        )
+    }
+}
+
+@MainActor
 private struct ContentView: View {
     let env: AppEnvironment
     @Bindable var viewModel: ClipboardViewModel
     @Binding var selection: HubTab
     @Environment(\.openWindow) private var openWindow
+    @State private var showPalette = false
 
     init(env: AppEnvironment, selection: Binding<HubTab>) {
         self.env = env
@@ -66,6 +86,16 @@ private struct ContentView: View {
             case .windows: WindowsTab()
             case .ai: AITab(model: env.aiViewModel, assistant: env.aiAssistant, env: env)
             }
+        }
+        .overlay {
+            if showPalette {
+                PaletteOverlay(env: env, openWindow: openWindow, onClose: { showPalette = false })
+            }
+        }
+        .background {
+            Button("") { showPalette.toggle() }
+                .keyboardShortcut("k", modifiers: .command)
+                .opacity(0)
         }
     }
 }
