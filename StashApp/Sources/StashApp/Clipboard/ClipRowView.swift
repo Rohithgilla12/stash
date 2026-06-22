@@ -199,7 +199,7 @@ private struct QRPopoverView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .frame(width: 260)
         .task {
-            qrImage = await MainActor.run { QRCode.image(from: text) }
+            qrImage = QRCode.image(from: text)
         }
     }
 }
