@@ -64,8 +64,7 @@ jobs:
             -derivedDataPath .build-release build CODE_SIGNING_ALLOWED=NO \
             MARKETING_VERSION="$VERSION" CURRENT_PROJECT_VERSION="$BUILD_NUMBER"
           APP=".build-release/Build/Products/Release/StashApp.app"
-          codesign --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$APP"
-          codesign --verify --strict "$APP"
+          bash "$GITHUB_WORKSPACE/scripts/sign-app.sh" "$APP" "$SIGN_IDENTITY"
 
       - name: Package DMG
         run: |

@@ -31,9 +31,8 @@ xcodebuild -scheme StashApp -configuration Release \
 APP=".build-release/Build/Products/Release/StashApp.app"
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$APP/Contents/Info.plist" 2>/dev/null || echo "0.1.0")
 
-echo "==> sign with hardened runtime ($IDENTITY)"
-codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
-codesign --verify --strict "$APP" && echo "    signature verified"
+echo "==> sign with hardened runtime ($IDENTITY) — incl. nested Sparkle helpers"
+bash "$ROOT/scripts/sign-app.sh" "$APP" "$IDENTITY"
 
 echo "==> build DMG"
 STAGE="$(mktemp -d)"

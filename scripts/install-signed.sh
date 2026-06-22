@@ -20,9 +20,8 @@ xcodebuild -scheme StashApp -configuration Release \
   -derivedDataPath .build-release build CODE_SIGNING_ALLOWED=NO >/dev/null
 APP=".build-release/Build/Products/Release/StashApp.app"
 
-echo "==> signing with: $IDENTITY"
-codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
-codesign --verify --strict "$APP" && echo "    signature verified"
+echo "==> signing with: $IDENTITY (incl. nested Sparkle helpers)"
+bash "$ROOT/scripts/sign-app.sh" "$APP" "$IDENTITY"
 
 echo "==> installing to $APP_DEST"
 # Kill BOTH the installed signed app and any stale Debug build (…/StashApp.app/…)
