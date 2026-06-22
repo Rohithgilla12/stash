@@ -16,11 +16,13 @@ struct CommandPaletteTests {
 
     @Test func subsequenceMatchesNonContiguous() {
         // "np" is a non-contiguous subsequence of "New Project" (N…P)
-        // "New note" has no 'p' so it should not match; "Unrelated" has no 'n' then 'p'
-        let items = [item("New Project"), item("New note"), item("Unrelated")]
+        // "Snap window top" also matches: 'n' at index 1, 'p' at index 3 in "snap"
+        // "Unrelated" has no 'n' then 'p' so it should not match
+        let items = [item("New Project"), item("Snap window top"), item("Unrelated")]
         let result = CommandPalette.filter(items, query: "np")
         let titles = result.map(\.title)
         #expect(titles.contains("New Project"))
+        #expect(titles.contains("Snap window top"))  // 'n' at 1, 'p' at 3 in "snap..."
         #expect(!titles.contains("Unrelated"))
     }
 

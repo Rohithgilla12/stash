@@ -7,7 +7,7 @@ struct CommandPaletteView: View {
 
     @State private var query = ""
     @State private var selection = 0
-    @FocusState private var fieldFocused: Bool
+    @FocusState private var containerFocused: Bool
 
     private var filtered: [PaletteItem] { CommandPalette.filter(items, query: query) }
 
@@ -33,14 +33,16 @@ struct CommandPaletteView: View {
         .frame(maxHeight: 380)
         .background(
             RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+        )
+        .background(
+            RoundedRectangle(cornerRadius: 12)
                 .fill(Tokens.panelFill)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(.ultraThinMaterial)
-                )
-                .shadow(radius: 6, y: 3)
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(radius: 6, y: 3)
+        .focusable()
+        .focused($containerFocused)
         .onKeyPress(.upArrow) {
             if selection > 0 { selection -= 1 }
             return .handled
@@ -58,7 +60,16 @@ struct CommandPaletteView: View {
             onClose()
             return .handled
         }
-        .onAppear { fieldFocused = true }
+        .onKeyPress(characters: .alphanumerics.union(.punctuationCharacters).union(.symbols)) { press in
+            query.append(press.characters)
+            selection = 0
+            return .handled
+        }
+        .onKeyPress(.delete) {
+            if !query.isEmpty { query.removeLast(); selection = 0 }
+            return .handled
+        }
+        .onAppear { containerFocused = true }
         .onChange(of: query) { _, _ in selection = 0 }
     }
 
@@ -66,9 +77,9 @@ struct CommandPaletteView: View {
         HStack(spacing: Space.sm) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Tokens.accent)
-            TextField("Search commands and content…", text: $query)
-                .textFieldStyle(.plain)
-                .focused($fieldFocused)
+            Text(query.isEmpty ? "Search commands and content…" : query)
+                .foregroundStyle(query.isEmpty ? .tertiary : .primary)
+            Spacer()
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
