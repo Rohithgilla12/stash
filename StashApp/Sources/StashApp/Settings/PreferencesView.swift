@@ -16,12 +16,13 @@ struct PreferencesView: View {
             generalSection
             clipboardSection
             textExpansionSection
+            keyboardShortcutsSection
             softwareUpdateSection
             aboutSection
         }
         .formStyle(.grouped)
         .tint(Tokens.accent)
-        .frame(width: 480, height: 420)
+        .frame(width: 480, height: 520)
     }
 
     @ViewBuilder private var generalSection: some View {
@@ -92,6 +93,23 @@ struct PreferencesView: View {
                     )
                 )
                 Text("Requires Accessibility permission.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder private var keyboardShortcutsSection: some View {
+        Section("Keyboard Shortcuts") {
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle(
+                    "Built-in global shortcuts",
+                    isOn: Binding(
+                        get: { env.globalHotkeysEnabled },
+                        set: { env.globalHotkeysEnabled = $0 }
+                    )
+                )
+                Text("⌃⌥S sticky notes · ⌃⌥V paste browser · ⌃⌥ arrows window snapping. Turn off if you trigger Stash via stash:// deeplinks or Karabiner. (The text-expander toggle above is separate.)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

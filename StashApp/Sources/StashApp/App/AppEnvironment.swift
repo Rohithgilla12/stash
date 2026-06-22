@@ -23,6 +23,15 @@ final class AppEnvironment {
     private var snapHotKeys: [GlobalHotKey] = []
     private let pasteBrowser = PasteBrowserController()
 
+    var globalHotkeysEnabled: Bool = true {
+        didSet {
+            guard hotkeysSettingLoaded else { return }
+            UserDefaults.standard.set(globalHotkeysEnabled, forKey: "globalHotkeysEnabled")
+            applyHotkeys()
+        }
+    }
+    private var hotkeysSettingLoaded = false
+
     init() {
         let database = (try? StashDatabase(path: AppPaths.dbURL().path))
             ?? (try! StashDatabase(path: ":memory:"))
@@ -52,6 +61,8 @@ final class AppEnvironment {
 
         wireExpander()
         wirePasteBrowser()
+        globalHotkeysEnabled = UserDefaults.standard.object(forKey: "globalHotkeysEnabled") as? Bool ?? true
+        hotkeysSettingLoaded = true
         start()
         AppEnvironment.shared = self
     }
@@ -131,14 +142,24 @@ final class AppEnvironment {
         Task { await monitor.start() }
         Task { await snippetsViewModel.seed() }
         startStickyObservation()
-        stickyManager.registerHotKey()
-        pasteBrowser.registerHotKey()
-        registerSnapHotKeys()
+        applyHotkeys()
         // Do NOT prompt for Accessibility at launch — only when the user actually
         // uses a feature that needs it (a snap hotkey, or enabling the expander),
         // and then at most once per launch (see AccessibilityAuthorizer).
         if snippetsViewModel.expanderEnabled {
             systemExpander.setEnabled(true)
+        }
+    }
+
+    private func applyHotkeys() {
+        if globalHotkeysEnabled {
+            stickyManager.registerHotKey()
+            pasteBrowser.registerHotKey()
+            registerSnapHotKeys()
+        } else {
+            stickyManager.unregisterHotKey()
+            pasteBrowser.unregisterHotKey()
+            snapHotKeys = []
         }
     }
 

@@ -79,6 +79,8 @@ final class StickyNotesManager {
         }
     }
 
+    func unregisterHotKey() { hotKey = nil }
+
     private func makeView(for note: Note) -> StickyNoteView {
         StickyNoteView(
             note: note,

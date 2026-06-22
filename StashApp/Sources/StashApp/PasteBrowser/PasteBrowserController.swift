@@ -22,6 +22,8 @@ final class PasteBrowserController {
         }
     }
 
+    func unregisterHotKey() { hotKey = nil }
+
     func toggle() {
         if let panel, panel.isVisible {
             hide()
