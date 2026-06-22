@@ -61,12 +61,31 @@ final class AIAssistant {
             }
         }
 
-        if output.1.isEmpty {
+        // The CLI may report credit/auth problems on stdout (exit 0) or stderr —
+        // map the known ones to a friendly, actionable message.
+        if let friendly = Self.friendlyError(in: output.0 + "\n" + output.1) {
+            self.errorText = friendly
+            self.response = ""
+        } else if output.1.isEmpty {
             self.response = output.0
         } else {
             self.errorText = output.1
         }
         self.isRunning = false
+    }
+
+    private static func friendlyError(in text: String) -> String? {
+        let lower = text.lowercased()
+        if lower.contains("credit balance") {
+            return "Anthropic API credits are low. Add credits at console.anthropic.com, "
+                + "or remove ANTHROPIC_API_KEY from your shell to use your Claude subscription instead."
+        }
+        if lower.contains("invalid api key") || lower.contains("unauthorized")
+            || lower.contains("not logged in") || lower.contains("authentication_error") {
+            return "Claude isn't authenticated. Run `claude` in a terminal to log in "
+                + "(or set a valid ANTHROPIC_API_KEY)."
+        }
+        return nil
     }
 
     func cancel() {
