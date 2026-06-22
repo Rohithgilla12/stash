@@ -2,19 +2,208 @@ import SwiftUI
 
 struct AITab: View {
     let model: AIViewModel
+    let assistant: AIAssistant
+    let env: AppEnvironment
 
+    @State private var prompt: String = ""
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 1.0
+    @State private var thinkScale: CGFloat = 1.0
+    @State private var thinkOpacity: Double = 1.0
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
+                assistantCard
                 mcpServerCard
                 usageCycleCard
                 activeSessionsCard
             }
         }
         .task { await model.start() }
+    }
+
+    @ViewBuilder private var assistantCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("ASSISTANT")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Tokens.textTertiary)
+
+            HStack(alignment: .bottom, spacing: 8) {
+                TextField("Ask Claude anything…", text: $prompt, axis: .vertical)
+                    .lineLimit(1...4)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13))
+                    .foregroundStyle(Tokens.textPrimary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Tokens.surface)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Tokens.hairline, lineWidth: 1)
+                            )
+                    )
+
+                if assistant.isRunning {
+                    Button { assistant.cancel() } label: {
+                        Text("Cancel")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Tokens.textSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(
+                                RoundedRectangle(cornerRadius: 7)
+                                    .fill(Tokens.surface)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Button {
+                        Task { await assistant.run(prompt) }
+                    } label: {
+                        Text("Send")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(
+                                RoundedRectangle(cornerRadius: 7)
+                                    .fill(prompt.isEmpty ? Tokens.accent.opacity(0.4) : Tokens.accent)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(prompt.isEmpty)
+                }
+            }
+
+            FlowLayout(spacing: 6) {
+                chipButton("Summarize clipboard") {
+                    let texts = env.viewModel.items.prefix(15).compactMap { item -> String? in
+                        let t = item.text ?? item.title ?? ""
+                        return t.isEmpty ? nil : String(t.prefix(300))
+                    }
+                    guard !texts.isEmpty else { return }
+                    let joined = texts.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
+                    Task { await assistant.run("Summarize these recent clipboard items concisely:\n\n\(joined)") }
+                }
+                chipButton("Plan my day") {
+                    let open = env.tasksViewModel.tasks.filter { !$0.done }
+                    let titles = open.map { "- \($0.title)" }.joined(separator: "\n")
+                    let planPrompt = titles.isEmpty
+                        ? "I have no tasks yet. Propose a good, focused plan for today as a developer working on a macOS app."
+                        : "Here are my current tasks:\n\(titles)\n\nPropose a focused, realistic plan for today. Group and prioritize."
+                    Task { await assistant.run(planPrompt) }
+                }
+                chipButton("Rewrite latest clip") {
+                    guard let top = env.viewModel.items.first,
+                          let text = top.text ?? top.title, !text.isEmpty else { return }
+                    Task { await assistant.run("Rewrite this more clearly and professionally:\n\n\(String(text.prefix(2000)))") }
+                }
+            }
+
+            if assistant.isRunning {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Tokens.accent)
+                        .frame(width: 6, height: 6)
+                        .scaleEffect(thinkScale)
+                        .opacity(thinkOpacity)
+                        .onAppear {
+                            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                                thinkScale = 1.5
+                                thinkOpacity = 0.4
+                            }
+                        }
+                        .onDisappear {
+                            thinkScale = 1.0
+                            thinkOpacity = 1.0
+                        }
+                    Text("Thinking…")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Tokens.textSecondary)
+                }
+            }
+
+            if let err = assistant.errorText {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.orange)
+                    Text(err)
+                        .font(.system(size: 12))
+                        .foregroundStyle(Tokens.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(.orange.opacity(0.08))
+                )
+            }
+
+            if !assistant.response.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    ScrollView {
+                        Text(assistant.response)
+                            .font(.system(size: 13))
+                            .foregroundStyle(Tokens.textPrimary)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                    }
+                    .frame(maxHeight: 200)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Tokens.surface)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Tokens.hairline, lineWidth: 1)
+                            )
+                    )
+
+                    Button {
+                        let pb = NSPasteboard.general
+                        pb.clearContents()
+                        pb.setString(assistant.response, forType: .string)
+                    } label: {
+                        Label("Copy response", systemImage: "doc.on.doc")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Tokens.accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else if !assistant.isRunning && assistant.errorText == nil {
+                Text("Ask anything, or use a quick action above.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Tokens.textTertiary)
+                    .padding(.vertical, 4)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                .fill(Tokens.panelFill)
+                .shadow(color: .black.opacity(0.04), radius: 3, y: 1)
+        )
+    }
+
+    private func chipButton(_ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Tokens.accent)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Tokens.accent.opacity(0.10))
+                )
+        }
+        .buttonStyle(.plain)
+        .disabled(assistant.isRunning)
     }
 
     private var mcpServerCard: some View {

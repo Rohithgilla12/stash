@@ -12,6 +12,7 @@ final class AppEnvironment {
     let tasksViewModel: TasksViewModel
     let snippetsViewModel: SnippetsViewModel
     let aiViewModel: AIViewModel
+    let aiAssistant = AIAssistant()
     let pomodoro = PomodoroTimer()
     private let systemExpander = SystemExpander()
     private let monitor: ClipboardMonitor
