@@ -99,6 +99,17 @@ jobs:
           LENGTH="$(printf '%s' "$SIG_LINE" | sed -n 's/.*length="\([^"]*\)".*/\1/p')"
           DMG_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${DMG}"
           PUB_DATE="$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
+          # Build HTML release notes from feat/fix commits since the previous tag
+          # (Sparkle renders the <description> as HTML in the update dialog).
+          PREV_TAG="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+          RANGE="${GITHUB_REF_NAME}"; [ -n "$PREV_TAG" ] && RANGE="${PREV_TAG}..${GITHUB_REF_NAME}"
+          NOTE_ITEMS="$(git log "$RANGE" --pretty=format:'%s' \
+            | grep -E '^(feat|fix)' \
+            | sed -E 's/^(feat|fix)\([^)]*\)!?: //; s/^(feat|fix)!?: //' \
+            | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' \
+            | sed 's|^|<li>|; s|$|</li>|')"
+          [ -z "$NOTE_ITEMS" ] && NOTE_ITEMS="<li>Maintenance and improvements.</li>"
+          NOTES_HTML="<h2>What's new in ${VERSION}</h2><ul>${NOTE_ITEMS}</ul><p><a href=\"https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}\">Full changelog on GitHub</a></p>"
           cat > appcast.xml <<EOF
           <?xml version="1.0" standalone="yes"?>
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -111,7 +122,7 @@ jobs:
                 <sparkle:version>${BUILD_NUMBER}</sparkle:version>
                 <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
                 <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-                <description><![CDATA[Release notes: https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}]]></description>
+                <description><![CDATA[${NOTES_HTML}]]></description>
                 <enclosure url="${DMG_URL}" sparkle:edSignature="${ED_SIG}" length="${LENGTH}" type="application/octet-stream"/>
               </item>
             </channel>
