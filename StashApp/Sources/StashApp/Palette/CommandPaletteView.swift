@@ -43,34 +43,35 @@ struct CommandPaletteView: View {
         .shadow(radius: 6, y: 3)
         .focusable()
         .focused($containerFocused)
-        .onKeyPress(.upArrow) {
-            if selection > 0 { selection -= 1 }
-            return .handled
+        .onKeyPress { press in handleKey(press) }
+        .onAppear { containerFocused = true }
+        .onChange(of: query) { _, _ in selection = 0 }
+    }
+
+    /// One handler for all keys so ordering is explicit (backspace was missed
+    /// when split across separate `.onKeyPress` modifiers).
+    private func handleKey(_ press: KeyPress) -> KeyPress.Result {
+        switch press.key {
+        case .upArrow:   if selection > 0 { selection -= 1 }; return .handled
+        case .downArrow: if selection < filtered.count - 1 { selection += 1 }; return .handled
+        case .return:    if selection < filtered.count { filtered[selection].run() }; return .handled
+        case .escape:    onClose(); return .handled
+        default: break
         }
-        .onKeyPress(.downArrow) {
-            if selection < filtered.count - 1 { selection += 1 }
-            return .handled
-        }
-        .onKeyPress(.return) {
-            guard selection < filtered.count else { return .handled }
-            filtered[selection].run()
-            return .handled
-        }
-        .onKeyPress(.escape) {
-            onClose()
-            return .handled
-        }
-        .onKeyPress(characters: .alphanumerics.union(.punctuationCharacters).union(.symbols).union(.whitespaces)) { press in
-            query.append(press.characters)
-            selection = 0
-            return .handled
-        }
-        .onKeyPress(.delete) {
+        if press.key == .delete || press.characters == "\u{7F}" || press.characters == "\u{8}" {
             if !query.isEmpty { query.removeLast(); selection = 0 }
             return .handled
         }
-        .onAppear { containerFocused = true }
-        .onChange(of: query) { _, _ in selection = 0 }
+        guard press.modifiers.subtracting(.shift).isEmpty else { return .ignored }
+        let typed = press.characters.filter { ch in
+            ch.unicodeScalars.allSatisfy { $0.value >= 0x20 && $0.value != 0x7F }
+        }
+        if !typed.isEmpty {
+            query.append(typed)
+            selection = 0
+            return .handled
+        }
+        return .ignored
     }
 
     private var searchRow: some View {

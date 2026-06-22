@@ -33,34 +33,7 @@ struct PasteBrowserView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .focusable()
         .focused($containerFocused)
-        .onKeyPress(.leftArrow) {
-            moveSelection(by: -1)
-            return .handled
-        }
-        .onKeyPress(.rightArrow) {
-            moveSelection(by: 1)
-            return .handled
-        }
-        .onKeyPress(.return) {
-            pasteSelected()
-            return .handled
-        }
-        .onKeyPress(.escape) {
-            onClose()
-            return .handled
-        }
-        .onKeyPress(characters: .alphanumerics.union(.punctuationCharacters).union(.symbols)) { press in
-            query.append(press.characters)
-            selection = 0
-            return .handled
-        }
-        .onKeyPress(.delete) {
-            if !query.isEmpty {
-                query.removeLast()
-                selection = 0
-            }
-            return .handled
-        }
+        .onKeyPress { press in handleKey(press) }
         .onAppear {
             containerFocused = true
         }
@@ -186,5 +159,33 @@ struct PasteBrowserView: View {
     private func pasteSelected() {
         guard !filtered.isEmpty, selection < filtered.count else { return }
         onPaste(filtered[selection])
+    }
+
+    /// One handler for all keys so ordering is explicit (backspace was being
+    /// missed when split across several `.onKeyPress` modifiers).
+    private func handleKey(_ press: KeyPress) -> KeyPress.Result {
+        switch press.key {
+        case .leftArrow:  moveSelection(by: -1); return .handled
+        case .rightArrow: moveSelection(by: 1);  return .handled
+        case .return:     pasteSelected();        return .handled
+        case .escape:     onClose();              return .handled
+        default: break
+        }
+        // Backspace / forward-delete — match the key OR the DEL/BS character.
+        if press.key == .delete || press.characters == "\u{7F}" || press.characters == "\u{8}" {
+            if !query.isEmpty { query.removeLast(); selection = 0 }
+            return .handled
+        }
+        // Printable characters → append (ignore ⌘/⌃/⌥ combos and control chars).
+        guard press.modifiers.subtracting(.shift).isEmpty else { return .ignored }
+        let typed = press.characters.filter { ch in
+            ch.unicodeScalars.allSatisfy { $0.value >= 0x20 && $0.value != 0x7F }
+        }
+        if !typed.isEmpty {
+            query.append(typed)
+            selection = 0
+            return .handled
+        }
+        return .ignored
     }
 }
