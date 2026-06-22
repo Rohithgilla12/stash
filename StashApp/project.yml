@@ -27,10 +27,10 @@ targets:
       path: Sources/StashApp/Info.plist
       properties:
         LSUIElement: true
-        CFBundleDisplayName: Stash
         NSHumanReadableCopyright: ""
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleDisplayName: "$(STASH_DISPLAY_NAME)"
         CFBundleURLTypes:
           - CFBundleURLName: com.rohithgilla.stash.url
             CFBundleURLSchemes: [stash]
@@ -42,9 +42,20 @@ targets:
       base:
         ENABLE_APP_SANDBOX: NO
         GENERATE_INFOPLIST_FILE: NO
-        PRODUCT_BUNDLE_IDENTIFIER: com.rohithgilla.stash.app
         COMBINE_HIDPI_IMAGES: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      configs:
+        # Debug == the "dev" variant: separate bundle id, name, data dir + DEV flag,
+        # so it runs side-by-side with the installed prod app without colliding
+        # (separate TCC grant, UserDefaults, and database).
+        Debug:
+          PRODUCT_BUNDLE_IDENTIFIER: com.rohithgilla.stash.app.dev
+          STASH_DISPLAY_NAME: Stash Dev
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG DEV
+        # Release == prod.
+        Release:
+          PRODUCT_BUNDLE_IDENTIFIER: com.rohithgilla.stash.app
+          STASH_DISPLAY_NAME: Stash
     dependencies:
       - package: GRDB
       - package: Sparkle

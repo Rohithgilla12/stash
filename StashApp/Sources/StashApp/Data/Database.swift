@@ -6,9 +6,15 @@ enum AppPaths {
         if let dir = ProcessInfo.processInfo.environment["STASH_DB_DIR"] {
             return URL(fileURLWithPath: dir, isDirectory: true)
         }
+        // The dev build keeps its data separate from prod so the two don't collide.
+        #if DEV
+        let folder = "Library/Application Support/Stash-Dev"
+        #else
+        let folder = "Library/Application Support/Stash"
+        #endif
         return FileManager.default
             .homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/Stash", isDirectory: true)
+            .appendingPathComponent(folder, isDirectory: true)
     }
     static func dbURL() -> URL {
         if let p = ProcessInfo.processInfo.environment["STASH_DB"] {

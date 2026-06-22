@@ -14,7 +14,11 @@ struct StashApp: App {
             if env.pomodoro.isRunning {
                 Text(env.pomodoro.display)
             } else {
+                #if DEV
+                Image(systemName: "hammer.fill")   // dev build — distinct from prod's tray
+                #else
                 Image(systemName: "tray.full")
+                #endif
             }
         }
         .menuBarExtraStyle(.window)
