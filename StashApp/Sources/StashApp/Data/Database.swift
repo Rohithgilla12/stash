@@ -121,6 +121,14 @@ struct StashDatabase: Sendable {
                 }
             }
         }
+        m.registerMigration("v7_task_due_at") { db in
+            let cols = try db.columns(in: "tasks").map(\.name)
+            if !cols.contains("due_at") {
+                try db.alter(table: "tasks") { t in
+                    t.add(column: "due_at", .integer)
+                }
+            }
+        }
         return m
     }
 }

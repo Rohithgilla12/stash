@@ -122,19 +122,25 @@ private struct TasksMainPane: View {
     }
 
     private var quickAddField: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "plus.circle.fill").foregroundStyle(Tokens.accent)
-            TextField("Add a task…", text: $quickAddText)
-                .textFieldStyle(.plain)
-                .onSubmit {
-                    let trimmed = quickAddText.trimmingCharacters(in: .whitespaces)
-                    guard !trimmed.isEmpty else { return }
-                    quickAddText = ""
-                    Task { await model.add(trimmed) }
-                }
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "plus.circle.fill").foregroundStyle(Tokens.accent)
+                TextField("Add a task…", text: $quickAddText)
+                    .textFieldStyle(.plain)
+                    .onSubmit {
+                        let trimmed = quickAddText.trimmingCharacters(in: .whitespaces)
+                        guard !trimmed.isEmpty else { return }
+                        quickAddText = ""
+                        Task { await model.add(trimmed) }
+                    }
+            }
+            .padding(8)
+            .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+            Text(#"Try: "pay rent fri 9am !high"  ·  "standup every weekday 9am""#)
+                .font(.system(.caption2))
+                .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
+                .padding(.horizontal, 2)
         }
-        .padding(8)
-        .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
     }
 
     @ViewBuilder
@@ -210,7 +216,7 @@ private struct FullTaskRow: View {
         case .high: Tokens.priorityHigh
         case .med: Tokens.priorityMed
         case .low: Tokens.priorityLow
-        case nil: Tokens.priorityLow
+        case nil: Color.clear
         }
     }
 
@@ -249,7 +255,7 @@ private struct FullTaskRow: View {
                     .background(Color.black.opacity(0.07), in: Capsule())
             }
             if let rule = task.repeatRule {
-                Text("↻ \(rule.capitalized)")
+                Text("↻ \(rule)")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 5)
@@ -269,7 +275,20 @@ private struct FullTaskRow: View {
                 }
                 .buttonStyle(.plain)
             }
-            if let due = task.due {
+            if let dueAt = task.dueAt {
+                let date = Date(timeIntervalSince1970: Double(dueAt) / 1000)
+                let label = formatDue(date, now: Date())
+                let isToday = Calendar.current.isDateInToday(date)
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(isToday ? Color.white : .secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        isToday ? Tokens.accent : Color.black.opacity(0.08),
+                        in: Capsule()
+                    )
+            } else if let due = task.due {
                 let isToday = due == .Today
                 Text(due.rawValue)
                     .font(.system(size: 10, weight: .medium))

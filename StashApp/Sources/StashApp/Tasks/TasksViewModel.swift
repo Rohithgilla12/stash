@@ -57,11 +57,32 @@ final class TasksViewModel {
     }
 
     func add(_ rawTitle: String) async {
-        let title = rawTitle.trimmingCharacters(in: .whitespaces)
-        guard !title.isEmpty else { return }
+        let raw = rawTitle.trimmingCharacters(in: .whitespaces)
+        guard !raw.isEmpty else { return }
+        let nowDate = Date()
+        let parsed = TaskQuickParse.parse(raw, now: nowDate)
         let id = UUID().uuidString
-        let now = Int64(Date().timeIntervalSince1970 * 1000)
-        try? await store.create(title: title, due: .Today, now: now, id: id)
+        let nowMs = Int64(nowDate.timeIntervalSince1970 * 1000)
+        let dueAtMs = parsed.dueAt.map { Int64($0.timeIntervalSince1970 * 1000) }
+        let due = dueBucket(for: parsed.dueAt, now: nowDate)
+        try? await store.create(
+            title: parsed.title,
+            due: due,
+            now: nowMs,
+            id: id,
+            dueAt: dueAtMs,
+            priority: parsed.priority,
+            repeatRule: parsed.repeatRule
+        )
+    }
+
+    private func dueBucket(for date: Date?, now: Date) -> TaskDue {
+        guard let date else { return .Upcoming }
+        let cal = Calendar.current
+        if cal.isDate(date, inSameDayAs: now) { return .Today }
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!
+        if cal.isDate(date, inSameDayAs: tomorrow) { return .Tomorrow }
+        return .Upcoming
     }
 
     func toggle(_ task: TaskItem) async {

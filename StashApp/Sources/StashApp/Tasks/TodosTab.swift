@@ -19,19 +19,25 @@ struct TodosTab: View {
     }
 
     private var quickAddField: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "plus.circle.fill").foregroundStyle(Tokens.accent)
-            TextField("Add a task…", text: $quickAddText)
-                .textFieldStyle(.plain)
-                .onSubmit {
-                    let trimmed = quickAddText.trimmingCharacters(in: .whitespaces)
-                    guard !trimmed.isEmpty else { return }
-                    quickAddText = ""
-                    Task { await model.add(trimmed) }
-                }
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "plus.circle.fill").foregroundStyle(Tokens.accent)
+                TextField("Add a task…", text: $quickAddText)
+                    .textFieldStyle(.plain)
+                    .onSubmit {
+                        let trimmed = quickAddText.trimmingCharacters(in: .whitespaces)
+                        guard !trimmed.isEmpty else { return }
+                        quickAddText = ""
+                        Task { await model.add(trimmed) }
+                    }
+            }
+            .padding(8)
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+            Text(#"Try: "pay rent fri 9am !high"  ·  "standup every weekday 9am""#)
+                .font(.system(.caption2))
+                .foregroundStyle(Tokens.textTertiary)
+                .padding(.horizontal, 2)
         }
-        .padding(8)
-        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
     }
 
     private var sectionHeader: some View {
@@ -105,6 +111,11 @@ struct TaskRowView: View {
             checkboxButton
             titleText
             Spacer()
+            if task.repeatRule != nil {
+                Text("↻")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Tokens.textSecondary)
+            }
             duePill
             if task.source == .claude {
                 claudeBadge
@@ -125,7 +136,7 @@ struct TaskRowView: View {
         case .high: Tokens.priorityHigh
         case .med: Tokens.priorityMed
         case .low: Tokens.priorityLow
-        case nil: Tokens.priorityLow
+        case nil: Color.clear
         }
     }
 
@@ -148,7 +159,20 @@ struct TaskRowView: View {
 
     @ViewBuilder
     private var duePill: some View {
-        if let due = task.due {
+        if let dueAt = task.dueAt {
+            let date = Date(timeIntervalSince1970: Double(dueAt) / 1000)
+            let label = formatDue(date, now: Date())
+            let isToday = Calendar.current.isDateInToday(date)
+            Text(label)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(isToday ? Color.white : Tokens.textSecondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(
+                    isToday ? Tokens.accent : Color.primary.opacity(0.10),
+                    in: Capsule()
+                )
+        } else if let due = task.due {
             let isToday = due == .Today
             Text(due.rawValue)
                 .font(.system(size: 10, weight: .medium))
@@ -170,4 +194,28 @@ struct TaskRowView: View {
             .padding(.vertical, 2)
             .background(Tokens.accent.opacity(0.1), in: Capsule())
     }
+}
+
+func formatDue(_ date: Date, now: Date) -> String {
+    let cal = Calendar.current
+    if cal.isDate(date, inSameDayAs: now) {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return "Today \(f.string(from: date))"
+    }
+    let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!
+    if cal.isDate(date, inSameDayAs: tomorrow) {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return "Tmr \(f.string(from: date))"
+    }
+    let thisWeekEnd = cal.date(byAdding: .day, value: 7, to: now)!
+    if date < thisWeekEnd {
+        let f = DateFormatter()
+        f.dateFormat = "EEE h:mm a"
+        return f.string(from: date)
+    }
+    let f = DateFormatter()
+    f.dateFormat = "MMM d"
+    return f.string(from: date)
 }

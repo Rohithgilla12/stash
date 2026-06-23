@@ -36,16 +36,25 @@ actor TasksStore {
     }
 
     @discardableResult
-    func create(title: String, due: TaskDue, now: Int64, id: String) throws -> TaskItem {
+    func create(
+        title: String,
+        due: TaskDue,
+        now: Int64,
+        id: String,
+        dueAt: Int64? = nil,
+        priority: TaskPriority? = nil,
+        repeatRule: String? = nil
+    ) throws -> TaskItem {
         let task = TaskItem(
             id: id,
             title: title,
             done: false,
-            priority: nil,
+            priority: priority,
             due: due,
+            dueAt: dueAt,
             project: "Inbox",
             tags: [],
-            repeatRule: nil,
+            repeatRule: repeatRule,
             subs: [],
             source: .you,
             createdAt: now,
