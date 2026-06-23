@@ -147,10 +147,14 @@ jobs:
           EOF
           echo "--- appcast.xml ---"; cat appcast.xml
 
+      - name: Stable-named DMG copy
+        run: cp "$DMG" Stash.dmg
+
       - name: Publish GitHub Release (DMG + appcast)
         uses: softprops/action-gh-release@v2
         with:
           files: |
             ${{ env.DMG }}
             appcast.xml
+            Stash.dmg
           generate_release_notes: true
