@@ -10,6 +10,7 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            Spacer()
             Group {
                 switch step {
                 case 0: welcomeStep
@@ -53,7 +54,6 @@ struct OnboardingView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(.top, Space.xxl)
     }
 
     private var permissionsStep: some View {
@@ -79,7 +79,6 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 380)
         }
-        .padding(.top, Space.xxl)
     }
 
     private var doneStep: some View {
@@ -97,7 +96,6 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 340)
         }
-        .padding(.top, Space.xxl)
     }
 
     private var footer: some View {
@@ -187,7 +185,6 @@ private struct PermissionsStepView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding(.top, Space.xxl)
     }
 }
 
