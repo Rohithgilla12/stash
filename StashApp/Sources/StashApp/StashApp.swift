@@ -11,15 +11,7 @@ struct StashApp: App {
         MenuBarExtra {
             ContentView(env: env, selection: $selection, checkForUpdates: { updater.checkForUpdates() })
         } label: {
-            if env.pomodoro.isRunning {
-                Text(env.pomodoro.display)
-            } else {
-                #if DEV
-                Image(systemName: "hammer.fill")   // dev build — distinct from prod's tray
-                #else
-                Image(systemName: "tray.full")
-                #endif
-            }
+            MenuBarLabel(env: env)
         }
         .menuBarExtraStyle(.window)
 
@@ -39,6 +31,29 @@ struct StashApp: App {
                 .frame(width: 480, height: 420)
         }
         .windowResizability(.contentSize)
+    }
+}
+
+@MainActor
+private struct MenuBarLabel: View {
+    let env: AppEnvironment
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Group {
+            if env.pomodoro.isRunning {
+                Text(env.pomodoro.display)
+            } else {
+                #if DEV
+                Image(systemName: "hammer.fill")
+                #else
+                Image(systemName: "tray.full")
+                #endif
+            }
+        }
+        .onAppear {
+            env.requestOpenWindow = { id in openWindow.openActivating(id: id) }
+        }
     }
 }
 

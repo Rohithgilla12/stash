@@ -16,13 +16,15 @@ final class AppEnvironment {
     let pomodoro = PomodoroTimer()
     private let systemExpander = SystemExpander()
     private let monitor: ClipboardMonitor
-    private let stickyManager: StickyNotesManager
+    private var stickyManager: StickyNotesManager!
     private let db: StashDatabase
     private var stickyObservationTask: Task<Void, Never>?
     private let snapper = WindowSnapper()
     private var snapHotKeys: [GlobalHotKey] = []
     private let pasteBrowser = PasteBrowserController()
     private let quickCapture = QuickCaptureController()
+
+    var requestOpenWindow: ((String) -> Void)?
 
     var globalHotkeysEnabled: Bool = true {
         didSet {
@@ -57,7 +59,10 @@ final class AppEnvironment {
 
         self.stickyManager = StickyNotesManager(
             onToggleItem: { [weak notesVM] note, _ in Task { await notesVM?.update(note) } },
-            onOpenNote: { [weak notesVM] note in notesVM?.selectedId = note.id }
+            onOpenNote: { [weak self] note in
+                self?.notesViewModel.selectedId = note.id
+                self?.requestOpenWindow?("notes")
+            }
         )
 
         wireExpander()

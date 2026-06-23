@@ -64,6 +64,18 @@ private final class MutPB: PasteboardReading, @unchecked Sendable {
     #expect(try await store.all().isEmpty)
 }
 
+@Test func captureSkipsFrontAppMatchingBundleID() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = ClipboardStore(pool: db.pool)
+    let pb = MutPB(); pb.str = "stash-internal"; pb.changeCount = 10
+    let mon = ClipboardMonitor(store: store, cache: ThumbnailCache(dir: AppPaths.cacheDir()),
+                               pasteboard: pb, now: { 1 }, makeID: { "id-self" })
+    let inserted = await mon.capture(frontApp: "Stash",
+                                     frontAppBundleID: Bundle.main.bundleIdentifier)
+    #expect(inserted == false)
+    #expect(try await store.all().isEmpty)
+}
+
 @Test func captureStoresBundleID() async throws {
     let db = try StashDatabase(path: ":memory:")
     let store = ClipboardStore(pool: db.pool)

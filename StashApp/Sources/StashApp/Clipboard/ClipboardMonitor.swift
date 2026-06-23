@@ -29,6 +29,7 @@ actor ClipboardMonitor {
         lastSeenChangeCount = cc
         if cc == ignoreChangeCount { ignoreChangeCount = nil; return false }
         if pasteboard.isConcealed() { return false }
+        if frontAppBundleID == Bundle.main.bundleIdentifier { return false }
         guard let content = ClipClassifier.classify(pasteboard) else { return false }
 
         let id = makeID()
