@@ -24,6 +24,11 @@ img { max-width: 100%; height: auto; display: block; }
 .container { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--space-6); }
 :focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 3px; border-radius: 4px; }
 
+/* Scroll-reveal */
+[data-reveal] { opacity: 0; transform: translateY(12px); transition: opacity 0.5s ease-out, transform 0.5s ease-out; }
+[data-reveal].is-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1; transform: none; transition: none; } }
+
 /* Shared, cross-component classes MUST live here — Astro scopes <style> per
    component, so these would not apply if defined inside one component. */
 .btn { display: inline-block; padding: var(--space-3) var(--space-6); border-radius: 999px; font-weight: 600; text-decoration: none; }
