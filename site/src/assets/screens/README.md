@@ -31,3 +31,9 @@ placeholders.
 3. `cd site && npm run build` — confirm `grep -c placeholder dist/index.html` is `0`.
 
 (Or hand the 8 files to Claude and it will do the swap + rebuild.)
+
+## Before go-live (Cloudflare)
+- Set the real domain in `site/astro.config.mjs` (`site: 'https://your-domain'`) and
+  rebuild — the OG/Twitter card URL is absolute and currently points at the
+  `stash.example` placeholder, so social previews 404 until this is set.
+- In Cloudflare Pages: root directory `site`, build `npm run build`, output `dist`.
