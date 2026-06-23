@@ -1,6 +1,7 @@
 import SwiftUI
 import ServiceManagement
 import UserNotifications
+import UniformTypeIdentifiers
 
 @MainActor
 struct PreferencesView: View {
@@ -12,6 +13,7 @@ struct PreferencesView: View {
         UserDefaults.standard.object(forKey: "linkPreviewsEnabled") as? Bool ?? true
     @State private var showClearConfirm = false
     @State private var reminderStatus: UNAuthorizationStatus = .notDetermined
+    @State private var ignoredBundleIDs: [String] = []
 
     var body: some View {
         Form {
@@ -24,7 +26,8 @@ struct PreferencesView: View {
         }
         .formStyle(.grouped)
         .tint(Tokens.accent)
-        .frame(width: 480, height: 560)
+        .frame(width: 480, height: 620)
+        .onAppear { ignoredBundleIDs = ClipboardIgnoreList.bundleIDs }
     }
 
     private var reminderStatusText: String {
@@ -173,6 +176,102 @@ struct PreferencesView: View {
                     Task { await env.viewModel.clearUnpinned() }
                 }
                 Button("Cancel", role: .cancel) {}
+            }
+
+            ignoredAppsSubsection
+        }
+    }
+
+    @ViewBuilder private var ignoredAppsSubsection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Ignored Apps")
+                .font(.subheadline)
+                .fontWeight(.medium)
+            Text("Clipboard from these apps is never saved to history.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if ignoredBundleIDs.isEmpty {
+                ignoredAppsEmptyState
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(ignoredBundleIDs, id: \.self) { bundleID in
+                        ignoredAppRow(bundleID: bundleID)
+                    }
+                }
+                .background(Tokens.surface)
+                .clipShape(RoundedRectangle(cornerRadius: Tokens.rowRadius))
+            }
+
+            Button("Add App…") {
+                addIgnoredApp()
+            }
+            .controlSize(.small)
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder private var ignoredAppsEmptyState: some View {
+        Text("No ignored apps.")
+            .font(.caption)
+            .foregroundStyle(Tokens.textTertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 4)
+    }
+
+    @ViewBuilder private func ignoredAppRow(bundleID: String) -> some View {
+        HStack(spacing: 8) {
+            if let nsImage = AppIconProvider.icon(forBundleID: bundleID) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            } else {
+                Image(systemName: "app.dashed")
+                    .frame(width: 20, height: 20)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(displayName(for: bundleID))
+                .lineLimit(1)
+
+            Spacer()
+
+            Button {
+                ClipboardIgnoreList.remove(bundleID)
+                ignoredBundleIDs = ClipboardIgnoreList.bundleIDs
+            } label: {
+                Image(systemName: "xmark")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Remove from ignored apps")
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+    }
+
+    private func displayName(for bundleID: String) -> String {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID),
+              let bundle = Bundle(url: url)
+        else { return bundleID }
+        return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? bundleID
+    }
+
+    private func addIgnoredApp() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [UTType.applicationBundle]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            Task { @MainActor in
+                guard let id = Bundle(url: url)?.bundleIdentifier else { return }
+                ClipboardIgnoreList.add(id)
+                ignoredBundleIDs = ClipboardIgnoreList.bundleIDs
             }
         }
     }
