@@ -5,8 +5,13 @@ import UserNotifications
 final class TaskReminderScheduler {
 
     func authorizationStatus() async -> UNAuthorizationStatus {
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        return settings.authorizationStatus
+        // Extract the Sendable status inside the callback — UNNotificationSettings
+        // itself is non-Sendable and can't cross the actor boundary (strict concurrency).
+        await withCheckedContinuation { continuation in
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                continuation.resume(returning: settings.authorizationStatus)
+            }
+        }
     }
 
     func requestAuthorization() async -> Bool {
