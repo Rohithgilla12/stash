@@ -38,17 +38,42 @@ final class SystemExpander {
     private var tapPort: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
     private(set) var enabled = false
+    private var trustPollTask: Task<Void, Never>?
 
     @discardableResult
     func setEnabled(_ on: Bool) -> Bool {
-        guard on != enabled else { return enabled }
-
         if on {
+            guard !enabled else { return true }   // already running
+            stopTrustPoll()
             installTap()
+            // If the tap couldn't install (Accessibility not granted yet), poll for
+            // the grant so the expander starts working without a relaunch once the
+            // user flips it on in System Settings.
+            if !enabled { startTrustPoll() }
         } else {
-            tearDownTap()
+            stopTrustPoll()
+            if enabled { tearDownTap() }
         }
         return enabled
+    }
+
+    private func startTrustPoll() {
+        trustPollTask?.cancel()
+        trustPollTask = Task { [weak self] in
+            for _ in 0..<150 {   // ~5 min at 2s intervals
+                try? await Task.sleep(for: .seconds(2))
+                guard let self, !Task.isCancelled else { return }
+                if AXIsProcessTrusted() {
+                    self.installTap()
+                    if self.enabled { return }
+                }
+            }
+        }
+    }
+
+    private func stopTrustPoll() {
+        trustPollTask?.cancel()
+        trustPollTask = nil
     }
 
     private func installTap() {
