@@ -163,7 +163,7 @@ final class AppEnvironment {
         quickCapture.show()
     }
 
-    func quickSave(_ text: String, asTask: Bool) {
+    private func quickSave(_ text: String, asTask: Bool) {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return }
         if asTask {
