@@ -18,8 +18,9 @@ enum SnippetTemplate {
             if name == "cursor" {
                 if !cursorConsumed {
                     cursorConsumed = true
+                    continue   // first cursor sets cursorOffset, is not a field
                 }
-                continue
+                // fall through: second+ {cursor} → fill-in field named "cursor"
             }
             if !seen.contains(name) {
                 seen.insert(name)
