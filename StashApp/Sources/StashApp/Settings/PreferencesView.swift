@@ -132,6 +132,19 @@ struct PreferencesView: View {
                 }
             }
             .task { await loadReminderStatus() }
+
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Welcome tour")
+                    Text("Revisit the setup guide.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Show") {
+                    env.requestOpenWindow?("onboarding")
+                }
+            }
         }
     }
 

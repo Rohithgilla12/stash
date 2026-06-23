@@ -31,6 +31,11 @@ struct StashApp: App {
                 .frame(width: 480, height: 420)
         }
         .windowResizability(.contentSize)
+
+        Window("Welcome to Stash", id: "onboarding") {
+            OnboardingView(env: env)
+        }
+        .windowResizability(.contentSize)
     }
 }
 
@@ -53,6 +58,10 @@ private struct MenuBarLabel: View {
         }
         .onAppear {
             env.requestOpenWindow = { id in openWindow.openActivating(id: id) }
+            if !UserDefaults.standard.bool(forKey: "hasOnboarded") {
+                UserDefaults.standard.set(true, forKey: "hasOnboarded")
+                openWindow.openActivating(id: "onboarding")
+            }
         }
     }
 }
