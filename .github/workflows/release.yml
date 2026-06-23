@@ -99,15 +99,27 @@ jobs:
           LENGTH="$(printf '%s' "$SIG_LINE" | sed -n 's/.*length="\([^"]*\)".*/\1/p')"
           DMG_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${DMG}"
           PUB_DATE="$(date -u '+%a, %d %b %Y %H:%M:%S +0000')"
-          # Build HTML release notes from feat/fix commits since the previous tag
-          # (Sparkle renders the <description> as HTML in the update dialog).
-          PREV_TAG="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
-          RANGE="${GITHUB_REF_NAME}"; [ -n "$PREV_TAG" ] && RANGE="${PREV_TAG}..${GITHUB_REF_NAME}"
-          NOTE_ITEMS="$(git log "$RANGE" --pretty=format:'%s' \
-            | grep -E '^(feat|fix)' \
-            | sed -E 's/^(feat|fix)\([^)]*\)!?: //; s/^(feat|fix)!?: //' \
-            | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g' \
-            | sed 's|^|<li>|; s|$|</li>|')"
+          # Release notes (Sparkle renders <description> as HTML):
+          #   1. If the tag's annotation message has a body, use it verbatim as the
+          #      notes — write bullet lines ("- …") for full, curated control.
+          #   2. Otherwise auto-scrape USER-FACING commits: only feat(app)/fix(app)
+          #      (release/build/ci/dev/chore/docs machinery excluded), minus any
+          #      commit whose message contains [skip-notes].
+          esc() { sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'; }
+          TAG_BODY="$(git tag -l "${GITHUB_REF_NAME}" --format='%(contents:body)')"
+          if printf '%s' "$TAG_BODY" | grep -q '[^[:space:]]'; then
+            NOTE_ITEMS="$(printf '%s\n' "$TAG_BODY" \
+              | sed '/^[[:space:]]*$/d' \
+              | sed -E 's/^[[:space:]]*[-*•][[:space:]]*//' \
+              | esc | sed 's|^|<li>|; s|$|</li>|')"
+          else
+            PREV_TAG="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
+            RANGE="${GITHUB_REF_NAME}"; [ -n "$PREV_TAG" ] && RANGE="${PREV_TAG}..${GITHUB_REF_NAME}"
+            NOTE_ITEMS="$(git log "$RANGE" --invert-grep --grep='\[skip-notes\]' --pretty=format:'%s' \
+              | grep -E '^(feat|fix)\(app\): ' \
+              | sed -E 's/^(feat|fix)\(app\): //' \
+              | esc | sed 's|^|<li>|; s|$|</li>|')"
+          fi
           [ -z "$NOTE_ITEMS" ] && NOTE_ITEMS="<li>Maintenance and improvements.</li>"
           NOTES_HTML="<h2>What's new in ${VERSION}</h2><ul>${NOTE_ITEMS}</ul><p><a href=\"https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}\">Full changelog on GitHub</a></p>"
           cat > appcast.xml <<EOF
