@@ -1,0 +1,17 @@
+---
+const DOWNLOAD_URL = 'https://github.com/Rohithgilla12/stash/releases/latest';
+---
+<section class="download" id="download">
+  <div class="container download__inner">
+    <h2 class="download__title">Get Stash.</h2>
+    <p class="download__body">Free, notarized, and it auto-updates itself via Sparkle.</p>
+    <a class="btn btn--primary" href={DOWNLOAD_URL}>Download for macOS</a>
+    <p class="hero__meta">macOS 14+ · Apple Silicon &amp; Intel</p>
+  </div>
+</section>
+<style>
+  .download { background: var(--accent-tint); border-block: 1px solid var(--hairline); }
+  .download__inner { text-align: center; padding-block: var(--space-24); }
+  .download__title { font-size: var(--step-3); }
+  .download__body { color: var(--ink-soft); font-size: var(--step-1); margin: var(--space-4) 0 var(--space-8); }
+</style>

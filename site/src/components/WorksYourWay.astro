@@ -1,0 +1,20 @@
+---
+const items = ['⌃⌥V — Paste browser', '⌃⌥S — Sticky notes', '⌃⌥C — Quick capture', '⌘K — Command palette'];
+---
+<section class="band">
+  <div class="container">
+    <p class="feat__eyebrow">Works your way</p>
+    <h2 class="band__title">Your keys, or ours.</h2>
+    <p class="band__body">Global hotkeys out of the box — or skip them entirely and trigger every action with a <code>stash://</code> deeplink wired into Raycast or Karabiner.</p>
+    <ul class="band__keys">{items.map((i) => <li>{i}</li>)}</ul>
+  </div>
+</section>
+<style>
+  .band { background: var(--surface); border-block: 1px solid var(--hairline); }
+  .band > .container { padding-block: var(--space-24); }
+  .band__title { font-size: var(--step-3); margin-top: var(--space-3); }
+  .band__body { color: var(--ink-soft); font-size: var(--step-1); margin-top: var(--space-4); max-width: 60ch; }
+  .band__body code { background: var(--accent-tint); color: var(--accent-strong); padding: 0.1em 0.4em; border-radius: 6px; }
+  .band__keys { list-style: none; padding: 0; margin: var(--space-8) 0 0; display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  .band__keys li { font-family: var(--font-display); font-weight: 600; border: 1px solid var(--hairline); border-radius: 8px; padding: var(--space-2) var(--space-3); }
+</style>

@@ -3,6 +3,10 @@ import Base from '../layouts/Base.astro';
 import Nav from '../components/Nav.astro';
 import Hero from '../components/Hero.astro';
 import FeatureSection from '../components/FeatureSection.astro';
+import WorksYourWay from '../components/WorksYourWay.astro';
+import Privacy from '../components/Privacy.astro';
+import DownloadCTA from '../components/DownloadCTA.astro';
+import Footer from '../components/Footer.astro';
 import { features } from '../data/features';
 ---
 <Base title="Stash — your menu-bar command center for macOS" description="Clipboard history, snippets, tasks, sticky notes and window snapping in one fast macOS menu-bar app.">
@@ -12,5 +16,9 @@ import { features } from '../data/features';
     <div id="features">
       {features.map((f, i) => <FeatureSection feature={f} index={i} />)}
     </div>
+    <WorksYourWay />
+    <Privacy />
+    <DownloadCTA />
   </main>
+  <Footer />
 </Base>
