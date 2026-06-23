@@ -22,6 +22,7 @@ final class AppEnvironment {
     private let snapper = WindowSnapper()
     private var snapHotKeys: [GlobalHotKey] = []
     private let pasteBrowser = PasteBrowserController()
+    private let quickCapture = QuickCaptureController()
 
     var globalHotkeysEnabled: Bool = true {
         didSet {
@@ -61,6 +62,7 @@ final class AppEnvironment {
 
         wireExpander()
         wirePasteBrowser()
+        wireQuickCapture()
         globalHotkeysEnabled = UserDefaults.standard.object(forKey: "globalHotkeysEnabled") as? Bool ?? true
         hotkeysSettingLoaded = true
         start()
@@ -115,6 +117,12 @@ final class AppEnvironment {
             if let title = q("title"), !title.isEmpty {
                 Task { [weak self] in await self?.tasksViewModel.add(title) }
             }
+        case "capture":
+            if let text = q("text"), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                quickSave(text, asTask: (q("type")?.lowercased() != "note"))
+            } else {
+                quickCapture.show()
+            }
         default:
             break
         }
@@ -151,14 +159,43 @@ final class AppEnvironment {
         }
     }
 
+    func showQuickCapture() {
+        quickCapture.show()
+    }
+
+    func quickSave(_ text: String, asTask: Bool) {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        if asTask {
+            Task { await tasksViewModel.add(t) }
+        } else {
+            Task {
+                if let note = await notesViewModel.newNote() {
+                    var n = note
+                    n.title = String(t.split(separator: "\n").first.map(String.init) ?? t).prefix(80).description
+                    n.body = t
+                    await notesViewModel.update(n)
+                }
+            }
+        }
+    }
+
+    private func wireQuickCapture() {
+        quickCapture.onSave = { [weak self] text, asTask in
+            self?.quickSave(text, asTask: asTask)
+        }
+    }
+
     private func applyHotkeys() {
         if globalHotkeysEnabled {
             stickyManager.registerHotKey()
             pasteBrowser.registerHotKey()
+            quickCapture.registerHotKey()
             registerSnapHotKeys()
         } else {
             stickyManager.unregisterHotKey()
             pasteBrowser.unregisterHotKey()
+            quickCapture.unregisterHotKey()
             snapHotKeys = []
         }
     }

@@ -86,6 +86,14 @@ enum CommandPalette {
             run: { env.handleDeeplink(URL(string: "stash://note")!); dismiss() }
         ))
         result.append(PaletteItem(
+            id: "action-quick-capture",
+            title: "Quick Capture",
+            subtitle: "Jot a note or task from anywhere",
+            symbol: "square.and.pencil",
+            kind: "action",
+            run: { env.showQuickCapture(); dismiss() }
+        ))
+        result.append(PaletteItem(
             id: "action-clear-clip",
             title: "Clear clipboard history",
             subtitle: "Remove all unpinned clips",
