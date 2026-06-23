@@ -1,6 +1,40 @@
 import Foundation
 
 enum TaskQuickParse {
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return f
+    }()
+
+    private static let weekdayTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEE h:mm a"
+        return f
+    }()
+
+    private static let monthDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
+
+    static func formatDue(_ date: Date, now: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDate(date, inSameDayAs: now) {
+            return "Today \(timeFormatter.string(from: date))"
+        }
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!
+        if cal.isDate(date, inSameDayAs: tomorrow) {
+            return "Tmr \(timeFormatter.string(from: date))"
+        }
+        let thisWeekEnd = cal.date(byAdding: .day, value: 7, to: now)!
+        if date < thisWeekEnd {
+            return weekdayTimeFormatter.string(from: date)
+        }
+        return monthDayFormatter.string(from: date)
+    }
+
     struct Result: Equatable {
         var title: String
         var dueAt: Date?

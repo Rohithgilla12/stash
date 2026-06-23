@@ -135,7 +135,7 @@ private struct TasksMainPane: View {
                     }
             }
             .padding(8)
-            .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+            .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
             Text(#"Try: "pay rent fri 9am !high"  ·  "standup every weekday 9am""#)
                 .font(.system(.caption2))
                 .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
@@ -277,7 +277,7 @@ private struct FullTaskRow: View {
             }
             if let dueAt = task.dueAt {
                 let date = Date(timeIntervalSince1970: Double(dueAt) / 1000)
-                let label = formatDue(date, now: Date())
+                let label = TaskQuickParse.formatDue(date, now: Date())
                 let isToday = Calendar.current.isDateInToday(date)
                 Text(label)
                     .font(.system(size: 10, weight: .medium))

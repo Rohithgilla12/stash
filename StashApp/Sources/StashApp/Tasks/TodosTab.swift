@@ -161,7 +161,7 @@ struct TaskRowView: View {
     private var duePill: some View {
         if let dueAt = task.dueAt {
             let date = Date(timeIntervalSince1970: Double(dueAt) / 1000)
-            let label = formatDue(date, now: Date())
+            let label = TaskQuickParse.formatDue(date, now: Date())
             let isToday = Calendar.current.isDateInToday(date)
             Text(label)
                 .font(.system(size: 10, weight: .medium))
@@ -196,26 +196,3 @@ struct TaskRowView: View {
     }
 }
 
-func formatDue(_ date: Date, now: Date) -> String {
-    let cal = Calendar.current
-    if cal.isDate(date, inSameDayAs: now) {
-        let f = DateFormatter()
-        f.dateFormat = "h:mm a"
-        return "Today \(f.string(from: date))"
-    }
-    let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!
-    if cal.isDate(date, inSameDayAs: tomorrow) {
-        let f = DateFormatter()
-        f.dateFormat = "h:mm a"
-        return "Tmr \(f.string(from: date))"
-    }
-    let thisWeekEnd = cal.date(byAdding: .day, value: 7, to: now)!
-    if date < thisWeekEnd {
-        let f = DateFormatter()
-        f.dateFormat = "EEE h:mm a"
-        return f.string(from: date)
-    }
-    let f = DateFormatter()
-    f.dateFormat = "MMM d"
-    return f.string(from: date)
-}
