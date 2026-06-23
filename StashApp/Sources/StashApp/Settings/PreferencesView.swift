@@ -1,5 +1,6 @@
 import SwiftUI
 import ServiceManagement
+import UserNotifications
 
 @MainActor
 struct PreferencesView: View {
@@ -10,6 +11,7 @@ struct PreferencesView: View {
     @State private var linkPreviewsEnabled: Bool =
         UserDefaults.standard.object(forKey: "linkPreviewsEnabled") as? Bool ?? true
     @State private var showClearConfirm = false
+    @State private var reminderStatus: UNAuthorizationStatus = .notDetermined
 
     var body: some View {
         Form {
@@ -22,7 +24,48 @@ struct PreferencesView: View {
         }
         .formStyle(.grouped)
         .tint(Tokens.accent)
-        .frame(width: 480, height: 520)
+        .frame(width: 480, height: 560)
+    }
+
+    private var reminderStatusText: String {
+        switch reminderStatus {
+        case .authorized: return "On"
+        case .denied: return "Denied — open Settings"
+        default: return "Not enabled"
+        }
+    }
+
+    private var reminderStatusColor: Color {
+        switch reminderStatus {
+        case .authorized: return Color.green
+        default: return Color.secondary
+        }
+    }
+
+    private var reminderButtonTitle: String {
+        switch reminderStatus {
+        case .notDetermined: return "Enable Reminders"
+        case .denied: return "Open Notification Settings"
+        default: return ""
+        }
+    }
+
+    private func reminderButtonAction() {
+        Task {
+            if reminderStatus == .notDetermined {
+                _ = await env.scheduler.requestAuthorization()
+                await env.scheduler.sync(env.tasksViewModel.tasks)
+            } else if reminderStatus == .denied {
+                NSWorkspace.shared.open(
+                    URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!
+                )
+            }
+            await loadReminderStatus()
+        }
+    }
+
+    private func loadReminderStatus() async {
+        reminderStatus = await env.scheduler.authorizationStatus()
     }
 
     @ViewBuilder private var generalSection: some View {
@@ -70,6 +113,25 @@ struct PreferencesView: View {
                     )
                 }
             }
+
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Task reminders")
+                    Text(reminderStatusText)
+                        .font(.caption)
+                        .foregroundStyle(reminderStatusColor)
+                    Text("Get notified when a task is due.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if reminderStatus != .authorized {
+                    Button(reminderButtonTitle) {
+                        reminderButtonAction()
+                    }
+                }
+            }
+            .task { await loadReminderStatus() }
         }
     }
 

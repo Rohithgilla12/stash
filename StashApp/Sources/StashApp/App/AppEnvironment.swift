@@ -13,6 +13,7 @@ final class AppEnvironment {
     let snippetsViewModel: SnippetsViewModel
     let aiViewModel: AIViewModel
     let aiAssistant = AIAssistant()
+    let scheduler = TaskReminderScheduler()
     let pomodoro = PomodoroTimer()
     private let systemExpander = SystemExpander()
     private let monitor: ClipboardMonitor
@@ -65,6 +66,9 @@ final class AppEnvironment {
             }
         )
 
+        tasksViewModel.onTasksChanged = { [weak self] tasks in
+            Task { await self?.scheduler.sync(tasks) }
+        }
         wireExpander()
         wirePasteBrowser()
         wireQuickCapture()
@@ -153,6 +157,16 @@ final class AppEnvironment {
         }
     }
 
+    func completeTask(id: String) async {
+        guard let task = tasksViewModel.tasks.first(where: { $0.id == id }) else { return }
+        await tasksViewModel.toggle(task)
+    }
+
+    private func syncRemindersIfAuthorized() async {
+        guard await scheduler.authorizationStatus() == .authorized else { return }
+        await scheduler.sync(tasksViewModel.tasks)
+    }
+
     func start() {
         viewModel.startObserving()
         notesViewModel.startObserving()
@@ -160,6 +174,7 @@ final class AppEnvironment {
         snippetsViewModel.startObserving()
         Task { await monitor.start() }
         Task { await snippetsViewModel.seed() }
+        Task { await self.syncRemindersIfAuthorized() }
         startStickyObservation()
         applyHotkeys()
         // Do NOT prompt for Accessibility at launch — only when the user actually

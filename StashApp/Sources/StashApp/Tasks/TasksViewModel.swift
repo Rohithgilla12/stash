@@ -10,6 +10,7 @@ enum TaskFilter: String, CaseIterable, Sendable {
 final class TasksViewModel {
     var tasks: [TaskItem] = []
     var filter: TaskFilter = .today
+    var onTasksChanged: (([TaskItem]) -> Void)?
 
     private let db: any DatabaseWriter
     private let store: TasksStore
@@ -47,6 +48,7 @@ final class TasksViewModel {
             do {
                 for try await rows in observation.values(in: self.db) {
                     self.tasks = rows
+                    self.onTasksChanged?(rows)
                 }
             } catch {
                 #if DEBUG
