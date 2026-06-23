@@ -17,6 +17,7 @@ const { title, description } = Astro.props;
     <meta property="og:image" content={new URL('/og.png', Astro.site)} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={new URL('/og.png', Astro.site)} />
+    <noscript><style>[data-reveal]{opacity:1;transform:none}</style></noscript>
   </head>
   <body>
     <slot />

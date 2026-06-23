@@ -33,8 +33,8 @@ img { max-width: 100%; height: auto; display: block; }
 /* Shared, cross-component classes MUST live here — Astro scopes <style> per
    component, so these would not apply if defined inside one component. */
 .btn { display: inline-block; padding: var(--space-3) var(--space-6); border-radius: 999px; font-weight: 600; text-decoration: none; }
-.btn--primary { background: var(--accent); color: var(--ink-inverse); }
+.btn--primary { background: var(--accent-strong); color: var(--ink-inverse); }
 .btn--ghost { color: var(--ink); border: 1px solid var(--hairline); }
 .frame { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--hairline); box-shadow: 0 30px 60px -30px oklch(0.4 0.05 55 / 0.35); background: var(--surface); margin: 0; }
 .feat__eyebrow { color: var(--accent-strong); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8rem; }
-.hero__meta { color: var(--ink-faint); font-size: 0.9rem; margin-top: var(--space-3); }
+.hero__meta { color: var(--ink-soft); font-size: 0.9rem; margin-top: var(--space-3); }
