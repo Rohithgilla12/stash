@@ -63,7 +63,7 @@ final class SystemExpander {
             for _ in 0..<150 {   // ~5 min at 2s intervals
                 try? await Task.sleep(for: .seconds(2))
                 guard let self, !Task.isCancelled else { return }
-                if AXIsProcessTrusted() {
+                if AXIsProcessTrusted() && AccessibilityAuthorizer.inputMonitoringGranted {
                     self.installTap()
                     if self.enabled { return }
                 }
@@ -77,8 +77,11 @@ final class SystemExpander {
     }
 
     private func installTap() {
-        if !AXIsProcessTrusted() {
-            AccessibilityAuthorizer.requestOnce()
+        let ax = AXIsProcessTrusted()
+        let im = AccessibilityAuthorizer.inputMonitoringGranted
+        if !ax || !im {
+            if !ax { AccessibilityAuthorizer.requestOnce() }
+            if !im { AccessibilityAuthorizer.requestInputMonitoringOnce() }
             return
         }
 

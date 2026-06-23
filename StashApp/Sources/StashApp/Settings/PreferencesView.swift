@@ -50,6 +50,26 @@ struct PreferencesView: View {
                     )
                 }
             }
+
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Input Monitoring")
+                    Text(AccessibilityAuthorizer.inputMonitoringGranted ? "Granted" : "Not granted")
+                        .font(.caption)
+                        .foregroundStyle(
+                            AccessibilityAuthorizer.inputMonitoringGranted ? Color.green : Color.secondary
+                        )
+                    Text("Needed (with Accessibility) for the system-wide text expander.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Open Input Monitoring Settings") {
+                    NSWorkspace.shared.open(
+                        URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent")!
+                    )
+                }
+            }
         }
     }
 

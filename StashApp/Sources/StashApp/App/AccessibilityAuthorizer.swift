@@ -1,4 +1,5 @@
 @preconcurrency import ApplicationServices
+import IOKit
 
 /// Centralizes the Accessibility (AXIsProcessTrusted) permission prompt.
 ///
@@ -21,5 +22,17 @@ enum AccessibilityAuthorizer {
         didPrompt = true
         let key = kAXTrustedCheckOptionPrompt.takeRetainedValue() as String
         AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
+    }
+
+    private static var didPromptInputMonitoring = false
+
+    static var inputMonitoringGranted: Bool {
+        IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) == kIOHIDAccessTypeGranted
+    }
+
+    static func requestInputMonitoringOnce() {
+        guard !didPromptInputMonitoring, !inputMonitoringGranted else { return }
+        didPromptInputMonitoring = true
+        _ = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
     }
 }
