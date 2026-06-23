@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 enum ExpansionEngine {
@@ -20,7 +21,12 @@ enum ExpansionEngine {
                 return s.expand ?? ""
             }
         }
-        return s.expand ?? ""
+        if let template = s.expand {
+            let clipboard = NSPasteboard.general.string(forType: .string)
+            let result = SnippetTemplate.render(template, values: [:], clipboard: clipboard, now: now)
+            return result.text
+        }
+        return ""
     }
 
     static func match(buffer: String, snippets: [Snippet], now: Date) -> (matchLength: Int, replacement: String)? {

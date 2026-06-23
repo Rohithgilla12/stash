@@ -265,6 +265,9 @@ private struct SnippetEditorSheet: View {
                                     .allowsHitTesting(false)
                             }
                         }
+                    Text("Placeholders: {date} {date:+3d} {time} {clipboard} {cursor} {field}")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
 

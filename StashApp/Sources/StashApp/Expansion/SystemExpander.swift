@@ -33,6 +33,7 @@ final class SystemExpander {
     nonisolated(unsafe) static var _sharedTapPort: CFMachPort?
 
     var snippets: [Snippet] = []
+    let formController = SnippetFormController()
 
     private var buffer = KeystrokeBuffer()
     private var tapPort: CFMachPort?
@@ -168,15 +169,29 @@ final class SystemExpander {
         buffer.append(typed)
 
         if let match = ExpansionEngine.match(buffer: buffer.value, snippets: snippets, now: Date()) {
-            performExpansion(matchLength: match.matchLength, replacement: match.replacement)
             buffer.reset()
+            let replacement = match.replacement
+            let fields = SnippetTemplate.fields(in: replacement)
+            deleteBackward(match.matchLength)
+
+            if fields.isEmpty {
+                let clipboard = NSPasteboard.general.string(forType: .string)
+                let result = SnippetTemplate.render(replacement, values: [:], clipboard: clipboard, now: Date())
+                insert(result.text, cursorOffset: result.cursorOffset)
+            } else {
+                let clipboard = NSPasteboard.general.string(forType: .string)
+                formController.present(fields: fields) { values in
+                    let result = SnippetTemplate.render(replacement, values: values, clipboard: clipboard, now: Date())
+                    self.insert(result.text, cursorOffset: result.cursorOffset)
+                } onCancel: {
+                }
+            }
         }
     }
 
-    private func performExpansion(matchLength: Int, replacement: String) {
+    private func deleteBackward(_ n: Int) {
         let deleteKeyCode: CGKeyCode = 51
-
-        for _ in 0..<matchLength {
+        for _ in 0..<n {
             if let down = CGEvent(keyboardEventSource: nil, virtualKey: deleteKeyCode, keyDown: true) {
                 down.post(tap: .cghidEventTap)
             }
@@ -184,23 +199,29 @@ final class SystemExpander {
                 up.post(tap: .cghidEventTap)
             }
         }
+    }
 
+    private func insert(_ text: String, cursorOffset: Int?) {
         usleep(1500)
-
-        let utf16 = Array(replacement.utf16)
+        let utf16 = Array(text.utf16)
         if let insertEvent = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true) {
-            insertEvent.keyboardSetUnicodeString(
-                stringLength: utf16.count,
-                unicodeString: utf16
-            )
+            insertEvent.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
             insertEvent.post(tap: .cghidEventTap)
         }
         if let insertUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) {
-            insertUp.keyboardSetUnicodeString(
-                stringLength: utf16.count,
-                unicodeString: utf16
-            )
+            insertUp.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
             insertUp.post(tap: .cghidEventTap)
+        }
+        if let offset = cursorOffset, offset > 0 {
+            let leftArrow: CGKeyCode = 123
+            for _ in 0..<offset {
+                if let down = CGEvent(keyboardEventSource: nil, virtualKey: leftArrow, keyDown: true) {
+                    down.post(tap: .cghidEventTap)
+                }
+                if let up = CGEvent(keyboardEventSource: nil, virtualKey: leftArrow, keyDown: false) {
+                    up.post(tap: .cghidEventTap)
+                }
+            }
         }
     }
 }
