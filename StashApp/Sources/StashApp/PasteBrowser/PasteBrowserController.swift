@@ -15,6 +15,8 @@ final class PasteBrowserController {
     private weak var previousApp: NSRunningApplication?
 
     var itemsProvider: () -> [ClipItem] = { [] }
+    var onPin: (ClipItem) -> Void = { _ in }
+    var onDelete: (ClipItem) -> Void = { _ in }
 
     func registerHotKey() {
         hotKey = GlobalHotKey(keyCode: 9, modifiers: UInt32(controlKey | optionKey)) { [weak self] in
@@ -67,6 +69,8 @@ final class PasteBrowserController {
         let view = PasteBrowserView(
             items: itemsProvider(),
             onPaste: { [weak self] item in self?.paste(item) },
+            onPin: { [weak self] item in self?.onPin(item) },
+            onDelete: { [weak self] item in self?.onDelete(item) },
             onClose: { [weak self] in self?.hide() }
         )
         p.contentView = NSHostingView(rootView: view)

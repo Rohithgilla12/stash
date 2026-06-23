@@ -130,6 +130,12 @@ final class AppEnvironment {
 
     private func wirePasteBrowser() {
         pasteBrowser.itemsProvider = { [weak self] in self?.viewModel.items ?? [] }
+        pasteBrowser.onPin = { [weak self] item in
+            Task { await self?.viewModel.togglePin(item) }
+        }
+        pasteBrowser.onDelete = { [weak self] item in
+            Task { await self?.viewModel.delete(item) }
+        }
     }
 
     private func wireExpander() {

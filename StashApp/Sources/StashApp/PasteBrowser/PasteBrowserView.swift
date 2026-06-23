@@ -1,18 +1,33 @@
 import SwiftUI
 
 struct PasteBrowserView: View {
-    let items: [ClipItem]
+    private let initialItems: [ClipItem]
     let onPaste: (ClipItem) -> Void
+    let onPin: (ClipItem) -> Void
+    let onDelete: (ClipItem) -> Void
     let onClose: () -> Void
 
+    @State private var localItems: [ClipItem]
     @State private var query: String = ""
     @State private var selection: Int = 0
     @FocusState private var containerFocused: Bool
 
+    init(items: [ClipItem], onPaste: @escaping (ClipItem) -> Void,
+         onPin: @escaping (ClipItem) -> Void,
+         onDelete: @escaping (ClipItem) -> Void,
+         onClose: @escaping () -> Void) {
+        self.initialItems = items
+        self.onPaste = onPaste
+        self.onPin = onPin
+        self.onDelete = onDelete
+        self.onClose = onClose
+        self._localItems = State(initialValue: items)
+    }
+
     private var filtered: [ClipItem] {
-        guard !query.isEmpty else { return items }
+        guard !query.isEmpty else { return localItems }
         let q = query.lowercased()
-        return items.filter {
+        return localItems.filter {
             ($0.title?.lowercased().contains(q) ?? false)
                 || ($0.text?.lowercased().contains(q) ?? false)
         }
@@ -91,7 +106,19 @@ struct PasteBrowserView: View {
                             PasteCardView(
                                 item: item,
                                 isSelected: selection == index,
-                                onPaste: { onPaste(item) }
+                                badgeIndex: index < 9 ? index + 1 : nil,
+                                onPaste: { onPaste(item) },
+                                onPin: {
+                                    onPin(item)
+                                    if let li = localItems.firstIndex(where: { $0.id == item.id }) {
+                                        localItems[li].pinned.toggle()
+                                    }
+                                },
+                                onDelete: {
+                                    onDelete(item)
+                                    localItems.removeAll { $0.id == item.id }
+                                    selection = min(selection, max(0, filtered.count - 1))
+                                }
                             )
                             .id(index)
                         }
@@ -125,6 +152,7 @@ struct PasteBrowserView: View {
             hintItem(key: "↵", label: "Paste")
             hintItem(key: "⎋", label: "Close")
             hintItem(key: "← →", label: "Navigate")
+            hintItem(key: "⌘1–9", label: "Quick paste")
         }
         .padding(.horizontal, Space.lg)
         .padding(.vertical, Space.sm)
@@ -161,8 +189,7 @@ struct PasteBrowserView: View {
         onPaste(filtered[selection])
     }
 
-    /// One handler for all keys so ordering is explicit (backspace was being
-    /// missed when split across several `.onKeyPress` modifiers).
+    /// One handler for all keys so ordering is explicit.
     private func handleKey(_ press: KeyPress) -> KeyPress.Result {
         switch press.key {
         case .leftArrow:  moveSelection(by: -1); return .handled
@@ -171,11 +198,44 @@ struct PasteBrowserView: View {
         case .escape:     onClose();              return .handled
         default: break
         }
-        // Backspace / forward-delete — match the key OR the DEL/BS character.
-        if press.key == .delete || press.characters == "\u{7F}" || press.characters == "\u{8}" {
-            if !query.isEmpty { query.removeLast(); selection = 0 }
+
+        // ⌘1–⌘9 quick-paste
+        if press.modifiers.contains(.command),
+           let digit = press.characters.first?.wholeNumberValue,
+           digit >= 1 && digit <= 9 {
+            let idx = digit - 1
+            if idx < filtered.count { onPaste(filtered[idx]) }
             return .handled
         }
+
+        // P key (no modifiers) — pin/unpin selected card
+        if press.modifiers.isEmpty, press.characters.lowercased() == "p" {
+            let idx = selection
+            guard idx < filtered.count else { return .ignored }
+            let item = filtered[idx]
+            onPin(item)
+            if let li = localItems.firstIndex(where: { $0.id == item.id }) {
+                localItems[li].pinned.toggle()
+            }
+            return .handled
+        }
+
+        // Backspace / forward-delete
+        if press.key == .delete || press.characters == "\u{7F}" || press.characters == "\u{8}" {
+            if !query.isEmpty {
+                query.removeLast()
+                selection = 0
+            } else {
+                let f = filtered
+                guard !f.isEmpty, selection < f.count else { return .handled }
+                let item = f[selection]
+                onDelete(item)
+                localItems.removeAll { $0.id == item.id }
+                selection = min(selection, max(0, filtered.count - 1))
+            }
+            return .handled
+        }
+
         // Printable characters → append (ignore ⌘/⌃/⌥ combos and control chars).
         guard press.modifiers.subtracting(.shift).isEmpty else { return .ignored }
         let typed = press.characters.filter { ch in

@@ -63,6 +63,31 @@ struct ClipRowView: View {
         if (item.kind == .text || item.kind == .link), !(item.text ?? "").isEmpty {
             Button("Show QR Code") { showQR = true }
         }
+
+        if item.kind == .image, let previewPath = item.previewPath {
+            let full = ThumbnailCache.fullPath(forThumbPath: previewPath)
+
+            Divider()
+
+            Button("Save Image…") {
+                let panel = NSSavePanel()
+                panel.nameFieldStringValue = "Stash Image.png"
+                panel.allowedContentTypes = [.png]
+                if panel.runModal() == .OK, let dest = panel.url {
+                    try? FileManager.default.copyItem(atPath: full, toPath: dest.path)
+                }
+            }
+
+            Button("Reveal in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: full)])
+            }
+
+            Button("Copy File Path") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(full, forType: .string)
+                onActed("Copied file path")
+            }
+        }
     }
 
     private func rowContent(hovering: Bool) -> some View {

@@ -3,9 +3,13 @@ import SwiftUI
 struct PasteCardView: View {
     let item: ClipItem
     let isSelected: Bool
+    var badgeIndex: Int? = nil
     let onPaste: () -> Void
+    var onPin: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
 
     @State private var ogPreview: LinkPreview?
+    @State private var isHovered: Bool = false
 
     private let cardWidth: CGFloat = 200
     private let cardHeight: CGFloat = 220
@@ -28,11 +32,44 @@ struct PasteCardView: View {
                     footerMeta
                 }
                 .padding(Space.md)
+
+                if let idx = badgeIndex {
+                    Text("⌘\(idx)")
+                        .font(.ui(9.5, .bold))
+                        .foregroundStyle(Tokens.textTertiary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Tokens.surface.opacity(0.85), in: Capsule())
+                        .padding(6)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                }
+
+                if isHovered {
+                    HStack(spacing: 2) {
+                        if let onPin {
+                            cardGhostButton(icon: item.pinned ? "pin.fill" : "pin", action: onPin)
+                        }
+                        if let onDelete {
+                            cardGhostButton(icon: "xmark", action: onDelete)
+                        }
+                    }
+                    .padding(6)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                }
+
+                if item.pinned && !isHovered {
+                    Circle()
+                        .fill(Tokens.accent)
+                        .frame(width: 6, height: 6)
+                        .padding(8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                }
             }
             .frame(width: cardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
         .buttonStyle(CardButtonStyle(isSelected: isSelected, cornerRadius: cornerRadius))
+        .onHover { isHovered = $0 }
         .task {
             if item.kind == .link {
                 ogPreview = await LinkPreviewService.shared.preview(for: item.text ?? "")
@@ -168,6 +205,21 @@ struct PasteCardView: View {
             .lineLimit(1)
             .truncationMode(.tail)
             .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func cardGhostButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Tokens.textTertiary)
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Tokens.panelFill.opacity(0.85))
+                )
+        }
+        .buttonStyle(.plain)
     }
 }
 
