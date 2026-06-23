@@ -19,7 +19,6 @@ struct QuickCaptureView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 8)
         .frame(width: 500)
-        .onKeyPress(.escape) { onClose(); return .handled }
         .onAppear { focused = true }
     }
 
@@ -32,7 +31,6 @@ struct QuickCaptureView: View {
                 .textFieldStyle(.plain)
                 .font(Font.rounded(16))
                 .focused($focused)
-                .onSubmit { commit() }
         }
         .padding(.bottom, 12)
     }
@@ -41,9 +39,14 @@ struct QuickCaptureView: View {
         HStack {
             TypeToggle(asTask: $asTask)
             Spacer()
-            Text("↵ Save   ⎋ Cancel")
-                .font(.caption)
+            Button("Cancel") { onClose() }
+                .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
+                .keyboardShortcut(.cancelAction)   // ⎋
+            Button(asTask ? "Add Task" : "Save Note") { commit() }
+                .buttonStyle(.borderedProminent)
+                .tint(Tokens.accent)
+                .keyboardShortcut(.defaultAction)  // ↵ — fires even with the field focused
         }
         .padding(.top, 10)
     }
