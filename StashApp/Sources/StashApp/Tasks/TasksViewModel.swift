@@ -63,8 +63,13 @@ final class TasksViewModel {
         let parsed = TaskQuickParse.parse(raw, now: nowDate)
         let id = UUID().uuidString
         let nowMs = Int64(nowDate.timeIntervalSince1970 * 1000)
-        let dueAtMs = parsed.dueAt.map { Int64($0.timeIntervalSince1970 * 1000) }
-        let due = dueBucket(for: parsed.dueAt, now: nowDate)
+        var dueAtMs = parsed.dueAt.map { Int64($0.timeIntervalSince1970 * 1000) }
+        if dueAtMs == nil, let rule = parsed.repeatRule {
+            if let anchor = TaskRecurrence.firstAnchor(rule: rule, from: nowDate) {
+                dueAtMs = Int64(anchor.timeIntervalSince1970 * 1000)
+            }
+        }
+        let due = dueBucket(for: dueAtMs.map { Date(timeIntervalSince1970: Double($0) / 1000) }, now: nowDate)
         try? await store.create(
             title: parsed.title,
             due: due,
@@ -86,7 +91,11 @@ final class TasksViewModel {
     }
 
     func toggle(_ task: TaskItem) async {
-        try? await store.setDone(id: task.id, done: !task.done)
+        let markingDone = !task.done
+        try? await store.setDone(id: task.id, done: markingDone)
+        if markingDone, let next = TaskRecurrence.spawnNext(from: task, now: Date()) {
+            try? await store.upsert(next)
+        }
     }
 
     func delete(_ task: TaskItem) async {

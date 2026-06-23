@@ -255,7 +255,7 @@ private struct FullTaskRow: View {
                     .background(Color.black.opacity(0.07), in: Capsule())
             }
             if let rule = task.repeatRule {
-                Text("↻ \(rule)")
+                Text("↻ \(TaskRecurrence.humanLabel(rule))")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 5)
