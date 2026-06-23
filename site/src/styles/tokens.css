@@ -5,6 +5,7 @@
   --ink: oklch(0.26 0.02 55);
   --ink-soft: oklch(0.46 0.02 55);
   --ink-faint: oklch(0.60 0.018 55);
+  --ink-inverse: oklch(0.99 0.005 60);
   --hairline: oklch(0.90 0.012 60);
   --accent: oklch(0.62 0.15 47);        /* ~ #c8642f */
   --accent-strong: oklch(0.55 0.16 47);
