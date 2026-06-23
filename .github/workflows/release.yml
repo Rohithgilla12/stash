@@ -106,13 +106,18 @@ jobs:
           #      (release/build/ci/dev/chore/docs machinery excluded), minus any
           #      commit whose message contains [skip-notes].
           esc() { sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'; }
+          # actions/checkout can leave the tag lightweight (annotation lost), so
+          # %(contents:body) would fall through to the COMMIT body — re-fetch the
+          # annotated tags first.
+          git fetch --tags --force origin >/dev/null 2>&1 || true
           TAG_BODY="$(git tag -l "${GITHUB_REF_NAME}" --format='%(contents:body)')"
-          if printf '%s' "$TAG_BODY" | grep -q '[^[:space:]]'; then
-            NOTE_ITEMS="$(printf '%s\n' "$TAG_BODY" \
-              | sed '/^[[:space:]]*$/d' \
-              | sed -E 's/^[[:space:]]*[-*•][[:space:]]*//' \
-              | esc | sed 's|^|<li>|; s|$|</li>|')"
-          else
+          # Curated notes = ONLY explicit bullet lines ("- …"), so commit trailers
+          # (e.g. Claude-Session:) or a stray commit body can never leak in.
+          NOTE_ITEMS="$(printf '%s\n' "$TAG_BODY" \
+            | grep -E '^[[:space:]]*[-*•][[:space:]]+' \
+            | sed -E 's/^[[:space:]]*[-*•][[:space:]]+//' \
+            | esc | sed 's|^|<li>|; s|$|</li>|')"
+          if [ -z "$NOTE_ITEMS" ]; then
             PREV_TAG="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)"
             RANGE="${GITHUB_REF_NAME}"; [ -n "$PREV_TAG" ] && RANGE="${PREV_TAG}..${GITHUB_REF_NAME}"
             NOTE_ITEMS="$(git log "$RANGE" --invert-grep --grep='\[skip-notes\]' --pretty=format:'%s' \
