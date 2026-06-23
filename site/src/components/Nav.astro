@@ -1,0 +1,25 @@
+---
+const links = [
+  { href: '#features', label: 'Features' },
+  { href: 'https://github.com/Rohithgilla12/stash', label: 'GitHub' },
+];
+---
+<header class="nav" id="site-nav">
+  <div class="container nav__inner">
+    <a class="nav__brand" href="#top">Stash</a>
+    <nav class="nav__links">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+      <a class="nav__cta" href="#download">Download</a>
+    </nav>
+  </div>
+</header>
+<style>
+  .nav { position: sticky; top: 0; z-index: 50; transition: background 0.2s ease, border-color 0.2s ease; border-bottom: 1px solid transparent; }
+  .nav.is-scrolled { background: color-mix(in oklch, var(--canvas) 88%, transparent); backdrop-filter: blur(8px); border-bottom-color: var(--hairline); }
+  .nav__inner { display: flex; align-items: center; justify-content: space-between; padding-block: var(--space-3); }
+  .nav__brand { font-family: var(--font-display); font-weight: 800; font-size: var(--step-1); color: var(--ink); text-decoration: none; }
+  .nav__links { display: flex; align-items: center; gap: var(--space-6); }
+  .nav__links a { color: var(--ink-soft); text-decoration: none; font-weight: 500; }
+  .nav__cta { background: var(--accent); color: #fff !important; padding: var(--space-2) var(--space-4); border-radius: 999px; }
+  @media (max-width: 640px) { .nav__links a:not(.nav__cta) { display: none; } }
+</style>

@@ -1,0 +1,30 @@
+---
+import { Image } from 'astro:assets';
+import shot from '../assets/placeholder.svg';
+const DOWNLOAD_URL = 'https://github.com/Rohithgilla12/stash/releases/latest';
+---
+<section class="hero" id="top">
+  <div class="container hero__inner">
+    <p class="hero__eyebrow" data-reveal>Lives up here ↑ in your menu bar</p>
+    <h1 class="hero__title" data-reveal>Your Mac, a keystroke away.</h1>
+    <p class="hero__lede" data-reveal>Clipboard history, snippets, tasks, sticky notes, window snapping and more — one menu-bar app that keeps your day in reach.</p>
+    <div class="hero__cta" data-reveal>
+      <a class="btn btn--primary" href={DOWNLOAD_URL}>Download for macOS</a>
+      <a class="btn btn--ghost" href="https://github.com/Rohithgilla12/stash">View on GitHub</a>
+    </div>
+    <p class="hero__meta" data-reveal>macOS 14+ · free · auto-updates</p>
+    <figure class="frame" data-reveal>
+      <Image src={shot} alt="The Stash menu-bar hub showing clipboard history" widths={[640, 1024, 1280]} sizes="(max-width: 900px) 100vw, 1000px" />
+    </figure>
+  </div>
+</section>
+<style>
+  .hero__inner { padding-block: var(--space-24) var(--space-16); text-align: center; }
+  .hero__eyebrow { color: var(--accent-strong); font-weight: 600; margin-bottom: var(--space-4); }
+  .hero__title { font-size: var(--step-4); max-width: 14ch; margin-inline: auto; }
+  .hero__lede { font-size: var(--step-1); color: var(--ink-soft); max-width: 56ch; margin: var(--space-6) auto 0; }
+  .hero__cta { display: flex; gap: var(--space-3); justify-content: center; margin-top: var(--space-8); flex-wrap: wrap; }
+  /* .btn*, .frame and .hero__meta are GLOBAL (see global.css). Only the hero's
+     frame top-margin is hero-specific: */
+  .hero .frame { margin-top: var(--space-16); }
+</style>

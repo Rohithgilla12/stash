@@ -1,6 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
 ---
-<Base title="Stash" description="Your menu-bar command center for macOS.">
-  <main class="container"><h1>Stash</h1></main>
+<Base title="Stash — your menu-bar command center for macOS" description="Clipboard history, snippets, tasks, sticky notes and window snapping in one fast macOS menu-bar app.">
+  <Nav />
+  <main><Hero /></main>
 </Base>
