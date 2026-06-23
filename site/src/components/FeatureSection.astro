@@ -1,0 +1,77 @@
+---
+import { Image } from 'astro:assets';
+import type { Feature } from '../data/features';
+
+interface Props {
+  feature: Feature;
+  index: number;
+}
+
+const { feature, index } = Astro.props;
+const imageLeft = index % 2 === 1;
+---
+<section class={`feat${imageLeft ? ' feat--rev' : ''}`} id={feature.id}>
+  <div class="container feat__inner">
+    <div class="feat__text" data-reveal>
+      <p class="feat__eyebrow">{feature.eyebrow}</p>
+      <h2 class="feat__title">{feature.title}</h2>
+      <p class="feat__body">{feature.body}</p>
+      {feature.hotkey && <span class="feat__key">{feature.hotkey}</span>}
+    </div>
+    <figure class="frame feat__media" data-reveal>
+      <Image
+        src={feature.image}
+        alt={feature.alt}
+        widths={[480, 800, 1100]}
+        sizes="(max-width: 800px) 100vw, 540px"
+      />
+    </figure>
+  </div>
+</section>
+
+<style>
+  .feat__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-16);
+    align-items: center;
+    padding-block: var(--space-24);
+  }
+
+  .feat--rev .feat__media { order: -1; }
+
+  .feat__title {
+    font-size: var(--step-3);
+    margin-top: var(--space-3);
+    max-width: 16ch;
+  }
+
+  .feat__body {
+    color: var(--ink-soft);
+    font-size: var(--step-1);
+    margin-top: var(--space-4);
+    max-width: 46ch;
+  }
+
+  .feat__key {
+    display: inline-block;
+    margin-top: var(--space-6);
+    font-family: var(--font-display);
+    font-weight: 600;
+    background: var(--accent-tint);
+    color: var(--accent-strong);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 8px;
+  }
+
+  .feat__media { margin: 0; }
+
+  @media (max-width: 800px) {
+    .feat__inner {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+      padding-block: var(--space-16);
+    }
+    .feat--rev .feat__media { order: 0; }
+  }
+</style>
