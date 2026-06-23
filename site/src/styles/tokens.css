@@ -1,0 +1,29 @@
+:root {
+  /* Warm editorial palette (OKLCH, neutrals tinted toward terracotta) */
+  --canvas: oklch(0.98 0.008 60);
+  --surface: oklch(0.965 0.012 60);
+  --ink: oklch(0.26 0.02 55);
+  --ink-soft: oklch(0.46 0.02 55);
+  --ink-faint: oklch(0.60 0.018 55);
+  --hairline: oklch(0.90 0.012 60);
+  --accent: oklch(0.62 0.15 47);        /* ~ #c8642f */
+  --accent-strong: oklch(0.55 0.16 47);
+  --accent-tint: oklch(0.95 0.03 55);
+
+  /* Spacing — 4pt scale */
+  --space-2: 0.5rem;  --space-3: 0.75rem; --space-4: 1rem;
+  --space-6: 1.5rem;  --space-8: 2rem;    --space-12: 3rem;
+  --space-16: 4rem;   --space-24: 6rem;   --space-32: 8rem;
+
+  /* Type */
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Hanken Grotesk Variable', system-ui, sans-serif;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+  --step-3: clamp(2rem, 1.5rem + 2.5vw, 3rem);
+  --step-4: clamp(2.75rem, 2rem + 4vw, 4.5rem);
+
+  --maxw: 1100px;
+  --radius: 14px;
+}
