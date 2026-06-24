@@ -114,7 +114,12 @@ private struct ContentView: View {
             case .todos: TodosTab(model: env.tasksViewModel)
             case .focus: FocusTab(timer: env.pomodoro)
             case .snippets: SnippetsTab(model: env.snippetsViewModel)
-            case .windows: WindowsTab(snapper: env.snapper)
+            case .windows: WindowsTab(
+                    snapper: env.snapper,
+                    presets: env.windowPresets,
+                    onSave: { env.saveWindowPreset($0) },
+                    onDelete: { env.deleteWindowPreset(id: $0) }
+                )
             case .ai: AITab(model: env.aiViewModel, assistant: env.aiAssistant, env: env)
             }
         }

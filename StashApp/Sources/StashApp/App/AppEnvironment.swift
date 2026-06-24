@@ -22,6 +22,9 @@ final class AppEnvironment {
     private var stickyObservationTask: Task<Void, Never>?
     let snapper = WindowSnapper()
     private var snapHotKeys: [GlobalHotKey] = []
+    let windowPresetStore: WindowPresetStore
+    var windowPresets: [WindowPreset] = []
+    private var presetObservationTask: Task<Void, Never>?
     private let pasteBrowser = PasteBrowserController()
     private let quickCapture = QuickCaptureController()
 
@@ -56,6 +59,7 @@ final class AppEnvironment {
         self.tasksViewModel = TasksViewModel(db: database.pool, store: tasksStore)
         let snippetsStore = SnippetsStore(pool: database.pool)
         self.snippetsViewModel = SnippetsViewModel(db: database.pool, store: snippetsStore)
+        self.windowPresetStore = WindowPresetStore(pool: database.pool)
         self.aiViewModel = AIViewModel(reader: ClaudeTranscriptReader())
 
         self.stickyManager = StickyNotesManager(
@@ -176,6 +180,7 @@ final class AppEnvironment {
         Task { await snippetsViewModel.seed() }
         Task { await self.syncRemindersIfAuthorized() }
         startStickyObservation()
+        startPresetObservation()
         applyHotkeys()
         // Do NOT prompt for Accessibility at launch — only when the user actually
         // uses a feature that needs it (a snap hotkey, or enabling the expander),
@@ -243,6 +248,39 @@ final class AppEnvironment {
         #if DEBUG
         print("[Stash] Snap hotkeys registered: \(registered.count)/\(SnapHotKey.all.count)")
         #endif
+    }
+
+    private func startPresetObservation() {
+        guard presetObservationTask == nil else { return }
+        let observation = ValueObservation.tracking { db in
+            try WindowPreset.order(Column("created_at"), Column("id")).fetchAll(db)
+        }
+        presetObservationTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                for try await presets in observation.values(in: self.db.pool) {
+                    self.windowPresets = presets
+                }
+            } catch {
+                #if DEBUG
+                print("WindowPreset observation error:", error)
+                #endif
+            }
+        }
+    }
+
+    func saveWindowPreset(_ preset: WindowPreset) {
+        Task { [weak self] in
+            guard let self else { return }
+            try? await self.windowPresetStore.upsert(preset)
+        }
+    }
+
+    func deleteWindowPreset(id: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            try? await self.windowPresetStore.delete(id: id)
+        }
     }
 
     private func startStickyObservation() {
