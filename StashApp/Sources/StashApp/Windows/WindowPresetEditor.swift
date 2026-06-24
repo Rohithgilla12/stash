@@ -1,6 +1,17 @@
 import SwiftUI
 
 struct WindowPresetEditor: View {
+    private enum DisplayOption: Hashable {
+        case active, main, index(Int)
+        var label: String {
+            switch self {
+            case .active: "Active Display"
+            case .main: "Main Display"
+            case .index(let i): "Display \(i + 1)"
+            }
+        }
+    }
+
     let editingPreset: WindowPreset?
     let onSave: (WindowPreset) -> Void
 
@@ -228,17 +239,6 @@ struct WindowPresetEditor: View {
         )
         onSave(preset)
         dismiss()
-    }
-}
-
-enum DisplayOption: Hashable {
-    case active, main, index(Int)
-    var label: String {
-        switch self {
-        case .active: "Active Display"
-        case .main: "Main Display"
-        case .index(let i): "Display \(i + 1)"
-        }
     }
 }
 

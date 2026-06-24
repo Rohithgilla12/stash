@@ -259,7 +259,9 @@ final class AppEnvironment {
             guard let self else { return }
             do {
                 for try await presets in observation.values(in: self.db.pool) {
-                    self.windowPresets = presets
+                    await MainActor.run {
+                        self.windowPresets = presets
+                    }
                 }
             } catch {
                 #if DEBUG
@@ -272,14 +274,26 @@ final class AppEnvironment {
     func saveWindowPreset(_ preset: WindowPreset) {
         Task { [weak self] in
             guard let self else { return }
-            try? await self.windowPresetStore.upsert(preset)
+            do {
+                try await self.windowPresetStore.upsert(preset)
+            } catch {
+                #if DEBUG
+                print("saveWindowPreset failed:", error)
+                #endif
+            }
         }
     }
 
     func deleteWindowPreset(id: String) {
         Task { [weak self] in
             guard let self else { return }
-            try? await self.windowPresetStore.delete(id: id)
+            do {
+                try await self.windowPresetStore.delete(id: id)
+            } catch {
+                #if DEBUG
+                print("deleteWindowPreset failed:", error)
+                #endif
+            }
         }
     }
 
