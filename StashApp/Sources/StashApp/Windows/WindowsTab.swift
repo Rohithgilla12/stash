@@ -161,9 +161,19 @@ struct WindowsTab: View {
         }
     }
 
+    private func tapPreset(_ preset: WindowPreset) {
+        snapper.snap(preset)
+        toastLabel = snapper.isTrusted ? "Snapped to \(preset.name)" : "Enable Accessibility to snap"
+        withAnimation { showToast = true }
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            await MainActor.run { withAnimation { showToast = false } }
+        }
+    }
+
     private func presetCard(_ preset: WindowPreset) -> some View {
         Button {
-            snapper.snap(preset)
+            tapPreset(preset)
         } label: {
             VStack(spacing: 4) {
                 miniDiagramForPreset(preset)

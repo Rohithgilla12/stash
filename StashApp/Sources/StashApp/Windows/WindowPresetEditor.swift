@@ -54,17 +54,19 @@ struct WindowPresetEditor: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.md) {
-            titleRow
-            nameSection
-            dimensionsSection
-            anchorSection
-            offsetSection
-            displaySection
-            actionButtons
+        ScrollView {
+            VStack(alignment: .leading, spacing: Space.md) {
+                titleRow
+                nameSection
+                dimensionsSection
+                anchorSection
+                offsetSection
+                displaySection
+                actionButtons
+            }
+            .padding(Space.md)
         }
-        .padding(Space.md)
-        .frame(minWidth: 340)
+        .frame(minWidth: 340, minHeight: 320)
     }
 
     private var titleRow: some View {
@@ -192,7 +194,7 @@ struct WindowPresetEditor: View {
 
     private func commitSave() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
-        guard !trimmedName.isEmpty else { return }
+        guard !trimmedName.isEmpty else { dismiss(); return }
 
         let clampedWidth: Double
         let storedWidth: Double
