@@ -4,9 +4,12 @@ import UserNotifications
 @MainActor
 final class TaskReminderScheduler {
 
-    func authorizationStatus() async -> UNAuthorizationStatus {
-        // Extract the Sendable status inside the callback — UNNotificationSettings
-        // itself is non-Sendable and can't cross the actor boundary (strict concurrency).
+    // `nonisolated`: UNUserNotificationCenter invokes the completion on a background
+    // queue. If this stayed @MainActor-isolated, the callback closure would inherit
+    // main-actor isolation and Swift's runtime would assert-fail (EXC_BREAKPOINT) when
+    // it runs off-main. nonisolated lets the callback run anywhere; we only hand back
+    // the Sendable enum through the continuation, so there's no data-race.
+    nonisolated func authorizationStatus() async -> UNAuthorizationStatus {
         await withCheckedContinuation { continuation in
             UNUserNotificationCenter.current().getNotificationSettings { settings in
                 continuation.resume(returning: settings.authorizationStatus)
