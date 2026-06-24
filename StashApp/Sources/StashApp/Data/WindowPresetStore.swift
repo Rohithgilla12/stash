@@ -10,7 +10,7 @@ actor WindowPresetStore {
 
     func all() throws -> [WindowPreset] {
         try pool.read { db in
-            try WindowPreset.order(Column("created_at").desc, Column("id").desc).fetchAll(db)
+            try WindowPreset.order(Column("created_at"), Column("id")).fetchAll(db)
         }
     }
 

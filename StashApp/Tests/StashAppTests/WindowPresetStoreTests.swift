@@ -57,12 +57,12 @@ import GRDB
         #expect(all.isEmpty)
     }
 
-    @Test func orderingByCreatedAtDesc() async throws {
+    @Test func orderingByCreatedAtAsc() async throws {
         let (_, store) = try makeStore()
         try await store.upsert(samplePreset(id: "pa", name: "First", createdAt: 100))
         try await store.upsert(samplePreset(id: "pb", name: "Second", createdAt: 200))
         let all = try await store.all()
-        #expect(all.map(\.id) == ["pb", "pa"])
+        #expect(all.map(\.id) == ["pa", "pb"])
     }
 
     @Test func upsertUpdatesExisting() async throws {
