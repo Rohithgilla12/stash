@@ -22,6 +22,7 @@ final class AppEnvironment {
     private var stickyObservationTask: Task<Void, Never>?
     let snapper = WindowSnapper()
     private var snapHotKeys: [GlobalHotKey] = []
+    private var presetHotKeys: [GlobalHotKey] = []
     let windowPresetStore: WindowPresetStore
     var windowPresets: [WindowPreset] = []
     private var presetObservationTask: Task<Void, Never>?
@@ -103,8 +104,11 @@ final class AppEnvironment {
         case "paste":
             pasteBrowser.toggle()
         case "snap":
-            if let raw = q("target") ?? url.pathComponents.dropFirst(2).first,
-               let target = SnapTarget(rawValue: raw) {
+            if let name = q("preset"),
+               let preset = windowPresets.first(where: { $0.name.lowercased() == name.lowercased() }) {
+                snapper.snap(preset)
+            } else if let raw = q("target") ?? url.pathComponents.dropFirst(2).first,
+                      let target = SnapTarget(rawValue: raw) {
                 snapper.snap(target)
             }
         case "stickies":
@@ -223,11 +227,13 @@ final class AppEnvironment {
             pasteBrowser.registerHotKey()
             quickCapture.registerHotKey()
             registerSnapHotKeys()
+            registerPresetHotKeys()
         } else {
             stickyManager.unregisterHotKey()
             pasteBrowser.unregisterHotKey()
             quickCapture.unregisterHotKey()
             snapHotKeys = []
+            presetHotKeys = []
         }
     }
 
@@ -250,6 +256,29 @@ final class AppEnvironment {
         #endif
     }
 
+    private func registerPresetHotKeys() {
+        presetHotKeys = []
+        guard globalHotkeysEnabled else { return }
+        var registered: [GlobalHotKey] = []
+        for preset in windowPresets {
+            guard let code = preset.hotkeyKeyCode, let mods = preset.hotkeyModifiers else { continue }
+            let captured = preset
+            if let key = GlobalHotKey(keyCode: UInt32(code), modifiers: UInt32(mods), handler: { [weak self] in
+                self?.snapper.snap(captured)
+            }) {
+                registered.append(key)
+            } else {
+                #if DEBUG
+                print("[Stash] Could not register hotkey for preset '\(preset.name)' (combo already claimed?)")
+                #endif
+            }
+        }
+        presetHotKeys = registered
+        #if DEBUG
+        print("[Stash] Preset hotkeys registered: \(registered.count)/\(windowPresets.filter { $0.hotkeyKeyCode != nil && $0.hotkeyModifiers != nil }.count)")
+        #endif
+    }
+
     private func startPresetObservation() {
         guard presetObservationTask == nil else { return }
         let observation = ValueObservation.tracking { db in
@@ -261,6 +290,7 @@ final class AppEnvironment {
                 for try await presets in observation.values(in: self.db.pool) {
                     await MainActor.run {
                         self.windowPresets = presets
+                        self.registerPresetHotKeys()
                     }
                 }
             } catch {
