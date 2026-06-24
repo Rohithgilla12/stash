@@ -56,8 +56,7 @@ final class WindowSnapper {
         }
         guard let (window, currentAXFrame) = focusedWindow() else { return }
 
-        let screen = resolveScreen(displayMode: "active", displayIndex: 0, windowAXFrame: currentAXFrame) ?? NSScreen.main
-        guard let screen else { return }
+        guard let screen = resolveScreen(displayMode: "active", displayIndex: 0, windowAXFrame: currentAXFrame) else { return }
         let primaryH = NSScreen.screens.first?.frame.height ?? screen.frame.height
         let visibleAX = ScreenGeometry.axFrame(fromAppKit: screen.visibleFrame, primaryHeight: primaryH)
         let frame = WindowLayout.frame(for: target, in: visibleAX, gap: 8)
@@ -71,12 +70,11 @@ final class WindowSnapper {
         }
         guard let (window, currentAXFrame) = focusedWindow() else { return }
 
-        let screen = resolveScreen(
+        guard let screen = resolveScreen(
             displayMode: preset.displayMode,
             displayIndex: preset.displayIndex,
             windowAXFrame: currentAXFrame
-        ) ?? NSScreen.main
-        guard let screen else { return }
+        ) else { return }
         let primaryH = NSScreen.screens.first?.frame.height ?? screen.frame.height
         let visibleAX = ScreenGeometry.axFrame(fromAppKit: screen.visibleFrame, primaryHeight: primaryH)
         let frame = WindowLayout.frame(for: preset, in: visibleAX)
@@ -95,8 +93,7 @@ final class WindowSnapper {
 
         let primaryH = screens.first?.frame.height ?? 0
 
-        let currentScreen = resolveScreen(displayMode: "active", displayIndex: 0, windowAXFrame: currentAXFrame) ?? NSScreen.main
-        guard let currentScreen else { return }
+        guard let currentScreen = resolveScreen(displayMode: "active", displayIndex: 0, windowAXFrame: currentAXFrame) else { return }
 
         let currentIndex = screens.firstIndex(of: currentScreen) ?? 0
         let nextIndex = (currentIndex + 1) % screens.count
@@ -112,8 +109,8 @@ final class WindowSnapper {
         let fracY = (currentVisibleAX.height > 0)
             ? (currentAXFrame.minY - currentVisibleAX.minY) / currentVisibleAX.height
             : 0
-        let fracW = (currentVisibleAX.width > 0) ? currentAXFrame.width / currentVisibleAX.width : 1
-        let fracH = (currentVisibleAX.height > 0) ? currentAXFrame.height / currentVisibleAX.height : 1
+        let fracW = min(1.0, (currentVisibleAX.width  > 0) ? currentAXFrame.width  / currentVisibleAX.width  : 1)
+        let fracH = min(1.0, (currentVisibleAX.height > 0) ? currentAXFrame.height / currentVisibleAX.height : 1)
 
         let newFrame = CGRect(
             x: nextVisibleAX.minX + fracX * nextVisibleAX.width,
@@ -182,7 +179,8 @@ final class WindowSnapper {
             return NSScreen.main
         case "index":
             let screens = NSScreen.screens
-            return (displayIndex >= 0 && displayIndex < screens.count) ? screens[displayIndex] : NSScreen.main
+            guard displayIndex >= 0, displayIndex < screens.count else { return nil }
+            return screens[displayIndex]
         default: // "active" — the screen whose AX frame overlaps the window the most
             guard let f = windowAXFrame else { return NSScreen.main }
             let primaryH = NSScreen.screens.first?.frame.height ?? 0
