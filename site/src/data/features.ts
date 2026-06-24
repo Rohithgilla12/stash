@@ -1,5 +1,6 @@
 import type { ImageMetadata } from 'astro';
 import placeholder from '../assets/placeholder.svg';
+import clipboardShot from '../assets/screens/clipboard.png';
 
 export interface Feature {
   id: string;
@@ -18,7 +19,7 @@ export const features: Feature[] = [
     title: 'Everything you copied, instantly back.',
     body: 'Searchable history with link previews, image clips and QR codes. Hit a number to paste — ⌘1–9.',
     hotkey: '⌃⌥V',
-    image: placeholder,
+    image: clipboardShot,
     alt: 'Stash clipboard history browser',
   },
   {
