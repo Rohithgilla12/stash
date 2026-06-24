@@ -20,7 +20,7 @@ final class AppEnvironment {
     private var stickyManager: StickyNotesManager!
     private let db: StashDatabase
     private var stickyObservationTask: Task<Void, Never>?
-    private let snapper = WindowSnapper()
+    let snapper = WindowSnapper()
     private var snapHotKeys: [GlobalHotKey] = []
     private let pasteBrowser = PasteBrowserController()
     private let quickCapture = QuickCaptureController()

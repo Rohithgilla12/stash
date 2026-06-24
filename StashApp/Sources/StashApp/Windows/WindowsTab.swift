@@ -1,9 +1,12 @@
 import SwiftUI
 
 struct WindowsTab: View {
+    let snapper: WindowSnapper
+
     @State private var activeTarget: SnapTarget? = nil
     @State private var showToast: Bool = false
     @State private var toastLabel: String = ""
+    @State private var targetAppName: String = "No active window"
 
     private let groupOrder = ["Halves", "Quarters", "Thirds", "Full Screen"]
     private let previewScreenRect = CGRect(x: 0, y: 0, width: 360, height: 200)
@@ -16,9 +19,14 @@ struct WindowsTab: View {
             previewArea
             snapGrid
         }
+        .onAppear {
+            // Capture once on appear — the targeted app is stable while the popover
+            // is open (it was active before the user opened Stash).
+            targetAppName = snapper.targetAppName ?? "No active window"
+        }
         .overlay(alignment: .bottom) {
             if showToast {
-                Text("Snapped: \(toastLabel)")
+                Text(toastLabel)
                     .font(.caption).padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Tokens.accent, in: Capsule()).foregroundStyle(.white)
                     .padding(.bottom, 8).transition(.opacity)
@@ -47,7 +55,7 @@ struct WindowsTab: View {
             .fill(Tokens.accent.opacity(0.25))
             .stroke(Tokens.accent, lineWidth: 1.5)
             .overlay(
-                Text("Safari")
+                Text(targetAppName)
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(Tokens.accent)
             )
@@ -127,8 +135,10 @@ struct WindowsTab: View {
     }
 
     private func tap(_ target: SnapTarget) {
+        snapper.snap(target)
         withAnimation { activeTarget = target }
-        toastLabel = target.label
+        let label = snapper.isTrusted ? "Snapped: \(target.label)" : "Enable Accessibility to snap"
+        toastLabel = label
         withAnimation { showToast = true }
         Task {
             try? await Task.sleep(for: .seconds(1.5))

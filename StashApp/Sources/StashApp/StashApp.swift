@@ -114,7 +114,7 @@ private struct ContentView: View {
             case .todos: TodosTab(model: env.tasksViewModel)
             case .focus: FocusTab(timer: env.pomodoro)
             case .snippets: SnippetsTab(model: env.snippetsViewModel)
-            case .windows: WindowsTab()
+            case .windows: WindowsTab(snapper: env.snapper)
             case .ai: AITab(model: env.aiViewModel, assistant: env.aiAssistant, env: env)
             }
         }
