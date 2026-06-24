@@ -8,8 +8,16 @@ final class UpdaterController: ObservableObject {
     @Published var canCheckForUpdates = false
 
     init() {
+        // Dev builds must NOT auto-update: they're ad-hoc-signed with a different
+        // bundle id, so Sparkle correctly rejects the notarized prod release as
+        // "improperly signed". Only the Release build runs the updater.
+        #if DEV
+        let autoStart = false
+        #else
+        let autoStart = true
+        #endif
         controller = SPUStandardUpdaterController(
-            startingUpdater: true,
+            startingUpdater: autoStart,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
