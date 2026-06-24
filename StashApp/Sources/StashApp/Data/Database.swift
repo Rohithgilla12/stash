@@ -129,6 +129,26 @@ struct StashDatabase: Sendable {
                 }
             }
         }
+        m.registerMigration("v8_window_presets") { db in
+            if try !db.tableExists("window_presets") {
+                try db.create(table: "window_presets") { t in
+                    t.column("id", .text).primaryKey()
+                    t.column("name", .text).notNull()
+                    t.column("width_mode", .text).notNull()
+                    t.column("width", .double).notNull()
+                    t.column("height_mode", .text).notNull()
+                    t.column("height", .double).notNull()
+                    t.column("anchor", .text).notNull()
+                    t.column("x_offset", .double).notNull().defaults(to: 0)
+                    t.column("y_offset", .double).notNull().defaults(to: 0)
+                    t.column("display_mode", .text).notNull().defaults(to: "active")
+                    t.column("display_index", .integer).notNull().defaults(to: 0)
+                    t.column("hotkey_key_code", .integer)
+                    t.column("hotkey_modifiers", .integer)
+                    t.column("created_at", .integer).notNull()
+                }
+            }
+        }
         return m
     }
 }

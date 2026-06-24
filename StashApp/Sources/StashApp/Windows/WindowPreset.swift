@@ -25,4 +25,17 @@ struct WindowPreset: Codable, FetchableRecord, PersistableRecord, Identifiable, 
     var createdAt: Int64
 
     static let databaseTableName = "window_presets"
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, width, height, anchor
+        case widthMode = "width_mode"
+        case heightMode = "height_mode"
+        case xOffset = "x_offset"
+        case yOffset = "y_offset"
+        case displayMode = "display_mode"
+        case displayIndex = "display_index"
+        case hotkeyKeyCode = "hotkey_key_code"
+        case hotkeyModifiers = "hotkey_modifiers"
+        case createdAt = "created_at"
+    }
 }
