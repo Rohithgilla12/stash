@@ -104,6 +104,10 @@ final class AppEnvironment {
         case "paste":
             pasteBrowser.toggle()
         case "snap":
+            if (q("action") ?? "").lowercased() == "nextdisplay" {
+                snapper.moveToNextDisplay()
+                return
+            }
             if let name = q("preset"),
                let preset = windowPresets.first(where: { $0.name.lowercased() == name.lowercased() }) {
                 snapper.snap(preset)

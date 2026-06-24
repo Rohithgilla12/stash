@@ -12,6 +12,7 @@ struct WindowsTab: View {
     @State private var targetAppName: String = "No active window"
     @State private var showAddPreset = false
     @State private var editingPreset: WindowPreset? = nil
+    @State private var isTrusted: Bool = false
 
     private let groupOrder = ["Halves", "Quarters", "Thirds", "Full Screen"]
     private let previewScreenRect = CGRect(x: 0, y: 0, width: 360, height: 200)
@@ -21,14 +22,25 @@ struct WindowsTab: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if !isTrusted {
+                accessibilityBanner
+            }
             previewArea
             snapGrid
+            if NSScreen.screens.count > 1 {
+                nextDisplayRow
+            }
             presetsSection
         }
         .onAppear {
-            // Capture once on appear — the targeted app is stable while the popover
-            // is open (it was active before the user opened Stash).
             targetAppName = snapper.targetAppName ?? "No active window"
+            isTrusted = snapper.isTrusted
+        }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1.5))
+                isTrusted = snapper.isTrusted
+            }
         }
         .overlay(alignment: .bottom) {
             if showToast {
@@ -44,6 +56,69 @@ struct WindowsTab: View {
         .sheet(item: $editingPreset) { preset in
             WindowPresetEditor(editingPreset: preset, onSave: onSave)
         }
+    }
+
+    private var accessibilityBanner: some View {
+        HStack(spacing: 8) {
+            Text("Window management needs Accessibility access")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Tokens.accent)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+            Button("Open Settings") {
+                AccessibilityAuthorizer.requestOnce()
+                NSWorkspace.shared.open(
+                    URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+                )
+            }
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(Tokens.accent)
+            .buttonStyle(.plain)
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Tokens.accent.opacity(0.5), lineWidth: 1)
+            )
+        }
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                .fill(Tokens.accent.opacity(0.08))
+                .stroke(Tokens.accent.opacity(0.25), lineWidth: 1)
+        )
+    }
+
+    private var nextDisplayRow: some View {
+        Button {
+            snapper.moveToNextDisplay()
+            let label = isTrusted ? "Moved to next display" : "Enable Accessibility to snap"
+            toastLabel = label
+            withAnimation { showToast = true }
+            Task {
+                try? await Task.sleep(for: .seconds(1.5))
+                await MainActor.run { withAnimation { showToast = false } }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.right.to.line")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Tokens.textSecondary)
+                Text("Move to Next Display")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Tokens.textPrimary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Tokens.textTertiary)
+            }
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                    .fill(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+                    .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private var previewArea: some View {
