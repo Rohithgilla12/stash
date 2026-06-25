@@ -121,6 +121,28 @@ final class WindowSnapper {
         setFrame(window, newFrame)
     }
 
+    struct LayoutRecallSummary: Sendable { let placed: Int; let launched: Int; let skipped: Int }
+
+    func recall(_ entries: [LayoutEntry]) async -> LayoutRecallSummary {
+        guard AXIsProcessTrusted() else {
+            AccessibilityAuthorizer.requestOnce()
+            return LayoutRecallSummary(placed: 0, launched: 0, skipped: entries.count)
+        }
+        var placed = 0, launched = 0, skipped = 0
+        for entry in entries {
+            if let app = runningApp(entry.bundleId) {
+                if place(entry, on: app) { placed += 1 } else { skipped += 1 }
+            } else if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: entry.bundleId) {
+                launched += 1
+                if let app = await launchAndWaitForWindow(url: url, bundleId: entry.bundleId),
+                   place(entry, on: app) {
+                    // counted under launched
+                } else { skipped += 1 }
+            } else { skipped += 1 }
+        }
+        return LayoutRecallSummary(placed: placed, launched: launched, skipped: skipped)
+    }
+
     func captureCurrentLayout() -> [LayoutEntry] {
         guard AXIsProcessTrusted() else { AccessibilityAuthorizer.requestOnce(); return [] }
         var entries: [LayoutEntry] = []
@@ -262,5 +284,29 @@ final class WindowSnapper {
                 return aArea < bArea
             } ?? NSScreen.main
         }
+    }
+
+    private func runningApp(_ bundleId: String) -> NSRunningApplication? {
+        NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundleId }
+    }
+
+    @discardableResult
+    private func place(_ entry: LayoutEntry, on app: NSRunningApplication) -> Bool {
+        guard let (window, _) = mainWindow(for: app) else { return false }
+        guard let screen = resolveScreen(displayMode: "index", displayIndex: entry.displayIndex, windowAXFrame: nil) ?? NSScreen.main else { return false }
+        let primaryH = NSScreen.screens.first?.frame.height ?? screen.frame.height
+        let visibleAX = ScreenGeometry.axFrame(fromAppKit: screen.visibleFrame, primaryHeight: primaryH)
+        setFrame(window, WindowGeometry.clamp(entry.frame, to: visibleAX))
+        return true
+    }
+
+    private func launchAndWaitForWindow(url: URL, bundleId: String) async -> NSRunningApplication? {
+        let config = NSWorkspace.OpenConfiguration()
+        _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
+        for _ in 0..<16 {
+            try? await Task.sleep(for: .milliseconds(300))
+            if let app = runningApp(bundleId), mainWindow(for: app) != nil { return app }
+        }
+        return nil
     }
 }
