@@ -121,7 +121,75 @@ final class WindowSnapper {
         setFrame(window, newFrame)
     }
 
+    func captureCurrentLayout() -> [LayoutEntry] {
+        guard AXIsProcessTrusted() else { AccessibilityAuthorizer.requestOnce(); return [] }
+        var entries: [LayoutEntry] = []
+        for app in NSWorkspace.shared.runningApplications
+            where app.activationPolicy == .regular
+            && app.bundleIdentifier != nil
+            && app.bundleIdentifier != Bundle.main.bundleIdentifier {
+            guard let (_, frame) = mainWindow(for: app) else { continue }
+            entries.append(LayoutEntry(
+                bundleId: app.bundleIdentifier!,
+                appName: app.localizedName ?? app.bundleIdentifier!,
+                x: frame.minX, y: frame.minY, width: frame.width, height: frame.height,
+                displayIndex: displayIndex(forAXFrame: frame)
+            ))
+        }
+        return entries
+    }
+
     // MARK: - Private helpers
+
+    private func mainWindow(for app: NSRunningApplication) -> (AXUIElement, CGRect)? {
+        let axApp = AXUIElementCreateApplication(app.processIdentifier)
+
+        var windowRef: CFTypeRef?
+        let window: AXUIElement
+        if AXUIElementCopyAttributeValue(axApp, kAXMainWindowAttribute as CFString, &windowRef) == .success,
+           let windowRef {
+            window = windowRef as! AXUIElement
+        } else {
+            var listRef: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(axApp, kAXWindowsAttribute as CFString, &listRef) == .success,
+                  let listRef else { return nil }
+            let list = listRef as! CFArray
+            guard CFArrayGetCount(list) > 0 else { return nil }
+            let raw = CFArrayGetValueAtIndex(list, 0)!
+            window = Unmanaged<AXUIElement>.fromOpaque(raw).takeUnretainedValue()
+        }
+
+        var posRef: CFTypeRef?
+        var sizeRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(window, kAXPositionAttribute as CFString, &posRef) == .success,
+              AXUIElementCopyAttributeValue(window, kAXSizeAttribute as CFString, &sizeRef) == .success,
+              let posRef, let sizeRef else { return nil }
+
+        var point = CGPoint.zero
+        var size = CGSize.zero
+        guard AXValueGetValue(posRef as! AXValue, .cgPoint, &point),
+              AXValueGetValue(sizeRef as! AXValue, .cgSize, &size) else { return nil }
+
+        return (window, CGRect(origin: point, size: size))
+    }
+
+    private func displayIndex(forAXFrame f: CGRect) -> Int {
+        let screens = NSScreen.screens
+        guard !screens.isEmpty else { return 0 }
+        let primaryH = screens.first?.frame.height ?? 0
+        var bestIndex = 0
+        var bestArea: CGFloat = -1
+        for (i, screen) in screens.enumerated() {
+            let screenAX = ScreenGeometry.axFrame(fromAppKit: screen.frame, primaryHeight: primaryH)
+            let overlap = screenAX.intersection(f)
+            let area = overlap.isNull ? 0 : overlap.width * overlap.height
+            if area > bestArea {
+                bestArea = area
+                bestIndex = i
+            }
+        }
+        return bestIndex
+    }
 
     private func resolveApp() -> NSRunningApplication? {
         if let last = lastActiveApp, last.bundleIdentifier != Bundle.main.bundleIdentifier {
