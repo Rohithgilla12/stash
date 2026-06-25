@@ -149,6 +149,18 @@ struct StashDatabase: Sendable {
                 }
             }
         }
+        m.registerMigration("v9_saved_layouts") { db in
+            if try !db.tableExists("saved_layouts") {
+                try db.create(table: "saved_layouts") { t in
+                    t.column("id", .text).primaryKey()
+                    t.column("name", .text).notNull()
+                    t.column("entries_json", .text).notNull().defaults(to: "[]")
+                    t.column("hotkey_key_code", .integer)
+                    t.column("hotkey_modifiers", .integer)
+                    t.column("created_at", .integer).notNull()
+                }
+            }
+        }
         return m
     }
 }
