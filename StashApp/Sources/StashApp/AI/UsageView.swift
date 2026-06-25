@@ -177,8 +177,7 @@ struct UsageView: View {
                 RoundedRectangle(cornerRadius: 2)
                     .fill(bucket.tokens > 0 ? Tokens.accent : Color.primary.opacity(0.08))
                     .frame(maxWidth: .infinity)
-                    .frame(height: barHeight > 0 ? barHeight : 2)
-                    .opacity(bucket.tokens > 0 ? 1 : 0)
+                    .frame(height: barHeight)
             }
         }
         .frame(height: totalHeight)
@@ -212,8 +211,8 @@ struct UsageView: View {
                     .lineLimit(1)
                     .padding(.bottom, 4)
             }
-            ForEach(model.byModel.prefix(8).indices, id: \.self) { idx in
-                let bucket = model.byModel[idx]
+            ForEach(model.byModel.dropFirst().prefix(7).indices, id: \.self) { idx in
+                let bucket = model.byModel.dropFirst()[idx]
                 HStack {
                     Text(bucket.model)
                         .font(.system(size: 12))
