@@ -19,7 +19,9 @@ import Foundation
             repoPath: repoPath,
             branch: branch,
             model: model,
-            inputTokens: inputTokens,
+            rawInputTokens: inputTokens,
+            cacheCreationTokens: 0,
+            cacheReadTokens: 0,
             outputTokens: outputTokens
         )
     }

@@ -6,6 +6,11 @@ struct UsageRecord: Sendable, Equatable {
     let repoPath: String
     let branch: String?
     let model: String
-    let inputTokens: Int
+    let rawInputTokens: Int
+    let cacheCreationTokens: Int
+    let cacheReadTokens: Int
     let outputTokens: Int
+
+    var inputTokens: Int { rawInputTokens + cacheCreationTokens + cacheReadTokens }
+    var totalTokens: Int { inputTokens + outputTokens }
 }
