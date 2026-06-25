@@ -290,7 +290,6 @@ final class WindowSnapper {
         NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == bundleId }
     }
 
-    @discardableResult
     private func place(_ entry: LayoutEntry, on app: NSRunningApplication) -> Bool {
         guard let (window, _) = mainWindow(for: app) else { return false }
         guard let screen = resolveScreen(displayMode: "index", displayIndex: entry.displayIndex, windowAXFrame: nil) ?? NSScreen.main else { return false }
@@ -304,7 +303,11 @@ final class WindowSnapper {
         let config = NSWorkspace.OpenConfiguration()
         _ = try? await NSWorkspace.shared.openApplication(at: url, configuration: config)
         for _ in 0..<16 {
-            try? await Task.sleep(for: .milliseconds(300))
+            do {
+                try await Task.sleep(for: .milliseconds(300))
+            } catch {
+                return nil  // cancelled — exit immediately
+            }
             if let app = runningApp(bundleId), mainWindow(for: app) != nil { return app }
         }
         return nil
