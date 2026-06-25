@@ -1,10 +1,13 @@
 import SwiftUI
 
+private enum AIMode { case chat, usage }
+
 struct AITab: View {
     let model: AIViewModel
     let assistant: AIAssistant
     let env: AppEnvironment
 
+    @State private var mode: AIMode = .chat
     @State private var prompt: String = ""
     @State private var pulseScale: CGFloat = 1.0
     @State private var pulseOpacity: Double = 1.0
@@ -12,15 +15,38 @@ struct AITab: View {
     @State private var thinkOpacity: Double = 1.0
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                assistantCard
-                mcpServerCard
-                usageCycleCard
-                activeSessionsCard
+        VStack(spacing: 0) {
+            Picker("", selection: $mode) {
+                Text("Chat").tag(AIMode.chat)
+                Text("Usage").tag(AIMode.usage)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+
+            if mode == .chat {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        assistantCard
+                        mcpServerCard
+                        usageCycleCard
+                        activeSessionsCard
+                    }
+                }
+                .task { await model.start() }
+            } else {
+                ScrollView {
+                    VStack(spacing: 12) {
+                        UsageView(model: model)
+                    }
+                    .padding(12)
+                }
+                .task {
+                    await model.loadUsage()
+                    await model.refreshLimits()
+                }
             }
         }
-        .task { await model.start() }
     }
 
     @ViewBuilder private var assistantCard: some View {
