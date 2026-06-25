@@ -34,7 +34,7 @@ private struct WindowDTO: Decodable {
 
 actor ClaudeLimitsClient {
 
-    static func decodeLimits(from data: Data, now: Date) throws -> ClaudeLimits {
+    static nonisolated func decodeLimits(from data: Data, now: Date) throws -> ClaudeLimits {
         let decoder = JSONDecoder()
         let response = try decoder.decode(APIResponse.self, from: data)
 
@@ -67,7 +67,7 @@ actor ClaudeLimitsClient {
     }
 
     func fetch() async -> Result<ClaudeLimits, ClaudeLimitsError> {
-        guard let token = acquireToken() else {
+        guard let token = await acquireToken() else {
             return .failure(.noToken)
         }
 
@@ -91,43 +91,57 @@ actor ClaudeLimitsClient {
 
         do {
             let limits = try ClaudeLimitsClient.decodeLimits(from: data, now: Date())
+            guard limits.session != nil || limits.weekly != nil else {
+                return .failure(.decode)
+            }
             return .success(limits)
         } catch {
             return .failure(.decode)
         }
     }
 
-    private func acquireToken() -> String? {
-        if let token = tokenFromKeychain() { return token }
+    private func acquireToken() async -> String? {
+        if let token = await tokenFromKeychain() { return token }
         if let token = tokenFromCredentialsFile() { return token }
         return nil
     }
 
-    private func tokenFromKeychain() -> String? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
-        process.arguments = ["find-generic-password", "-s", "Claude Code-credentials", "-w"]
+    private func tokenFromKeychain() async -> String? {
+        await withCheckedContinuation { continuation in
+            Task.detached(priority: .utility) {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
+                process.arguments = ["find-generic-password", "-s", "Claude Code-credentials", "-w"]
 
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = Pipe()
+                let pipe = Pipe()
+                process.standardOutput = pipe
+                process.standardError = Pipe()
 
-        do {
-            try process.run()
-        } catch {
-            return nil
+                do {
+                    try process.run()
+                } catch {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                process.waitUntilExit()
+
+                guard process.terminationStatus == 0 else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                let outputData = pipe.fileHandleForReading.readDataToEndOfFile()
+                guard let jsonString = String(data: outputData, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines),
+                      !jsonString.isEmpty
+                else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+
+                continuation.resume(returning: ClaudeLimitsClient.extractAccessToken(from: jsonString))
+            }
         }
-        process.waitUntilExit()
-
-        guard process.terminationStatus == 0 else { return nil }
-
-        let outputData = pipe.fileHandleForReading.readDataToEndOfFile()
-        guard let jsonString = String(data: outputData, encoding: .utf8)?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
-              !jsonString.isEmpty
-        else { return nil }
-
-        return extractAccessToken(from: jsonString)
     }
 
     private func tokenFromCredentialsFile() -> String? {
@@ -135,10 +149,10 @@ actor ClaudeLimitsClient {
             .appendingPathComponent(".claude/.credentials.json")
         guard let data = try? Data(contentsOf: credPath) else { return nil }
         guard let jsonString = String(data: data, encoding: .utf8) else { return nil }
-        return extractAccessToken(from: jsonString)
+        return ClaudeLimitsClient.extractAccessToken(from: jsonString)
     }
 
-    private func extractAccessToken(from jsonString: String) -> String? {
+    private static nonisolated func extractAccessToken(from jsonString: String) -> String? {
         guard let data = jsonString.data(using: .utf8),
               let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
               let oauth = obj["claudeAiOauth"] as? [String: Any],
