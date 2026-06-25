@@ -26,6 +26,9 @@ final class AppEnvironment {
     let windowPresetStore: WindowPresetStore
     var windowPresets: [WindowPreset] = []
     private var presetObservationTask: Task<Void, Never>?
+    let savedLayoutStore: SavedLayoutStore
+    var savedLayouts: [SavedLayout] = []
+    private var layoutObservationTask: Task<Void, Never>?
     private let pasteBrowser = PasteBrowserController()
     private let quickCapture = QuickCaptureController()
 
@@ -61,6 +64,7 @@ final class AppEnvironment {
         let snippetsStore = SnippetsStore(pool: database.pool)
         self.snippetsViewModel = SnippetsViewModel(db: database.pool, store: snippetsStore)
         self.windowPresetStore = WindowPresetStore(pool: database.pool)
+        self.savedLayoutStore = SavedLayoutStore(pool: database.pool)
         self.aiViewModel = AIViewModel(reader: ClaudeTranscriptReader())
 
         self.stickyManager = StickyNotesManager(
@@ -189,6 +193,7 @@ final class AppEnvironment {
         Task { await self.syncRemindersIfAuthorized() }
         startStickyObservation()
         startPresetObservation()
+        startLayoutObservation()
         applyHotkeys()
         // Do NOT prompt for Accessibility at launch — only when the user actually
         // uses a feature that needs it (a snap hotkey, or enabling the expander),
@@ -326,6 +331,82 @@ final class AppEnvironment {
             } catch {
                 #if DEBUG
                 print("deleteWindowPreset failed:", error)
+                #endif
+            }
+        }
+    }
+
+    private func startLayoutObservation() {
+        guard layoutObservationTask == nil else { return }
+        let observation = ValueObservation.tracking { db in
+            try SavedLayout.order(Column("created_at"), Column("id")).fetchAll(db)
+        }
+        layoutObservationTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                for try await layouts in observation.values(in: self.db.pool) {
+                    await MainActor.run {
+                        self.savedLayouts = layouts
+                    }
+                }
+            } catch {
+                #if DEBUG
+                print("SavedLayout observation error:", error)
+                #endif
+            }
+        }
+    }
+
+    func saveCurrentLayout(name: String) {
+        let entries = snapper.captureCurrentLayout()
+        guard !entries.isEmpty else { return }
+        let layout = SavedLayout(
+            id: UUID().uuidString,
+            name: name,
+            entriesJSON: SavedLayout.encode(entries),
+            hotkeyKeyCode: nil,
+            hotkeyModifiers: nil,
+            createdAt: Int64(Date().timeIntervalSince1970 * 1000)
+        )
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.savedLayoutStore.upsert(layout)
+            } catch {
+                #if DEBUG
+                print("saveCurrentLayout failed:", error)
+                #endif
+            }
+        }
+    }
+
+    func deleteLayout(id: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.savedLayoutStore.delete(id: id)
+            } catch {
+                #if DEBUG
+                print("deleteLayout failed:", error)
+                #endif
+            }
+        }
+    }
+
+    func recallLayout(_ layout: SavedLayout) async -> WindowSnapper.LayoutRecallSummary {
+        return await snapper.recall(layout.entries)
+    }
+
+    func renameLayout(_ layout: SavedLayout, name: String) {
+        var updated = layout
+        updated.name = name
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.savedLayoutStore.upsert(updated)
+            } catch {
+                #if DEBUG
+                print("renameLayout failed:", error)
                 #endif
             }
         }

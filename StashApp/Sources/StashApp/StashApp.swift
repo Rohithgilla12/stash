@@ -118,7 +118,12 @@ private struct ContentView: View {
                     snapper: env.snapper,
                     presets: env.windowPresets,
                     onSave: { env.saveWindowPreset($0) },
-                    onDelete: { env.deleteWindowPreset(id: $0) }
+                    onDelete: { env.deleteWindowPreset(id: $0) },
+                    layouts: env.savedLayouts,
+                    onSaveLayout: { env.saveCurrentLayout(name: $0) },
+                    onDeleteLayout: { env.deleteLayout(id: $0) },
+                    onRenameLayout: { env.renameLayout($0, name: $1) },
+                    onRecallLayout: { await env.recallLayout($0) }
                 )
             case .ai: AITab(model: env.aiViewModel, assistant: env.aiAssistant, env: env)
             }

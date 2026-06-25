@@ -5,6 +5,11 @@ struct WindowsTab: View {
     let presets: [WindowPreset]
     let onSave: (WindowPreset) -> Void
     let onDelete: (String) -> Void
+    let layouts: [SavedLayout]
+    let onSaveLayout: (String) -> Void
+    let onDeleteLayout: (String) -> Void
+    let onRenameLayout: (SavedLayout, String) -> Void
+    let onRecallLayout: (_ layout: SavedLayout) async -> WindowSnapper.LayoutRecallSummary
 
     @State private var activeTarget: SnapTarget? = nil
     @State private var showToast: Bool = false
@@ -13,6 +18,8 @@ struct WindowsTab: View {
     @State private var showAddPreset = false
     @State private var editingPreset: WindowPreset? = nil
     @State private var isTrusted: Bool = false
+    @State private var showSaveLayout = false
+    @State private var renamingLayout: SavedLayout? = nil
 
     private let groupOrder = ["Halves", "Quarters", "Thirds", "Full Screen"]
     private let previewScreenRect = CGRect(x: 0, y: 0, width: 360, height: 200)
@@ -31,6 +38,7 @@ struct WindowsTab: View {
                 nextDisplayRow
             }
             presetsSection
+            layoutsSection
         }
         .onAppear {
             targetAppName = snapper.targetAppName ?? "No active window"
@@ -55,6 +63,16 @@ struct WindowsTab: View {
         }
         .sheet(item: $editingPreset) { preset in
             WindowPresetEditor(editingPreset: preset, onSave: onSave)
+        }
+        .sheet(isPresented: $showSaveLayout) {
+            SaveLayoutSheet(initialName: "") { name in
+                onSaveLayout(name)
+            }
+        }
+        .sheet(item: $renamingLayout) { layout in
+            SaveLayoutSheet(initialName: layout.name) { newName in
+                onRenameLayout(layout, newName)
+            }
         }
     }
 
@@ -325,6 +343,89 @@ struct WindowsTab: View {
             await MainActor.run {
                 withAnimation { showToast = false }
             }
+        }
+    }
+
+    private var layoutsSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionHeader("Layouts")
+            ForEach(layouts) { layout in
+                layoutRow(layout)
+            }
+            saveLayoutButton
+        }
+    }
+
+    private var saveLayoutButton: some View {
+        Button {
+            showSaveLayout = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "square.on.square")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(isTrusted ? Tokens.textSecondary : Tokens.textTertiary)
+                Text("Save current windows…")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isTrusted ? Tokens.textPrimary : Tokens.textTertiary)
+                Spacer()
+            }
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                    .fill(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+                    .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(!isTrusted)
+        .opacity(isTrusted ? 1 : 0.5)
+    }
+
+    private func layoutRow(_ layout: SavedLayout) -> some View {
+        Button {
+            recallLayout(layout)
+        } label: {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(layout.name)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Tokens.textPrimary)
+                        .lineLimit(1)
+                    Text("\(layout.entries.count) apps")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Tokens.textTertiary)
+                }
+                Spacer()
+                Image(systemName: "arrow.trianglehead.counterclockwise")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Tokens.textTertiary)
+            }
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                    .fill(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+                    .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .contextMenu {
+            Button("Rename") { renamingLayout = layout }
+            Button("Delete", role: .destructive) { onDeleteLayout(layout.id) }
+        }
+    }
+
+    private func recallLayout(_ layout: SavedLayout) {
+        toastLabel = isTrusted ? "Recalling…" : "Enable Accessibility to recall"
+        withAnimation { showToast = true }
+        Task {
+            if isTrusted {
+                let summary = await onRecallLayout(layout)
+                await MainActor.run {
+                    toastLabel = "Placed \(summary.placed) · launched \(summary.launched) · skipped \(summary.skipped)"
+                }
+            }
+            try? await Task.sleep(for: .seconds(2))
+            await MainActor.run { withAnimation { showToast = false } }
         }
     }
 }
