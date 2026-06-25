@@ -24,7 +24,7 @@ enum UsageAggregator {
         calendar: Calendar = .current
     ) -> (input: Int, output: Int) {
         let filtered = records.filter { calendar.isDate($0.timestamp, inSameDayAs: now) }
-        let input = filtered.reduce(0) { $0 + $1.inputTokens }
+        let input = filtered.reduce(0) { $0 + $1.inputTokens + $1.cacheCreationTokens + $1.cacheReadTokens }
         let output = filtered.reduce(0) { $0 + $1.outputTokens }
         return (input, output)
     }
@@ -52,7 +52,7 @@ enum UsageAggregator {
             let repo = (sessionRecords.first?.repoPath as NSString?)?.lastPathComponent ?? ""
             let branch = mostRecent?.branch
 
-            let input = sessionRecords.reduce(0) { $0 + $1.inputTokens }
+            let input = sessionRecords.reduce(0) { $0 + $1.inputTokens + $1.cacheCreationTokens + $1.cacheReadTokens }
             let output = sessionRecords.reduce(0) { $0 + $1.outputTokens }
 
             summaries.append(SessionSummary(

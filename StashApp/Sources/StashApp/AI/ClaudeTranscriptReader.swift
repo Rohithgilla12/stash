@@ -37,10 +37,10 @@ struct ClaudeTranscriptReader: Sendable {
             repoPath: cwd,
             branch: gitBranch,
             model: modelStr,
-            rawInputTokens: rawInput,
+            inputTokens: rawInput,
+            outputTokens: outputTokens,
             cacheCreationTokens: cacheCreation,
-            cacheReadTokens: cacheRead,
-            outputTokens: outputTokens
+            cacheReadTokens: cacheRead
         )
     }
 

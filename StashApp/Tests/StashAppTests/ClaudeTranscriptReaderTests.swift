@@ -57,12 +57,12 @@ import Foundation
         #expect(sorted[0].sessionId == "sess-abc")
         #expect(sorted[0].repoPath == "/Users/dev/myrepo")
         #expect(sorted[0].branch == "main")
-        #expect(sorted[0].inputTokens == 150)
+        #expect(sorted[0].inputTokens + sorted[0].cacheCreationTokens + sorted[0].cacheReadTokens == 150)
         #expect(sorted[0].outputTokens == 50)
 
         #expect(sorted[1].sessionId == "sess-abc")
         #expect(sorted[1].branch == "feat/x")
-        #expect(sorted[1].inputTokens == 210)
+        #expect(sorted[1].inputTokens + sorted[1].cacheCreationTokens + sorted[1].cacheReadTokens == 210)
         #expect(sorted[1].outputTokens == 80)
     }
 
@@ -122,7 +122,7 @@ import Foundation
         let records = reader.read(modifiedWithin: 3600, now: now)
 
         #expect(records.count == 1)
-        #expect(records[0].inputTokens == 100)
+        #expect(records[0].inputTokens + records[0].cacheCreationTokens + records[0].cacheReadTokens == 100)
         #expect(records[0].outputTokens == 20)
     }
 }

@@ -19,10 +19,10 @@ import Foundation
             repoPath: repoPath,
             branch: branch,
             model: model,
-            rawInputTokens: inputTokens,
+            inputTokens: inputTokens,
+            outputTokens: outputTokens,
             cacheCreationTokens: 0,
-            cacheReadTokens: 0,
-            outputTokens: outputTokens
+            cacheReadTokens: 0
         )
     }
 
