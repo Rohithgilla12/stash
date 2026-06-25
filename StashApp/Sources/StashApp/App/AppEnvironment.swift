@@ -23,6 +23,7 @@ final class AppEnvironment {
     let snapper = WindowSnapper()
     private var snapHotKeys: [GlobalHotKey] = []
     private var presetHotKeys: [GlobalHotKey] = []
+    private var layoutHotKeys: [GlobalHotKey] = []
     let windowPresetStore: WindowPresetStore
     var windowPresets: [WindowPreset] = []
     private var presetObservationTask: Task<Void, Never>?
@@ -142,6 +143,11 @@ final class AppEnvironment {
             if let title = q("title"), !title.isEmpty {
                 Task { [weak self] in await self?.tasksViewModel.add(title) }
             }
+        case "layout":
+            if let name = q("name"),
+               let layout = savedLayouts.first(where: { $0.name.lowercased() == name.lowercased() }) {
+                Task { _ = await snapper.recall(layout.entries) }
+            }
         case "capture":
             if let text = q("text"), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 quickSave(text, asTask: (q("type")?.lowercased() != "note"))
@@ -237,12 +243,14 @@ final class AppEnvironment {
             quickCapture.registerHotKey()
             registerSnapHotKeys()
             registerPresetHotKeys()
+            registerLayoutHotKeys()
         } else {
             stickyManager.unregisterHotKey()
             pasteBrowser.unregisterHotKey()
             quickCapture.unregisterHotKey()
             snapHotKeys = []
             presetHotKeys = []
+            layoutHotKeys = []
         }
     }
 
@@ -285,6 +293,30 @@ final class AppEnvironment {
         presetHotKeys = registered
         #if DEBUG
         print("[Stash] Preset hotkeys registered: \(registered.count)/\(windowPresets.filter { $0.hotkeyKeyCode != nil && $0.hotkeyModifiers != nil }.count)")
+        #endif
+    }
+
+    private func registerLayoutHotKeys() {
+        layoutHotKeys = []
+        guard globalHotkeysEnabled else { return }
+        var registered: [GlobalHotKey] = []
+        for layout in savedLayouts {
+            guard let code = layout.hotkeyKeyCode, let mods = layout.hotkeyModifiers else { continue }
+            let capturedEntries = layout.entries
+            if let key = GlobalHotKey(keyCode: UInt32(code), modifiers: UInt32(mods), handler: { [weak self] in
+                guard let self else { return }
+                Task { _ = await self.snapper.recall(capturedEntries) }
+            }) {
+                registered.append(key)
+            } else {
+                #if DEBUG
+                print("[Stash] Could not register hotkey for layout '\(layout.name)' (combo already claimed?)")
+                #endif
+            }
+        }
+        layoutHotKeys = registered
+        #if DEBUG
+        print("[Stash] Layout hotkeys registered: \(registered.count)/\(savedLayouts.filter { $0.hotkeyKeyCode != nil && $0.hotkeyModifiers != nil }.count)")
         #endif
     }
 
@@ -347,6 +379,7 @@ final class AppEnvironment {
                 for try await layouts in observation.values(in: self.db.pool) {
                     await MainActor.run {
                         self.savedLayouts = layouts
+                        self.registerLayoutHotKeys()
                     }
                 }
             } catch {
