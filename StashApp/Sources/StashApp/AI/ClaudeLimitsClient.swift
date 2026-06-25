@@ -20,6 +20,7 @@ enum ClaudeLimitsError: Error {
     case decode
 }
 
+// v1 surfaces session/weekly/sonnet/opus windows; extra_usage (overage spend) is intentionally deferred.
 private struct APIResponse: Decodable {
     let five_hour: WindowDTO?
     let seven_day: WindowDTO?

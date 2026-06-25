@@ -48,23 +48,36 @@ final class AIViewModel {
         loaded = true
     }
 
+    private var usageLoading = false
+    private var limitsLoading = false
+
     func loadUsage() async {
+        guard !usageLoading else { return }
+        usageLoading = true; defer { usageLoading = false }
+
         let capturedReader = reader
         let n = Date()
         let records = await Task.detached {
             capturedReader.read(modifiedWithin: 31 * 24 * 3600, now: n)
         }.value
 
+        let cutoff30d = Calendar.current.startOfDay(
+            for: Calendar.current.date(byAdding: .day, value: -29, to: n)!
+        )
+
         daily = UsageAggregator.daily(records, days: 30, now: n)
         byModel = UsageAggregator.byModel(records)
         todayCost = UsageAggregator.cost(records, since: Calendar.current.startOfDay(for: n), now: n)
-        cost30d = UsageAggregator.cost(records, since: nil, now: n)
-        tokens30d = records.reduce(0) { $0 + $1.totalTokens }
+        cost30d = UsageAggregator.cost(records, since: cutoff30d, now: n)
+        tokens30d = records.filter { $0.timestamp >= cutoff30d }.reduce(0) { $0 + $1.totalTokens }
         latestTokens = UsageAggregator.sessions(records, now: n, activeWithin: 86400).first?.totalTokens ?? 0
         self.now = n
     }
 
     func refreshLimits() async {
+        guard !limitsLoading else { return }
+        limitsLoading = true; defer { limitsLoading = false }
+
         limitsState = .loading
         let result = await ClaudeLimitsClient().fetch()
         switch result {
