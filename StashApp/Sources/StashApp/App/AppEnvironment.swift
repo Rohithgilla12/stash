@@ -360,13 +360,14 @@ final class AppEnvironment {
     func saveCurrentLayout(name: String) {
         let entries = snapper.captureCurrentLayout()
         guard !entries.isEmpty else { return }
+        let existing = savedLayouts.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
         let layout = SavedLayout(
-            id: UUID().uuidString,
+            id: existing?.id ?? UUID().uuidString,
             name: name,
             entriesJSON: SavedLayout.encode(entries),
-            hotkeyKeyCode: nil,
-            hotkeyModifiers: nil,
-            createdAt: Int64(Date().timeIntervalSince1970 * 1000)
+            hotkeyKeyCode: existing?.hotkeyKeyCode,
+            hotkeyModifiers: existing?.hotkeyModifiers,
+            createdAt: existing?.createdAt ?? Int64(Date().timeIntervalSince1970 * 1000)
         )
         Task { [weak self] in
             guard let self else { return }

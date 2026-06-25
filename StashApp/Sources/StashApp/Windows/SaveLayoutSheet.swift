@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SaveLayoutSheet: View {
+    let title: String
     let initialName: String
     let onSave: (String) -> Void
 
@@ -8,7 +9,8 @@ struct SaveLayoutSheet: View {
     @State private var name: String
     @FocusState private var isFocused: Bool
 
-    init(initialName: String, onSave: @escaping (String) -> Void) {
+    init(title: String, initialName: String, onSave: @escaping (String) -> Void) {
+        self.title = title
         self.initialName = initialName
         self.onSave = onSave
         _name = State(initialValue: initialName)
@@ -18,7 +20,7 @@ struct SaveLayoutSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Text(initialName.isEmpty ? "Save Layout" : "Rename Layout")
+            Text(title)
                 .font(.headline)
                 .foregroundStyle(Tokens.textPrimary)
 

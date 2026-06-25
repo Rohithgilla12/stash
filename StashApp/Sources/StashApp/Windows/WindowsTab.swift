@@ -65,12 +65,12 @@ struct WindowsTab: View {
             WindowPresetEditor(editingPreset: preset, onSave: onSave)
         }
         .sheet(isPresented: $showSaveLayout) {
-            SaveLayoutSheet(initialName: "") { name in
+            SaveLayoutSheet(title: "Save Layout", initialName: "") { name in
                 onSaveLayout(name)
             }
         }
         .sheet(item: $renamingLayout) { layout in
-            SaveLayoutSheet(initialName: layout.name) { newName in
+            SaveLayoutSheet(title: "Rename Layout", initialName: layout.name) { newName in
                 onRenameLayout(layout, newName)
             }
         }
