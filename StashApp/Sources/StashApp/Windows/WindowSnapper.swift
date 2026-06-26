@@ -133,10 +133,9 @@ final class WindowSnapper {
             if let app = runningApp(entry.bundleId) {
                 if place(entry, on: app) { placed += 1 } else { skipped += 1 }
             } else if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: entry.bundleId) {
-                launched += 1
                 if let app = await launchAndWaitForWindow(url: url, bundleId: entry.bundleId),
                    place(entry, on: app) {
-                    // counted under launched
+                    launched += 1
                 } else { skipped += 1 }
             } else { skipped += 1 }
         }
@@ -292,7 +291,10 @@ final class WindowSnapper {
 
     private func place(_ entry: LayoutEntry, on app: NSRunningApplication) -> Bool {
         guard let (window, _) = mainWindow(for: app) else { return false }
-        guard let screen = resolveScreen(displayMode: "index", displayIndex: entry.displayIndex, windowAXFrame: nil) ?? NSScreen.main else { return false }
+        guard let screen = resolveScreen(displayMode: "index", displayIndex: entry.displayIndex, windowAXFrame: nil)
+                ?? NSScreen.main
+                ?? NSScreen.screens.first
+        else { return false }
         let primaryH = NSScreen.screens.first?.frame.height ?? screen.frame.height
         let visibleAX = ScreenGeometry.axFrame(fromAppKit: screen.visibleFrame, primaryHeight: primaryH)
         setFrame(window, WindowGeometry.clamp(entry.frame, to: visibleAX))
