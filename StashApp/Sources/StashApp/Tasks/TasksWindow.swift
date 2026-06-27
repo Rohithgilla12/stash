@@ -5,16 +5,21 @@ struct TasksWindow: View {
 
     var body: some View {
         NavigationSplitView {
-            List(TaskFilter.allCases, id: \.self, selection: Binding(
-                get: { model.filter as TaskFilter? },
-                set: { model.filter = $0 ?? .all }
-            )) { filter in
-                SidebarFilterRow(
-                    filter: filter,
-                    count: countForFilter(filter),
-                    isSelected: model.filter == filter
-                )
-                .tag(filter)
+            List {
+                ForEach(TaskFilter.allCases, id: \.self) { filter in
+                    SidebarFilterRow(
+                        filter: filter,
+                        count: countForFilter(filter),
+                        isSelected: model.filter == filter
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture { model.filter = filter }
+                    .listRowBackground(
+                        RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                            .fill(model.filter == filter ? Tokens.rowSelected : Color.clear)
+                            .padding(.vertical, 1)
+                    )
+                }
             }
             .listStyle(.sidebar)
             .tint(Tokens.accent)

@@ -47,6 +47,7 @@ struct SnippetsTab: View {
         VStack(alignment: .leading, spacing: 2) {
             Toggle("Expand snippets system-wide", isOn: $model.expanderEnabled)
                 .toggleStyle(.switch)
+                .tint(Tokens.accent)
                 .font(.callout)
                 .foregroundStyle(Tokens.textPrimary)
             Text("Requires Accessibility permission")

@@ -66,6 +66,7 @@ struct WindowPresetEditor: View {
             }
             .padding(Space.md)
         }
+        .tint(Tokens.accent)
         .frame(minWidth: 340, minHeight: 320)
     }
 

@@ -5,17 +5,22 @@ struct NotesWindow: View {
 
     var body: some View {
         NavigationSplitView {
-            List(model.notes, id: \.id, selection: Binding(
-                get: { model.selectedId },
-                set: { model.selectedId = $0 }
-            )) { note in
-                SidebarRow(note: note, isSelected: model.selectedId == note.id)
-                    .tag(note.id)
-                    .contextMenu {
-                        Button("Delete", role: .destructive) {
-                            Task { await model.delete(note) }
+            List {
+                ForEach(model.notes, id: \.id) { note in
+                    SidebarRow(note: note, isSelected: model.selectedId == note.id)
+                        .contentShape(Rectangle())
+                        .onTapGesture { model.selectedId = note.id }
+                        .listRowBackground(
+                            RoundedRectangle(cornerRadius: Tokens.rowRadius)
+                                .fill(model.selectedId == note.id ? Tokens.rowSelected : Color.clear)
+                                .padding(.vertical, 1)
+                        )
+                        .contextMenu {
+                            Button("Delete", role: .destructive) {
+                                Task { await model.delete(note) }
+                            }
                         }
-                    }
+                }
             }
             .listStyle(.sidebar)
             .tint(Tokens.accent)

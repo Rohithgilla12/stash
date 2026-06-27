@@ -21,6 +21,7 @@ struct AITab: View {
                 Text("Usage").tag(AIMode.usage)
             }
             .pickerStyle(.segmented)
+            .tint(Tokens.accent)
             .padding(.horizontal, 12)
             .padding(.top, 8)
 
