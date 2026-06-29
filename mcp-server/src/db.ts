@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   subs       TEXT NOT NULL DEFAULT '[]', -- JSON {t,done}[]
   source     TEXT NOT NULL DEFAULT 'you',-- 'you' | 'claude'
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  order_index INTEGER
 );
 CREATE TABLE IF NOT EXISTS notes (
   id         TEXT PRIMARY KEY,
