@@ -25,12 +25,27 @@ final class TasksViewModel {
         tasks.filter { TasksViewModel.matchesFilter($0, filter) }
     }
 
-    nonisolated static func matchesFilter(_ t: TaskItem, _ f: TaskFilter) -> Bool {
+    /// The bucket a task belongs in *right now*. Tasks with a real `dueAt` are
+    /// classified against the current date so the lists roll over at midnight —
+    /// anything due today or earlier (overdue) surfaces in Today. Dateless tasks
+    /// stay sticky on the bucket they were filed under (defaults to Today).
+    nonisolated static func effectiveDue(_ t: TaskItem, now: Date = Date()) -> TaskDue {
+        guard let ms = t.dueAt else { return t.due ?? .Today }
+        let date = Date(timeIntervalSince1970: Double(ms) / 1000)
+        let cal = Calendar.current
+        if cal.startOfDay(for: date) <= cal.startOfDay(for: now) { return .Today }
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!
+        if cal.isDate(date, inSameDayAs: tomorrow) { return .Tomorrow }
+        return .Upcoming
+    }
+
+    nonisolated static func matchesFilter(_ t: TaskItem, _ f: TaskFilter, now: Date = Date()) -> Bool {
         switch f {
         case .today:
-            return t.due == .Today && !t.done
+            return effectiveDue(t, now: now) == .Today && !t.done
         case .upcoming:
-            return (t.due == .Tomorrow || t.due == .Upcoming) && !t.done
+            let e = effectiveDue(t, now: now)
+            return (e == .Tomorrow || e == .Upcoming) && !t.done
         case .done:
             return t.done
         case .all:
@@ -71,7 +86,7 @@ final class TasksViewModel {
                 dueAtMs = Int64(anchor.timeIntervalSince1970 * 1000)
             }
         }
-        let due = dueBucket(for: dueAtMs.map { Date(timeIntervalSince1970: Double($0) / 1000) }, now: nowDate)
+        let due = Self.dueBucket(for: dueAtMs.map { Date(timeIntervalSince1970: Double($0) / 1000) }, now: nowDate)
         try? await store.create(
             title: parsed.title,
             due: due,
@@ -83,8 +98,10 @@ final class TasksViewModel {
         )
     }
 
-    private func dueBucket(for date: Date?, now: Date) -> TaskDue {
-        guard let date else { return .Upcoming }
+    /// Buckets a parsed due date. A task with no date defaults to Today so it is
+    /// visible the moment it is created (the default Tasks view is Today).
+    nonisolated static func dueBucket(for date: Date?, now: Date) -> TaskDue {
+        guard let date else { return .Today }
         let cal = Calendar.current
         if cal.isDate(date, inSameDayAs: now) { return .Today }
         let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!

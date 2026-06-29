@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 import GRDB
 @testable import StashApp
 
@@ -96,6 +97,66 @@ import GRDB
     #expect(TasksViewModel.matchesFilter(tomorrowTask, .all) == true)
     #expect(TasksViewModel.matchesFilter(upcomingTask, .all) == true)
     #expect(TasksViewModel.matchesFilter(doneTask, .all) == false)
+}
+
+// MARK: - Due-bucket tests (nonisolated static, no MainActor needed)
+
+@Test func testDueBucketDefaultsToTodayWhenNoDate() {
+    // A quick task with no parsed date should land in Today, not Upcoming,
+    // so it is visible the moment it is created (the default view is Today).
+    let now = Date(timeIntervalSince1970: 1_700_000_000)
+    #expect(TasksViewModel.dueBucket(for: nil, now: now) == .Today)
+}
+
+@Test func testDueBucketClassifiesRelativeDates() {
+    let cal = Calendar.current
+    let now = Date(timeIntervalSince1970: 1_700_000_000)
+    let laterToday = cal.date(byAdding: .hour, value: 3, to: now)!
+    let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!
+    let nextWeek = cal.date(byAdding: .day, value: 7, to: now)!
+
+    #expect(TasksViewModel.dueBucket(for: laterToday, now: now) == .Today)
+    #expect(TasksViewModel.dueBucket(for: tomorrow, now: now) == .Tomorrow)
+    #expect(TasksViewModel.dueBucket(for: nextWeek, now: now) == .Upcoming)
+}
+
+// MARK: - Effective-due / rollover tests (nonisolated static, no MainActor needed)
+
+private func datedTask(id: String, dueAtMsAgoDays days: Int, storedDue: TaskDue, from now: Date) -> TaskItem {
+    let date = Calendar.current.date(byAdding: .day, value: days, to: now)!
+    return TaskItem(
+        id: id, title: id, done: false, priority: nil,
+        due: storedDue, dueAt: Int64(date.timeIntervalSince1970 * 1000),
+        project: "Inbox", tags: [], repeatRule: nil, subs: [],
+        source: .you, createdAt: 1, updatedAt: 1
+    )
+}
+
+@Test func testEffectiveDueRollsOverdueIntoToday() {
+    let now = Date(timeIntervalSince1970: 1_700_000_000)
+    // Task was filed as "Tomorrow" days ago; its real date is now in the past.
+    let stale = datedTask(id: "overdue", dueAtMsAgoDays: -2, storedDue: .Tomorrow, from: now)
+    #expect(TasksViewModel.effectiveDue(stale, now: now) == .Today)
+    #expect(TasksViewModel.matchesFilter(stale, .today, now: now) == true)
+    #expect(TasksViewModel.matchesFilter(stale, .upcoming, now: now) == false)
+}
+
+@Test func testEffectiveDueClassifiesDatedTasksByRealDate() {
+    let now = Date(timeIntervalSince1970: 1_700_000_000)
+    let tomorrow = datedTask(id: "tom", dueAtMsAgoDays: 1, storedDue: .Today, from: now)
+    let future = datedTask(id: "fut", dueAtMsAgoDays: 5, storedDue: .Today, from: now)
+    #expect(TasksViewModel.effectiveDue(tomorrow, now: now) == .Tomorrow)
+    #expect(TasksViewModel.effectiveDue(future, now: now) == .Upcoming)
+}
+
+@Test func testEffectiveDueIsStickyForDatelessTasks() {
+    let now = Date(timeIntervalSince1970: 1_700_000_000)
+    let dateless = TaskItem(
+        id: "d1", title: "no date", done: false, priority: nil,
+        due: .Today, dueAt: nil, project: "Inbox", tags: [], repeatRule: nil,
+        subs: [], source: .you, createdAt: 1, updatedAt: 1
+    )
+    #expect(TasksViewModel.effectiveDue(dateless, now: now) == .Today)
 }
 
 // MARK: - Live observation test
