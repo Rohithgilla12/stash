@@ -84,6 +84,7 @@ private struct SidebarFilterRow: View {
 private struct TasksMainPane: View {
     @Bindable var model: TasksViewModel
     @State private var quickAddText = ""
+    @State private var reschedulingTask: TaskItem?
 
     private var filterTitle: String {
         switch model.filter {
@@ -107,6 +108,11 @@ private struct TasksMainPane: View {
                 .padding(.vertical, 8)
             Divider()
             taskListContent
+        }
+        .sheet(item: $reschedulingTask) { task in
+            ReschedulePicker(task: task) { date in
+                Task { await model.reschedule(task, to: .on(date)) }
+            }
         }
     }
 
@@ -166,7 +172,9 @@ private struct TasksMainPane: View {
                     ForEach(model.visible) { task in
                         FullTaskRow(task: task,
                             onToggle: { Task { await model.toggle(task) } },
-                            onDelete: { Task { await model.delete(task) } }
+                            onDelete: { Task { await model.delete(task) } },
+                            onReschedule: { target in Task { await model.reschedule(task, to: target) } },
+                            onPickDate: { reschedulingTask = task }
                         )
                     }
                 }
@@ -180,6 +188,8 @@ private struct FullTaskRow: View {
     let task: TaskItem
     let onToggle: () -> Void
     let onDelete: () -> Void
+    let onReschedule: (RescheduleTarget) -> Void
+    let onPickDate: () -> Void
 
     @State private var subsExpanded = false
 
@@ -195,6 +205,9 @@ private struct FullTaskRow: View {
         }
         .background(Color.black.opacity(0.03), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
         .contextMenu {
+            Menu("Reschedule") {
+                rescheduleMenuItems(showsPickDate: true, onReschedule: onReschedule, onPickDate: onPickDate)
+            }
             Button("Delete", role: .destructive, action: onDelete)
         }
     }

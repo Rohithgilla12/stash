@@ -61,9 +61,11 @@ struct TodosTab: View {
                 .padding(.vertical, 20)
         } else {
             ForEach(todayTasks) { task in
-                TaskRowView(task: task) {
-                    Task { await model.toggle(task) }
-                }
+                TaskRowView(
+                    task: task,
+                    onToggle: { Task { await model.toggle(task) } },
+                    onReschedule: { target in Task { await model.reschedule(task, to: target) } }
+                )
             }
         }
     }
@@ -104,6 +106,7 @@ struct TodosTab: View {
 struct TaskRowView: View {
     let task: TaskItem
     let onToggle: () -> Void
+    var onReschedule: ((RescheduleTarget) -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 8) {
@@ -123,6 +126,13 @@ struct TaskRowView: View {
         }
         .padding(8)
         .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
+        .contextMenu {
+            if let onReschedule {
+                Menu("Reschedule") {
+                    rescheduleMenuItems(showsPickDate: false, onReschedule: onReschedule, onPickDate: {})
+                }
+            }
+        }
     }
 
     private var priorityDot: some View {

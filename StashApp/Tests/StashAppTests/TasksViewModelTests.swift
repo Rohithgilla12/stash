@@ -159,6 +159,26 @@ private func datedTask(id: String, dueAtMsAgoDays days: Int, storedDue: TaskDue,
     #expect(TasksViewModel.effectiveDue(dateless, now: now) == .Today)
 }
 
+// MARK: - Reschedule helper tests
+
+@Test func testNextWeekendFromWeekday() {
+    var cal = Calendar(identifier: .gregorian)
+    cal.timeZone = TimeZone(identifier: "UTC")!
+    // 2023-11-15 is a Wednesday.
+    let wed = cal.date(from: DateComponents(year: 2023, month: 11, day: 15))!
+    let sat = TasksViewModel.nextWeekend(from: wed, calendar: cal)
+    #expect(cal.component(.weekday, from: sat) == 7) // Saturday
+    #expect(cal.dateComponents([.day], from: wed, to: sat).day == 3)
+}
+
+@Test func testNextWeekendWhenAlreadyWeekend() {
+    var cal = Calendar(identifier: .gregorian)
+    cal.timeZone = TimeZone(identifier: "UTC")!
+    // 2023-11-18 is a Saturday.
+    let sat = cal.date(from: DateComponents(year: 2023, month: 11, day: 18))!
+    #expect(TasksViewModel.nextWeekend(from: sat, calendar: cal) == sat)
+}
+
 // MARK: - Live observation test
 
 @Test func testLiveObservation() async throws {

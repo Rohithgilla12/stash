@@ -5,6 +5,11 @@ enum TaskFilter: String, CaseIterable, Sendable {
     case today, upcoming, all, done
 }
 
+/// Where a "reschedule" action moves a task.
+enum RescheduleTarget: Sendable, Equatable {
+    case today, tomorrow, weekend, on(Date), clear
+}
+
 @MainActor
 @Observable
 final class TasksViewModel {
@@ -107,6 +112,39 @@ final class TasksViewModel {
         let tomorrow = cal.date(byAdding: .day, value: 1, to: now)!
         if cal.isDate(date, inSameDayAs: tomorrow) { return .Tomorrow }
         return .Upcoming
+    }
+
+    /// The Saturday of the current weekend (today if it is already the weekend).
+    nonisolated static func nextWeekend(from date: Date, calendar: Calendar = .current) -> Date {
+        let weekday = calendar.component(.weekday, from: date)  // 1=Sun … 7=Sat
+        if weekday == 7 || weekday == 1 { return date }         // already the weekend
+        return calendar.date(byAdding: .day, value: 7 - weekday, to: date) ?? date
+    }
+
+    /// Moves a task to a new day. Concrete days get a noon `dueAt` (so reminders
+    /// don't fire at midnight) and a freshly-computed bucket; `.clear` drops the
+    /// date and returns it to the sticky Today list.
+    func reschedule(_ task: TaskItem, to target: RescheduleTarget) async {
+        var t = task
+        let now = Date()
+        let cal = Calendar.current
+        let day: Date?
+        switch target {
+        case .today:    day = now
+        case .tomorrow: day = cal.date(byAdding: .day, value: 1, to: now)
+        case .weekend:  day = Self.nextWeekend(from: now, calendar: cal)
+        case .on(let d): day = d
+        case .clear:    day = nil
+        }
+        if let day {
+            let noon = cal.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? cal.startOfDay(for: day)
+            t.dueAt = Int64(noon.timeIntervalSince1970 * 1000)
+            t.due = Self.dueBucket(for: noon, now: now)
+        } else {
+            t.dueAt = nil
+            t.due = .Today
+        }
+        try? await store.upsert(t)
     }
 
     func toggle(_ task: TaskItem) async {
