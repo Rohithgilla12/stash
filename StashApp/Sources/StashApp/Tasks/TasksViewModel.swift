@@ -138,9 +138,6 @@ final class TasksViewModel {
         return calendar.date(byAdding: .day, value: 7 - weekday, to: date) ?? date
     }
 
-    /// Moves a task to a new day. Concrete days get a noon `dueAt` (so reminders
-    /// don't fire at midnight) and a freshly-computed bucket; `.clear` drops the
-    /// date and returns it to the sticky Today list.
     /// Reorders within the current filtered view, persisting a new global order.
     func move(fromOffsets: IndexSet, toOffset: Int) async {
         var reordered = visible
@@ -152,6 +149,9 @@ final class TasksViewModel {
         try? await store.reorder(idsInOrder: newGlobal)
     }
 
+    /// Moves a task to a new day. Concrete days get a noon `dueAt` (so reminders
+    /// don't fire at midnight) and a freshly-computed bucket; `.clear` drops the
+    /// date and returns it to the sticky Today list.
     func reschedule(_ task: TaskItem, to target: RescheduleTarget) async {
         var t = task
         let now = Date()
