@@ -99,7 +99,8 @@ final class TasksViewModel {
             id: id,
             dueAt: dueAtMs,
             priority: parsed.priority,
-            repeatRule: parsed.repeatRule
+            repeatRule: parsed.repeatRule,
+            tags: parsed.tags
         )
     }
 

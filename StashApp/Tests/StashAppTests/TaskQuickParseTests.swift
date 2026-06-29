@@ -79,6 +79,27 @@ private func makeDate(year: Int, month: Int, day: Int, hour: Int, minute: Int = 
     #expect(r.repeatRule == nil)
 }
 
+@Test func testTagsAreExtractedAndStrippedFromTitle() {
+    let r = TaskQuickParse.parse("pay rent fri 9am !high #home #finance", now: fixedNow, calendar: utcCalendar)
+    #expect(r.title == "pay rent")
+    #expect(r.priority == .high)
+    #expect(r.tags == ["home", "finance"])
+    let expected = makeDate(year: 2024, month: 1, day: 12, hour: 9)
+    #expect(r.dueAt == expected)
+}
+
+@Test func testTagsDeduplicateCaseInsensitively() {
+    let r = TaskQuickParse.parse("buy milk #Home #home", now: fixedNow, calendar: utcCalendar)
+    #expect(r.title == "buy milk")
+    #expect(r.tags == ["Home"])
+}
+
+@Test func testBareHashIsNotATag() {
+    let r = TaskQuickParse.parse("review PR #", now: fixedNow, calendar: utcCalendar)
+    #expect(r.title == "review PR #")
+    #expect(r.tags.isEmpty)
+}
+
 @Test func testTeamSyncEveryMonday10am() {
     let r = TaskQuickParse.parse("team sync every monday 10am", now: fixedNow, calendar: utcCalendar)
     #expect(r.title == "team sync")

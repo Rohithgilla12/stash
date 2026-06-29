@@ -147,7 +147,7 @@ private struct TasksMainPane: View {
             }
             .padding(8)
             .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Tokens.rowRadius))
-            Text(#"Try: "pay rent fri 9am !high"  ·  "standup every weekday 9am""#)
+            Text(#"Try: "pay rent fri 9am !high #home"  ·  "standup every weekday 9am""#)
                 .font(.system(.caption2))
                 .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
                 .padding(.horizontal, 2)

@@ -40,12 +40,14 @@ enum TaskQuickParse {
         var dueAt: Date?
         var priority: TaskPriority?
         var repeatRule: String?
+        var tags: [String] = []
     }
 
     static func parse(_ raw: String, now: Date, calendar: Calendar = .current) -> Result {
         var tokens = tokenise(raw)
 
         let priority = extractPriority(&tokens)
+        let tags = extractTags(&tokens)
         let repeatRule = extractRepeat(&tokens)
         let (dateResult, timeResult) = extractDateTime(&tokens, now: now, calendar: calendar)
 
@@ -62,7 +64,7 @@ enum TaskQuickParse {
             calendar: calendar
         )
 
-        return Result(title: title, dueAt: dueAt, priority: priority, repeatRule: repeatRule)
+        return Result(title: title, dueAt: dueAt, priority: priority, repeatRule: repeatRule, tags: tags)
     }
 }
 
@@ -92,6 +94,28 @@ private func extractPriority(_ tokens: inout [String]) -> TaskPriority? {
         }
     }
     return nil
+}
+
+/// Pulls `#tag` tokens out of the input. A bare `#` is ignored; tags are
+/// de-duplicated (case-insensitively) while preserving first-seen spelling.
+private func extractTags(_ tokens: inout [String]) -> [String] {
+    var tags: [String] = []
+    var seen = Set<String>()
+    var remaining: [String] = []
+    for token in tokens {
+        if token.hasPrefix("#"), token.count > 1 {
+            let tag = String(token.dropFirst())
+            let key = tag.lowercased()
+            if !seen.contains(key) {
+                seen.insert(key)
+                tags.append(tag)
+            }
+        } else {
+            remaining.append(token)
+        }
+    }
+    tokens = remaining
+    return tags
 }
 
 private enum DateToken {

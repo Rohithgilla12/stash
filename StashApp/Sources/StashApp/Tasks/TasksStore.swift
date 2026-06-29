@@ -43,7 +43,8 @@ actor TasksStore {
         id: String,
         dueAt: Int64? = nil,
         priority: TaskPriority? = nil,
-        repeatRule: String? = nil
+        repeatRule: String? = nil,
+        tags: [String] = []
     ) throws -> TaskItem {
         let task = TaskItem(
             id: id,
@@ -53,7 +54,7 @@ actor TasksStore {
             due: due,
             dueAt: dueAt,
             project: "Inbox",
-            tags: [],
+            tags: tags,
             repeatRule: repeatRule,
             subs: [],
             source: .you,
