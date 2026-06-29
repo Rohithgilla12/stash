@@ -67,3 +67,13 @@ import GRDB
     let all = try await store.all()
     #expect(all.map(\.id) == ["high", "low"]) // -3 before 5
 }
+
+@Test func testCreatePutsNewTaskAtTop() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = TasksStore(pool: db.pool)
+    let first = try await store.create(title: "first", due: .Today, now: 100, id: "f")
+    let second = try await store.create(title: "second", due: .Today, now: 200, id: "s")
+    #expect(second.orderIndex! < first.orderIndex!)
+    let all = try await store.all()
+    #expect(all.map(\.id) == ["s", "f"]) // newest at top
+}

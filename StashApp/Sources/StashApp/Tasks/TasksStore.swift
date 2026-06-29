@@ -48,6 +48,10 @@ actor TasksStore {
         repeatRule: String? = nil,
         tags: [String] = []
     ) throws -> TaskItem {
+        let minOrder = try pool.read { db in
+            try Int64.fetchOne(db, sql: "SELECT MIN(order_index) FROM tasks")
+        }
+        let orderIndex = (minOrder ?? 0) - 1
         let task = TaskItem(
             id: id,
             title: title,
@@ -61,7 +65,8 @@ actor TasksStore {
             subs: [],
             source: .you,
             createdAt: now,
-            updatedAt: now
+            updatedAt: now,
+            orderIndex: orderIndex
         )
         try upsert(task)
         return task
