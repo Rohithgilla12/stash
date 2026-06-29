@@ -19,6 +19,12 @@ enum TaskQuickParse {
         return f
     }()
 
+    /// An open task whose due day is strictly before today is overdue.
+    static func isOverdue(_ date: Date, done: Bool, now: Date, calendar: Calendar = .current) -> Bool {
+        guard !done else { return false }
+        return calendar.startOfDay(for: date) < calendar.startOfDay(for: now)
+    }
+
     static func formatDue(_ date: Date, now: Date) -> String {
         let cal = Calendar.current
         if cal.isDate(date, inSameDayAs: now) {

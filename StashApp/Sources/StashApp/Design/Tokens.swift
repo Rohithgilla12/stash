@@ -70,6 +70,7 @@ enum Tokens {
     static let codeColor = Color(hex: "#5f7a8a")
     static let textColor = Color(hex: "#9a8c7a")
 
+    static let overdue = Color(hex: "#c0392b")
     static let running = Color(hex: "#3fa45b")
     static let waiting = Color(hex: "#d8a13a")
     static let idle = Color(hex: "#a39a8c")

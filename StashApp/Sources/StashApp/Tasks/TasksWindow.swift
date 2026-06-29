@@ -295,15 +295,16 @@ private struct FullTaskRow: View {
             }
             if let dueAt = task.dueAt {
                 let date = Date(timeIntervalSince1970: Double(dueAt) / 1000)
-                let label = TaskQuickParse.formatDue(date, now: Date())
+                let overdue = TaskQuickParse.isOverdue(date, done: task.done, now: Date())
                 let isToday = Calendar.current.isDateInToday(date)
-                Text(label)
+                let filled = overdue || isToday
+                Text(overdue ? "Overdue" : TaskQuickParse.formatDue(date, now: Date()))
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(isToday ? Color.white : .secondary)
+                    .foregroundStyle(filled ? Color.white : .secondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
-                        isToday ? Tokens.accent : Color.black.opacity(0.08),
+                        overdue ? Tokens.overdue : (isToday ? Tokens.accent : Color.black.opacity(0.08)),
                         in: Capsule()
                     )
             } else if let due = task.due {

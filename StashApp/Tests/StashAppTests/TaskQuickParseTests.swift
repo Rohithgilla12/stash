@@ -79,6 +79,18 @@ private func makeDate(year: Int, month: Int, day: Int, hour: Int, minute: Int = 
     #expect(r.repeatRule == nil)
 }
 
+@Test func testIsOverdue() {
+    let now = makeDate(year: 2024, month: 1, day: 10, hour: 12)
+    let yesterday = makeDate(year: 2024, month: 1, day: 9, hour: 9)
+    let earlierToday = makeDate(year: 2024, month: 1, day: 10, hour: 8)
+    let tomorrow = makeDate(year: 2024, month: 1, day: 11, hour: 9)
+
+    #expect(TaskQuickParse.isOverdue(yesterday, done: false, now: now, calendar: utcCalendar) == true)
+    #expect(TaskQuickParse.isOverdue(yesterday, done: true, now: now, calendar: utcCalendar) == false)
+    #expect(TaskQuickParse.isOverdue(earlierToday, done: false, now: now, calendar: utcCalendar) == false)
+    #expect(TaskQuickParse.isOverdue(tomorrow, done: false, now: now, calendar: utcCalendar) == false)
+}
+
 @Test func testTagsAreExtractedAndStrippedFromTitle() {
     let r = TaskQuickParse.parse("pay rent fri 9am !high #home #finance", now: fixedNow, calendar: utcCalendar)
     #expect(r.title == "pay rent")

@@ -171,15 +171,16 @@ struct TaskRowView: View {
     private var duePill: some View {
         if let dueAt = task.dueAt {
             let date = Date(timeIntervalSince1970: Double(dueAt) / 1000)
-            let label = TaskQuickParse.formatDue(date, now: Date())
+            let overdue = TaskQuickParse.isOverdue(date, done: task.done, now: Date())
             let isToday = Calendar.current.isDateInToday(date)
-            Text(label)
+            let filled = overdue || isToday
+            Text(overdue ? "Overdue" : TaskQuickParse.formatDue(date, now: Date()))
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(isToday ? Color.white : Tokens.textSecondary)
+                .foregroundStyle(filled ? Color.white : Tokens.textSecondary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(
-                    isToday ? Tokens.accent : Color.primary.opacity(0.10),
+                    overdue ? Tokens.overdue : (isToday ? Tokens.accent : Color.primary.opacity(0.10)),
                     in: Capsule()
                 )
         } else if let due = task.due {
