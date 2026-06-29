@@ -58,6 +58,20 @@ final class TasksViewModel {
         }
     }
 
+    /// Applies a reordering of a filtered subset back onto the global order.
+    /// Slots currently held by a visible task are refilled, in order, from
+    /// `visibleNewOrder`; non-visible tasks keep their positions.
+    nonisolated static func reorderedGlobal(global: [String], visibleNewOrder: [String]) -> [String] {
+        let visibleSet = Set(visibleNewOrder)
+        var queue = visibleNewOrder
+        return global.map { id in
+            if visibleSet.contains(id) {
+                return queue.isEmpty ? id : queue.removeFirst()
+            }
+            return id
+        }
+    }
+
     func startObserving() {
         guard observationTask == nil else { return }
         let observation = ValueObservation.tracking { db in

@@ -179,6 +179,28 @@ private func datedTask(id: String, dueAtMsAgoDays days: Int, storedDue: TaskDue,
     #expect(TasksViewModel.nextWeekend(from: sat, calendar: cal) == sat)
 }
 
+// MARK: - Reordered-global tests (filtered-view drag reordering)
+
+@Test func testReorderedGlobalMovesWithinFullList() {
+    let global = ["A", "B", "C", "D", "E"]
+    // Today shows A,C,E; user drags C above A → C,A,E
+    let result = TasksViewModel.reorderedGlobal(global: global, visibleNewOrder: ["C", "A", "E"])
+    #expect(result == ["C", "B", "A", "D", "E"])
+}
+
+@Test func testReorderedGlobalPreservesNonVisible() {
+    let global = ["A", "B", "C", "D"]
+    // Visible is B,D; reorder to D,B. A and C keep their slots.
+    let result = TasksViewModel.reorderedGlobal(global: global, visibleNewOrder: ["D", "B"])
+    #expect(result == ["A", "D", "C", "B"])
+}
+
+@Test func testReorderedGlobalNoOp() {
+    let global = ["A", "B", "C"]
+    let result = TasksViewModel.reorderedGlobal(global: global, visibleNewOrder: ["A", "C"])
+    #expect(result == ["A", "B", "C"])
+}
+
 // MARK: - Live observation test
 
 @Test func testLiveObservation() async throws {
