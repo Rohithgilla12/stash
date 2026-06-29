@@ -51,3 +51,19 @@ import GRDB
     let all = try await store.all()
     #expect(all.map(\.id) == ["tb", "ta"])
 }
+
+@Test func testOrderingFollowsOrderIndex() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = TasksStore(pool: db.pool)
+    // Insert with explicit order_index out of created_at order.
+    try await store.upsert(TaskItem(
+        id: "low", title: "low", done: false, priority: nil, due: .Today,
+        dueAt: nil, project: "Inbox", tags: [], repeatRule: nil, subs: [],
+        source: .you, createdAt: 100, updatedAt: 100, orderIndex: 5))
+    try await store.upsert(TaskItem(
+        id: "high", title: "high", done: false, priority: nil, due: .Today,
+        dueAt: nil, project: "Inbox", tags: [], repeatRule: nil, subs: [],
+        source: .you, createdAt: 200, updatedAt: 200, orderIndex: -3))
+    let all = try await store.all()
+    #expect(all.map(\.id) == ["high", "low"]) // -3 before 5
+}

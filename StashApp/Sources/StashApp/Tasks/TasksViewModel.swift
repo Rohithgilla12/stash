@@ -61,7 +61,9 @@ final class TasksViewModel {
     func startObserving() {
         guard observationTask == nil else { return }
         let observation = ValueObservation.tracking { db in
-            try TaskItem.order(Column("created_at").desc, Column("id").desc).fetchAll(db)
+            try TaskItem
+                .order(Column("order_index").asc, Column("created_at").desc)
+                .fetchAll(db)
         }
         observationTask = Task { [weak self] in
             guard let self else { return }

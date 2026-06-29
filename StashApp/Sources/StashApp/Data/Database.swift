@@ -161,6 +161,16 @@ struct StashDatabase: Sendable {
                 }
             }
         }
+        m.registerMigration("v10_task_order") { db in
+            let cols = try db.columns(in: "tasks").map(\.name)
+            if !cols.contains("order_index") {
+                try db.alter(table: "tasks") { t in
+                    t.add(column: "order_index", .integer)
+                }
+                // Backfill so the current newest-first order is preserved.
+                try db.execute(sql: "UPDATE tasks SET order_index = -created_at WHERE order_index IS NULL")
+            }
+        }
         return m
     }
 }

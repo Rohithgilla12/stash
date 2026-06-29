@@ -10,7 +10,9 @@ actor TasksStore {
 
     func all() throws -> [TaskItem] {
         try pool.read { db in
-            try TaskItem.order(Column("created_at").desc, Column("id").desc).fetchAll(db)
+            try TaskItem
+                .order(Column("order_index").asc, Column("created_at").desc)
+                .fetchAll(db)
         }
     }
 

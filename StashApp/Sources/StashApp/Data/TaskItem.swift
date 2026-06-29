@@ -12,6 +12,7 @@ struct TaskItem: Codable, FetchableRecord, PersistableRecord, Identifiable, Send
     var priority: TaskPriority?
     var due: TaskDue?
     var dueAt: Int64?
+    var orderIndex: Int64?
     var project: String
     var tags: [String]
     var repeatRule: String?
@@ -33,7 +34,8 @@ struct TaskItem: Codable, FetchableRecord, PersistableRecord, Identifiable, Send
         subs: [ChecklistItem],
         source: TaskSource,
         createdAt: Int64,
-        updatedAt: Int64
+        updatedAt: Int64,
+        orderIndex: Int64? = nil
     ) {
         self.id = id
         self.title = title
@@ -48,6 +50,7 @@ struct TaskItem: Codable, FetchableRecord, PersistableRecord, Identifiable, Send
         self.source = source
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.orderIndex = orderIndex
     }
 
     static let databaseTableName = "tasks"
@@ -55,6 +58,7 @@ struct TaskItem: Codable, FetchableRecord, PersistableRecord, Identifiable, Send
     enum CodingKeys: String, CodingKey {
         case id, title, done, priority, due, project, tags
         case dueAt = "due_at"
+        case orderIndex = "order_index"
         case repeatRule = "repeat"
         case subs, source
         case createdAt = "created_at"
