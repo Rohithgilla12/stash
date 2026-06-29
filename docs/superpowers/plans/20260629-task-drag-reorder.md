@@ -231,7 +231,7 @@ Add to `TasksViewModelTests.swift`:
     let global = ["A", "B", "C", "D", "E"]
     // Today shows A,C,E; user drags C above A → C,A,E
     let result = TasksViewModel.reorderedGlobal(global: global, visibleNewOrder: ["C", "A", "E"])
-    #expect(result == ["C", "A", "B", "D", "E"])
+    #expect(result == ["C", "B", "A", "D", "E"]) // slot-refill: non-visible B keeps its slot
 }
 
 @Test func testReorderedGlobalPreservesNonVisible() {

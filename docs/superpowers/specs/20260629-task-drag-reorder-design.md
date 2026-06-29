@@ -82,7 +82,8 @@ The view model then renumbers `order_index = 0,1,2,…` over the new global orde
 and persists changed rows in one transaction.
 
 Worked example — global `[A,B,C,D,E]`, Today shows `[A,C,E]`, user drags C above
-A → `visibleNewOrder = [C,A,E]` → new global `[C,A,B,D,E]`.
+A → `visibleNewOrder = [C,A,E]` → new global `[C,B,A,D,E]` (non-visible `B`
+keeps its slot; the Today view still shows `[C,A,E]`).
 
 ## UI
 
