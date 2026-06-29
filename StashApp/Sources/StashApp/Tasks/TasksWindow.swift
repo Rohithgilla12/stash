@@ -167,19 +167,24 @@ private struct TasksMainPane: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ScrollView {
-                LazyVStack(spacing: 4) {
-                    ForEach(model.visible) { task in
-                        FullTaskRow(task: task,
-                            onToggle: { Task { await model.toggle(task) } },
-                            onDelete: { Task { await model.delete(task) } },
-                            onReschedule: { target in Task { await model.reschedule(task, to: target) } },
-                            onPickDate: { reschedulingTask = task }
-                        )
-                    }
+            List {
+                ForEach(model.visible) { task in
+                    FullTaskRow(task: task,
+                        onToggle: { Task { await model.toggle(task) } },
+                        onDelete: { Task { await model.delete(task) } },
+                        onReschedule: { target in Task { await model.reschedule(task, to: target) } },
+                        onPickDate: { reschedulingTask = task }
+                    )
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 2, leading: 12, bottom: 2, trailing: 12))
+                    .listRowBackground(Color.clear)
                 }
-                .padding(12)
+                .onMove { from, to in
+                    Task { await model.move(fromOffsets: from, toOffset: to) }
+                }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
     }
 }

@@ -37,6 +37,17 @@ actor TasksStore {
         try pool.write { try TaskItem.deleteOne($0, key: id) }
     }
 
+    func reorder(idsInOrder ids: [String]) throws {
+        try pool.write { db in
+            for (index, id) in ids.enumerated() {
+                try db.execute(
+                    sql: "UPDATE tasks SET order_index = ? WHERE id = ?",
+                    arguments: [Int64(index), id]
+                )
+            }
+        }
+    }
+
     @discardableResult
     func create(
         title: String,

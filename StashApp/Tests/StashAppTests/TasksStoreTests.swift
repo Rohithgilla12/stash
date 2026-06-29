@@ -77,3 +77,15 @@ import GRDB
     let all = try await store.all()
     #expect(all.map(\.id) == ["s", "f"]) // newest at top
 }
+
+@Test func testReorderRenumbers() async throws {
+    let db = try StashDatabase(path: ":memory:")
+    let store = TasksStore(pool: db.pool)
+    try await store.create(title: "a", due: .Today, now: 1, id: "a")
+    try await store.create(title: "b", due: .Today, now: 2, id: "b")
+    try await store.create(title: "c", due: .Today, now: 3, id: "c")
+    try await store.reorder(idsInOrder: ["a", "b", "c"])
+    let all = try await store.all()
+    #expect(all.map(\.id) == ["a", "b", "c"])
+    #expect(all.map(\.orderIndex) == [0, 1, 2])
+}

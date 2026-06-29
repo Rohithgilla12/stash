@@ -141,6 +141,17 @@ final class TasksViewModel {
     /// Moves a task to a new day. Concrete days get a noon `dueAt` (so reminders
     /// don't fire at midnight) and a freshly-computed bucket; `.clear` drops the
     /// date and returns it to the sticky Today list.
+    /// Reorders within the current filtered view, persisting a new global order.
+    func move(fromOffsets: IndexSet, toOffset: Int) async {
+        var reordered = visible
+        reordered.move(fromOffsets: fromOffsets, toOffset: toOffset)
+        let newGlobal = Self.reorderedGlobal(
+            global: tasks.map(\.id),
+            visibleNewOrder: reordered.map(\.id)
+        )
+        try? await store.reorder(idsInOrder: newGlobal)
+    }
+
     func reschedule(_ task: TaskItem, to target: RescheduleTarget) async {
         var t = task
         let now = Date()
